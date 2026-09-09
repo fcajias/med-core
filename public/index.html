@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispensario Médico FYDI | Control Clínico y Bodega</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+  <!-- Top Header -->
+  <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md text-white font-bold">
+          <i data-lucide="cross" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Dispensario Médico FYDI
+            <span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cuadrado 100%
+            </span>
+          </h1>
+          <p class="text-xs text-sky-200">Sistema Integral de Control Clínico, Kardex y Bodega en Tiempo Real</p>
+        </div>
+      </div>
+
+      <!-- Right Actions: User Profile & Dynamic Excel -->
+      <div class="flex items-center space-x-3">
+        <!-- Live Dynamic Excel Download Button -->
+        <a href="/descargar-excel" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-all shadow-sm border border-emerald-400/30" title="Descarga el Excel generado en vivo con los datos actuales">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          Descargar Excel en Vivo
+        </a>
+
+        <!-- Current User Profile & Role Indicator -->
+        <div id="user-profile-badge" class="bg-brand-800 px-3 py-1.5 rounded-xl border border-brand-700 flex items-center gap-2.5 text-xs">
+          <div id="user-role-icon" class="w-6 h-6 rounded-full bg-brand-700 flex items-center justify-center text-cyan-300 font-bold">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+          </div>
+          <div>
+            <div id="user-display-name" class="font-bold text-white text-[11px] leading-tight">Cargando...</div>
+            <div id="user-role-badge" class="text-[10px] font-semibold text-cyan-300 uppercase tracking-wider">ROL</div>
+          </div>
+          <button onclick="abrirModalLogin()" class="ml-2 text-slate-300 hover:text-white p-1 rounded hover:bg-brand-700/50" title="Cambiar de usuario o rol">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Clock -->
+        <div class="hidden sm:flex bg-brand-800/60 px-2.5 py-1.5 rounded-lg border border-brand-700 text-xs text-slate-300 items-center gap-1.5">
+          <i data-lucide="clock" class="w-3 h-3 text-cyan-400"></i>
+          <span id="reloj-vivo">--:--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-brand-800/90 border-t border-brand-700/60 px-4 sm:px-8">
+      <div class="max-w-7xl mx-auto flex space-x-2 sm:space-x-4 overflow-x-auto py-2 text-sm" id="nav-tabs">
+        <button onclick="cambiarTab('atencion')" id="tab-btn-atencion" class="nav-tab active-tab flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition">
+          <i data-lucide="stethoscope" class="w-4 h-4"></i>
+          Nueva Atención (Despacho)
+        </button>
+        <button onclick="cambiarTab('inventario')" id="tab-btn-inventario" class="nav-tab flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition">
+          <i data-lucide="package" class="w-4 h-4"></i>
+          Inventario & Bodega
+          <span id="badge-alertas" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>
+        </button>
+        <button onclick="cambiarTab('pacientes')" id="tab-btn-pacientes" class="nav-tab flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          Expediente de Pacientes
+        </button>
+        <button onclick="cambiarTab('estadisticas')" id="tab-btn-estadisticas" class="nav-tab flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          Estadísticas de Consumo
+        </button>
+        <button onclick="cambiarTab('historial')" id="tab-btn-historial" class="nav-tab flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition">
+          <i data-lucide="history" class="w-4 h-4"></i>
+          Historial de Atenciones
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- Flash Notification Banner -->
+    <div id="toast-banner" class="hidden mb-6 p-4 rounded-xl border shadow-md flex items-start justify-between transition-all">
+      <div class="flex items-center gap-3">
+        <div id="toast-icon"></div>
+        <div>
+          <h4 id="toast-title" class="text-sm font-bold"></h4>
+          <p id="toast-msg" class="text-xs mt-0.5"></p>
+        </div>
+      </div>
+      <button onclick="cerrarToast()" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Banner Informativo de Rol Activo -->
+    <div id="role-info-banner" class="mb-5 p-3 rounded-xl border text-xs flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span id="role-banner-badge" class="font-bold px-2 py-0.5 rounded-full text-[10px]">ROL</span>
+        <span id="role-banner-desc" class="text-slate-700"></span>
+      </div>
+      <span class="text-[11px] text-slate-400">Sesión activa y segura</span>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: NUEVA ATENCIÓN Y DESPACHO AUTOMÁTICO               -->
+    <!-- ======================================================== -->
+    <section id="tab-atencion" class="tab-pane block">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Formulario Izquierdo -->
+        <div class="lg:col-span-8 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-5 h-5 text-brand-600"></i>
+                Registro de Atención Médica & Receta
+              </h2>
+              <p class="text-xs text-slate-500">Al registrar la consulta, las medicinas se descuentan automáticamente del stock físico.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-semibold text-slate-600">Fecha:</label>
+              <input type="date" id="atencion-fecha" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Permiso de Auditoría: Deshabilitar formulario para auditores -->
+          <div id="atencion-readonly-notice" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center gap-2 font-medium">
+            <i data-lucide="eye" class="w-4 h-4 text-amber-600"></i>
+            Modo Auditoría / Consulta: Este rol es de solo lectura. Para registrar consultas, inicie sesión como Enfermería o Administrador.
+          </div>
+
+          <form id="form-atencion" onsubmit="guardarAtencion(event)">
+            <!-- Datos del Paciente -->
+            <div class="mb-6 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                  <i data-lucide="user" class="w-3.5 h-3.5 text-brand-500"></i>
+                  Datos del Trabajador / Paciente
+                </h3>
+                <span class="text-[11px] text-slate-400">Escribe cédula o nombre para autocompletar</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Cédula</label>
+                  <input type="text" id="pac-cedula" placeholder="Ej. 1724541642" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" oninput="buscarSugerenciaPaciente(this.value)">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Nombres *</label>
+                  <input type="text" id="pac-nombres" required placeholder="Nombres completos" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Apellidos *</label>
+                  <input type="text" id="pac-apellidos" required placeholder="Apellidos completos" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Edad</label>
+                  <input type="number" id="pac-edad" placeholder="Años" min="15" max="90" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Celular</label>
+                  <input type="text" id="pac-celular" placeholder="099..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Piso / Área</label>
+                  <input type="text" id="pac-piso" placeholder="Ej. Piso 2 / Mantenimiento" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+              </div>
+
+              <!-- Sugerencias desplegables de autocompletado -->
+              <div id="pac-sugerencias" class="hidden mt-2 bg-white border border-slate-300 rounded-lg shadow-lg max-h-40 overflow-y-auto divide-y divide-slate-100 text-xs z-20"></div>
+            </div>
+
+            <!-- Diagnóstico y Observaciones -->
+            <div class="mb-6">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-500"></i>
+                Diagnóstico / Motivo de Consulta *
+              </label>
+              <input type="text" id="atencion-diagnostico" required placeholder="Ej. Cefalea intensa, Dolor muscular lumbar, Acidez estomacal..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none mb-2">
+              
+              <!-- Chips rápidos -->
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[11px] text-slate-400 self-center mr-1">Rápidos:</span>
+                <button type="button" onclick="setDiag('Cefalea / Dolor de cabeza')" class="diag-chip">Dolor de Cabeza</button>
+                <button type="button" onclick="setDiag('Dismenorrea / Cólicos menstruales')" class="diag-chip">Cólicos</button>
+                <button type="button" onclick="setDiag('Lumbalgia / Tensión muscular')" class="diag-chip">Dolor Muscular</button>
+                <button type="button" onclick="setDiag('Epigastralgia / Acidez estomacal')" class="diag-chip">Gastritis / Acidez</button>
+                <button type="button" onclick="setDiag('Cuadro gripal / Malestar general')" class="diag-chip">Gripe / Resfriado</button>
+                <button type="button" onclick="setDiag('Amigdalitis / Ardor de garganta')" class="diag-chip">Garganta</button>
+                <button type="button" onclick="setDiag('Curación de herida / Traumatismo')" class="diag-chip">Herida / Golpe</button>
+              </div>
+            </div>
+
+            <!-- Medicamentos a Despachar -->
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                  <i data-lucide="pill" class="w-3.5 h-3.5 text-brand-500"></i>
+                  Medicinas o Insumos a Entregar *
+                </label>
+                <span class="text-[11px] text-slate-400">Puedes recetar varios productos en la misma atención</span>
+              </div>
+
+              <!-- Lista dinámica de renglones de medicina -->
+              <div id="receta-items" class="space-y-2.5"></div>
+
+              <button type="button" onclick="agregarRenglonReceta()" id="btn-add-renglon" class="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-700 font-semibold bg-brand-50 hover:bg-brand-100 border border-brand-200 px-3 py-1.5 rounded-lg transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                + Agregar otro medicamento a esta atención
+              </button>
+            </div>
+
+            <!-- Observaciones adicionales -->
+            <div class="mb-6">
+              <label class="block text-xs font-medium text-slate-700 mb-1">Observaciones / Indicaciones adicionales (Opcional)</label>
+              <textarea id="atencion-obs" rows="2" placeholder="Indicaciones médicas dadas al paciente, reposo, recomendaciones..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+            </div>
+
+            <!-- Botón Guardar -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="reset" onclick="resetFormAtencion()" id="btn-limpiar-atencion" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium transition">
+                Limpiar
+              </button>
+              <button type="submit" id="btn-guardar-atencion" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-md transition-all">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                Guardar Atención y Descontar Stock
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Panel Lateral Derecho: Resumen y Alertas -->
+        <div class="lg:col-span-4 space-y-5">
+          <!-- Tarjeta de Alerta de Stock Crítico -->
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3 flex items-center gap-1.5">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              Alertas de Stock en Bodega
+            </h3>
+            <div id="panel-alertas-stock" class="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs">
+              <div class="text-slate-400 py-4 text-center">Cargando alertas...</div>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Ayuda / Marcas comerciales -->
+          <div class="bg-gradient-to-br from-brand-50 to-sky-50 rounded-2xl p-5 shadow-sm border border-brand-100 text-xs">
+            <h3 class="font-bold text-brand-900 mb-2 flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-4 h-4 text-brand-600"></i>
+              Traductor Automático de Marcas
+            </h3>
+            <p class="text-slate-600 mb-2 leading-relaxed">
+              No necesitas recordar nombres técnicos. Si buscas por la marca comercial común, el sistema la reconoce y descuenta automáticamente:
+            </p>
+            <ul class="space-y-1 text-slate-700 list-disc pl-4 text-[11px]">
+              <li><b>Analgan</b> &rarr; Paracetamol 1 gr</li>
+              <li><b>Acitip</b> &rarr; Magaldrato + Simeticona</li>
+              <li><b>Digesflat / Digespar</b> &rarr; Pancreatina</li>
+              <li><b>Finalin</b> &rarr; Finalin Fem 300mg</li>
+              <li><b>Sal Andrews</b> &rarr; Bicarbonato Efervescente</li>
+              <li><b>Activox</b> &rarr; Caramelos Miel o Menta</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: INVENTARIO & BODEGA EN VIVO                       -->
+    <!-- ======================================================== -->
+    <section id="tab-inventario" class="tab-pane hidden">
+      <!-- Barra superior de inventario -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex flex-1 items-center gap-3">
+            <div class="relative flex-1 max-w-md">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <input type="text" id="filtro-inv-busqueda" oninput="filtrarInventario()" placeholder="Buscar por medicamento, marca (Analgan, Acitip) o código..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+            <select id="filtro-inv-categoria" onchange="filtrarInventario()" class="border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+              <option value="">Todas las categorías</option>
+              <option value="Medicamento">Medicamentos</option>
+              <option value="Insumo Médico">Insumos Médicos</option>
+              <option value="ALERTAS">🚨 Solo Alertas (Bajo / Agotado)</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Botón exclusivo para Administrador: Crear Medicamento -->
+            <button onclick="abrirModalNuevoMedicamento()" id="btn-admin-nuevo-producto" class="hidden inline-flex items-center gap-2 bg-purple-700 hover:bg-purple-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm">
+              <i data-lucide="package-plus" class="w-4 h-4"></i>
+              + Nuevo Medicamento
+            </button>
+            <button onclick="abrirModalEntrada()" id="btn-ingreso-bodega" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              + Registrar Ingreso a Bodega
+            </button>
+          </div>
+        </div>
+
+        <!-- Métricas Rápidas -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100 text-xs">
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <span class="text-slate-500 block text-[11px]">Unidades en Bodega</span>
+            <span id="metric-inv-total-unidades" class="text-base font-bold text-slate-800">0</span>
+          </div>
+          <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+            <span class="text-emerald-700 block text-[11px]">En Stock Óptimo</span>
+            <span id="metric-inv-disponibles" class="text-base font-bold text-emerald-700">0</span>
+          </div>
+          <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+            <span class="text-amber-700 block text-[11px]">Stock Bajo / Alerta</span>
+            <span id="metric-inv-bajos" class="text-base font-bold text-amber-700">0</span>
+          </div>
+          <div class="bg-rose-50 p-3 rounded-xl border border-rose-100">
+            <span class="text-rose-700 block text-[11px]">Agotados</span>
+            <span id="metric-inv-agotados" class="text-base font-bold text-rose-700">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Medicamentos -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Código</th>
+                <th class="py-3 px-4">Medicamento / Insumo</th>
+                <th class="py-3 px-4">Presentación</th>
+                <th class="py-3 px-4">Concentración</th>
+                <th class="py-3 px-4">Marcas / Sinónimos</th>
+                <th class="py-3 px-4 text-center">Stock Bodega</th>
+                <th class="py-3 px-4 text-center">Mínimo</th>
+                <th class="py-3 px-4 text-center">Estado</th>
+                <th class="py-3 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-inventario-body" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="9" class="text-center py-8 text-slate-400">Cargando inventario...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: EXPEDIENTE DE PACIENTES                            -->
+    <!-- ======================================================== -->
+    <section id="tab-pacientes" class="tab-pane hidden">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-brand-600"></i>
+              Directorio de Trabajadores & Historial Médico
+            </h2>
+            <p class="text-xs text-slate-500">Haz clic en cualquier paciente para ver todas sus consultas, fechas, diagnósticos y recetas.</p>
+          </div>
+          <div class="relative max-w-xs w-full">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input type="text" id="filtro-pac-busqueda" oninput="buscarPacientes(this.value)" placeholder="Buscar por nombre o cédula..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Pacientes -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Cédula</th>
+                <th class="py-3 px-4">Trabajador / Paciente</th>
+                <th class="py-3 px-4 text-center">Edad</th>
+                <th class="py-3 px-4">Celular</th>
+                <th class="py-3 px-4">Piso / Área</th>
+                <th class="py-3 px-4 text-center">Total Atenciones</th>
+                <th class="py-3 px-4 text-center">Última Visita</th>
+                <th class="py-3 px-4 text-center">Expediente</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-pacientes-body" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-slate-400">Cargando pacientes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: ESTADÍSTICAS & TENDENCIAS                          -->
+    <!-- ======================================================== -->
+    <section id="tab-estadisticas" class="tab-pane hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold">Total Atenciones Realizadas</span>
+            <div class="p-2 rounded-lg bg-blue-50 text-blue-600"><i data-lucide="clipboard-list" class="w-4 h-4"></i></div>
+          </div>
+          <div id="stat-tot-atenciones" class="text-2xl font-bold text-slate-800">0</div>
+          <span class="text-[11px] text-slate-400">Julio, Agosto y Septiembre 2026</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold">Total Empleados Atendidos</span>
+            <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600"><i data-lucide="users" class="w-4 h-4"></i></div>
+          </div>
+          <div id="stat-tot-pacientes" class="text-2xl font-bold text-slate-800">0</div>
+          <span class="text-[11px] text-slate-400">Personal con expediente activo</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold">Unidades Físicas en Bodega</span>
+            <div class="p-2 rounded-lg bg-cyan-50 text-cyan-600"><i data-lucide="archive" class="w-4 h-4"></i></div>
+          </div>
+          <div id="stat-tot-unidades" class="text-2xl font-bold text-slate-800">0</div>
+          <span class="text-[11px] text-slate-400">100% verificado y cuadrado</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold">Medicamentos en Alerta</span>
+            <div class="p-2 rounded-lg bg-rose-50 text-rose-600"><i data-lucide="alert-octagon" class="w-4 h-4"></i></div>
+          </div>
+          <div id="stat-tot-alertas" class="text-2xl font-bold text-rose-600">0</div>
+          <span class="text-[11px] text-slate-400">Por stock bajo o agotado</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Top Más Consumidos -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i>
+              Top 10 Medicinas Más Consumidas
+            </span>
+            <span class="text-[11px] font-normal text-slate-400">Mayor rotación</span>
+          </h3>
+          <div id="chart-mas-consumidos" class="space-y-3 text-xs">
+            <div class="text-slate-400 text-center py-4">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Top Menos Consumidos (Estancados) -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <i data-lucide="snowflake" class="w-4 h-4 text-cyan-500"></i>
+              Top 10 Medicinas Menos Consumidas (Sin Rotación)
+            </span>
+            <span class="text-[11px] font-normal text-slate-400">Monitorear caducidad</span>
+          </h3>
+          <div id="chart-menos-consumidos" class="space-y-3 text-xs">
+            <div class="text-slate-400 text-center py-4">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Diagnósticos más comunes -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i>
+            Diagnósticos y Patologías Más Frecuentes
+          </h3>
+          <div id="chart-top-diagnosticos" class="space-y-2.5 text-xs">
+            <div class="text-slate-400 text-center py-4">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Distribución Mensual -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-blue-500"></i>
+            Evolución de Consultas por Mes
+          </h3>
+          <div id="chart-mensual" class="space-y-3 text-xs">
+            <div class="text-slate-400 text-center py-4">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: HISTORIAL DE ATENCIONES                            -->
+    <!-- ======================================================== -->
+    <section id="tab-historial" class="tab-pane hidden">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="history" class="w-5 h-5 text-brand-600"></i>
+              Bitácora Histórica de Consultas y Despachos
+            </h2>
+            <p class="text-xs text-slate-500">Registro cronológico de las atenciones realizadas en el dispensario.</p>
+          </div>
+          <a href="/descargar-excel" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3.5 py-2 rounded-xl transition shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Descargar en Excel en Vivo
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Fecha</th>
+                <th class="py-3 px-4">Cédula</th>
+                <th class="py-3 px-4">Paciente</th>
+                <th class="py-3 px-4">Piso / Área</th>
+                <th class="py-3 px-4">Diagnóstico</th>
+                <th class="py-3 px-4">Medicamentos Despachados</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-historial-body" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-slate-400">Cargando historial...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: LOGIN / SELECCIÓN DE ROL                          -->
+  <!-- ======================================================== -->
+  <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-fade-in">
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 rounded-2xl bg-brand-600 text-white mx-auto flex items-center justify-center mb-2 shadow-lg shadow-brand-500/30">
+          <i data-lucide="lock" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">Control de Acceso por Roles</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Selecciona tu perfil de trabajo o ingresa con contraseña</p>
+      </div>
+
+      <!-- Selección Rápida de Perfil -->
+      <div class="space-y-2.5 mb-5">
+        <div onclick="loginRapido('admin', 'admin123')" class="p-3 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 cursor-pointer flex items-center justify-between transition group">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold">
+              <i data-lucide="shield" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="font-bold text-xs text-purple-900 group-hover:text-purple-950">Administrador / Supervisor</div>
+              <div class="text-[11px] text-purple-700">Control total: editar medicamentos, ajustar stock</div>
+            </div>
+          </div>
+          <span class="text-xs text-purple-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
+        </div>
+
+        <div onclick="loginRapido('enfermeria', 'enfermera123')" class="p-3 rounded-xl border border-sky-200 bg-sky-50/60 hover:bg-sky-100/70 cursor-pointer flex items-center justify-between transition group">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold">
+              <i data-lucide="stethoscope" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="font-bold text-xs text-sky-900 group-hover:text-sky-950">Enfermería</div>
+              <div class="text-[11px] text-sky-700">Atención de pacientes, despachos (sin alterar stock)</div>
+            </div>
+          </div>
+          <span class="text-xs text-sky-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
+        </div>
+
+        <div onclick="loginRapido('auditor', 'auditor123')" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition group">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-slate-600 text-white flex items-center justify-center font-bold">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="font-bold text-xs text-slate-800">Auditoría / Consulta</div>
+              <div class="text-[11px] text-slate-500">Solo visualización y descarga de informes</div>
+            </div>
+          </div>
+          <span class="text-xs text-slate-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
+        </div>
+      </div>
+
+      <div class="relative flex py-2 items-center">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="flex-shrink mx-3 text-slate-400 text-[11px]">O ingresar credenciales manuales</span>
+        <div class="flex-grow border-t border-slate-200"></div>
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-3 mt-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Usuario</label>
+          <input type="text" id="login-usuario" required placeholder="admin, enfermeria o auditor" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Contraseña</label>
+          <input type="password" id="login-password" required placeholder="••••••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm">
+            Ingresar al Sistema
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EDITAR / CREAR MEDICAMENTO (ADMINISTRADOR)        -->
+  <!-- ======================================================== -->
+  <div id="modal-editar-med" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 id="modal-editar-med-title" class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-5 h-5 text-purple-600"></i>
+          Editar Medicamento / Insumo
+        </h3>
+        <button onclick="cerrarModalEditarMed()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-editar-med" onsubmit="guardarMedicamentoAdmin(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="edit-med-id">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Código</label>
+            <input type="text" id="edit-med-codigo" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-500">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Categoría *</label>
+            <select id="edit-med-categoria" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              <option value="Medicamento">Medicamento</option>
+              <option value="Insumo Médico">Insumo Médico</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Nombre Oficial / Genérico *</label>
+          <input type="text" id="edit-med-nombre" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none uppercase">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Presentación</label>
+            <input type="text" id="edit-med-presentacion" placeholder="Ej. tabs, amps, fco" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Concentración / Detalle</label>
+            <input type="text" id="edit-med-concentracion" placeholder="Ej. 500 mg, 75 mgs / 3 ml" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Marcas Comerciales / Sinónimos de Búsqueda</label>
+          <input type="text" id="edit-med-marcas" placeholder="Ej. Analgan, Paracetamol 1000mg" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          <span class="text-[10px] text-slate-400">Permite que la enfermera lo encuentre escribiendo la marca comercial</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Stock Mínimo de Alerta *</label>
+            <input type="number" id="edit-med-stockmin" required min="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+          <div id="wrapper-stock-inicial" class="hidden">
+            <label class="block font-medium text-slate-700 mb-1">Stock Inicial de Apertura</label>
+            <input type="number" id="edit-med-stock-inicial" min="0" value="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="cerrarModalEditarMed()" class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white font-semibold shadow-sm transition">
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: AJUSTE MANUAL DE STOCK (ADMINISTRADOR)            -->
+  <!-- ======================================================== -->
+  <div id="modal-ajuste-stock" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-purple-600"></i>
+          Ajuste Físico de Stock (Auditoría)
+        </h3>
+        <button onclick="cerrarModalAjusteStock()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-ajuste-stock" onsubmit="guardarAjusteStockAdmin(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="ajuste-med-id">
+
+        <div class="p-3 bg-purple-50 border border-purple-100 rounded-xl">
+          <div class="font-bold text-purple-950 text-xs" id="ajuste-med-nombre">-</div>
+          <div class="text-[11px] text-purple-800" id="ajuste-med-sub">-</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-500 mb-1">Stock Actual en Sistema</label>
+            <input type="text" id="ajuste-stock-actual" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 font-bold text-slate-700 text-center text-sm">
+          </div>
+          <div>
+            <label class="block font-bold text-purple-900 mb-1">Nuevo Stock Físico Real *</label>
+            <input type="number" id="ajuste-nuevo-stock" required min="0" class="w-full border-2 border-purple-400 rounded-lg px-3 py-2 font-black text-purple-950 text-center text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Motivo Justificado del Ajuste (Obligatorio) *</label>
+          <textarea id="ajuste-motivo" required rows="3" placeholder="Ej. Conteo físico percha Septiembre, producto roto/vencido descartado, regularización de lote..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"></textarea>
+          <span class="text-[10px] text-slate-400">Este motivo quedará asentado en el Kardex como 'AJUSTE_AUDITORIA'.</span>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="cerrarModalAjusteStock()" class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white font-semibold shadow-sm transition">
+            Confirmar y Ajustar Saldo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EXPEDIENTE CLÍNICO DE UN PACIENTE                 -->
+  <!-- ======================================================== -->
+  <div id="modal-expediente" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
+      <div class="px-6 py-4 bg-brand-900 text-white flex items-center justify-between">
+        <div>
+          <h3 id="exp-pac-nombre" class="text-base font-bold">Expediente del Paciente</h3>
+          <p id="exp-pac-sub" class="text-xs text-sky-200"></p>
+        </div>
+        <button onclick="cerrarModalExpediente()" class="text-slate-300 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Cédula</span>
+            <span id="exp-pac-cedula" class="font-semibold text-slate-800">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Edad / Celular</span>
+            <span id="exp-pac-contacto" class="font-semibold text-slate-800">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Piso / Ubicación</span>
+            <span id="exp-pac-piso" class="font-semibold text-slate-800">-</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-1.5 text-xs">
+            <i data-lucide="history" class="w-3.5 h-3.5 text-brand-600"></i>
+            Historial de Consultas Médicas y Recetas
+          </h4>
+          <div id="exp-atenciones-list" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="cerrarModalExpediente()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-medium text-xs">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: REGISTRAR ENTRADA / COMPRA A BODEGA                -->
+  <!-- ======================================================== -->
+  <div id="modal-entrada" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="archive" class="w-5 h-5 text-brand-600"></i>
+          Ingreso de Mercadería a Bodega (Kardex)
+        </h3>
+        <button onclick="cerrarModalEntrada()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-entrada" onsubmit="guardarEntradaBodega(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Medicamento / Insumo *</label>
+          <select id="entrada-med-id" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+            <option value="">Seleccione el producto...</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Cantidad Recibida *</label>
+            <input type="number" id="entrada-cantidad" required min="1" placeholder="Ej. 50" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Fecha de Ingreso *</label>
+            <input type="date" id="entrada-fecha" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Proveedor / Origen</label>
+            <input type="text" id="entrada-proveedor" placeholder="Ej. Farmacia Distrimed" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">N° Factura / Guía</label>
+            <input type="text" id="entrada-factura" placeholder="Ej. FAC-00124" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Lote / Vencimiento</label>
+          <input type="text" id="entrada-lote" placeholder="Ej. Lote 2408 / Vence 2028-12" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Observaciones</label>
+          <textarea id="entrada-obs" rows="2" placeholder="Notas sobre el estado del producto o entrega..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="cerrarModalEntrada()" class="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold shadow-sm transition">
+            Registrar Entrada a Bodega
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: KARDEX MOVIMIENTOS DETALLADOS                     -->
+  <!-- ======================================================== -->
+  <div id="modal-kardex" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
+      <div class="px-6 py-4 bg-slate-800 text-white flex items-center justify-between">
+        <div>
+          <h3 id="kardex-med-titulo" class="text-base font-bold">Kardex de Movimientos</h3>
+          <p id="kardex-med-sub" class="text-xs text-slate-300"></p>
+        </div>
+        <button onclick="cerrarModalKardex()" class="text-slate-300 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+            <tr>
+              <th class="py-2.5 px-3">Fecha</th>
+              <th class="py-2.5 px-3">Tipo</th>
+              <th class="py-2.5 px-3">Concepto / Detalle</th>
+              <th class="py-2.5 px-3 text-center">Cantidad</th>
+              <th class="py-2.5 px-3 text-center">Saldo Anterior</th>
+              <th class="py-2.5 px-3 text-center">Nuevo Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-kardex-modal-body" class="divide-y divide-slate-100">
+            <tr><td colspan="6" class="text-center py-4 text-slate-400">Cargando movimientos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="cerrarModalKardex()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-medium text-xs">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>Dispensario Médico FYDI &copy; 2026 &bull; Control y Auditoría Sanitaria</span>
+      <span class="flex items-center gap-1.5 text-emerald-600 font-medium">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+        Base de Datos Sincronizada con Bodega Física
+      </span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
