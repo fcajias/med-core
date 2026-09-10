@@ -3,6 +3,8 @@ let medicamentosCache = [];
 let pacientesCache = [];
 let renglonesReceta = [];
 let renglonIdCounter = 0;
+let atencionPendiente = null;
+let permisosCache = [];
 
 // Estado de sesión activa
 let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || {
@@ -64,6 +66,7 @@ function aplicarPermisosRol() {
   const btnNuevoProd = document.getElementById("btn-admin-nuevo-producto");
   const readonlyNotice = document.getElementById("atencion-readonly-notice");
   const formAtencion = document.getElementById("form-atencion");
+  const tabPermisosBtn = document.getElementById("tab-btn-permisos");
 
   nameEl.textContent = currentUser.nombre_completo;
   badgeEl.textContent = currentUser.rol;
@@ -74,9 +77,10 @@ function aplicarPermisosRol() {
     bannerContainer.className = "mb-5 p-3 rounded-xl border border-purple-200 bg-purple-50 text-xs flex items-center justify-between";
     bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-purple-200 text-purple-900";
     bannerBadge.textContent = "ROL: ADMINISTRADOR / SUPERVISOR";
-    bannerDesc.textContent = "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico y supervisar auditorías.";
+    bannerDesc.textContent = "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico, anular consultas y configurar permisos.";
     if (btnNuevoProd) btnNuevoProd.classList.remove("hidden");
     if (readonlyNotice) readonlyNotice.classList.add("hidden");
+    if (tabPermisosBtn) tabPermisosBtn.classList.remove("hidden");
     if (formAtencion) {
       formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = false);
     }
@@ -86,9 +90,10 @@ function aplicarPermisosRol() {
     bannerContainer.className = "mb-5 p-3 rounded-xl border border-sky-200 bg-sky-50 text-xs flex items-center justify-between";
     bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
     bannerBadge.textContent = "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
-    bannerDesc.textContent = "Puedes registrar atenciones a pacientes y recetar medicinas (descuento automático). La edición de catálogo y stock está bloqueada por seguridad.";
+    bannerDesc.textContent = "Puedes registrar atenciones a pacientes y recetar medicinas con doble confirmación. La edición de catálogo y ajustes están restringidos.";
     if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
     if (readonlyNotice) readonlyNotice.classList.add("hidden");
+    if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
     if (formAtencion) {
       formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = false);
     }
@@ -101,6 +106,7 @@ function aplicarPermisosRol() {
     bannerDesc.textContent = "Acceso de solo lectura para supervisión de Kardex, bitácora de atenciones y descarga de balances.";
     if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
     if (readonlyNotice) readonlyNotice.classList.remove("hidden");
+    if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
     if (formAtencion) {
       formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = true);
     }
@@ -175,6 +181,8 @@ function cambiarTab(tabName) {
     cargarEstadisticas();
   } else if (tabName === "historial") {
     cargarHistorial();
+  } else if (tabName === "permisos") {
+    cargarMatrizPermisos();
   }
 
   if (window.lucide) {
@@ -422,6 +430,7 @@ async function guardarMedicamentoAdmin(e) {
   const mid = document.getElementById("edit-med-id").value;
   const payload = {
     user_role: currentUser.rol,
+    usuario_registro: currentUser.usuario,
     id: mid ? parseInt(mid) : null,
     categoria: document.getElementById("edit-med-categoria").value,
     nombre: document.getElementById("edit-med-nombre").value.trim().toUpperCase(),
@@ -495,7 +504,8 @@ async function guardarAjusteStockAdmin(e) {
         medicamento_id: mid,
         nuevo_stock: nuevoStock,
         motivo: motivo,
-        admin_nombre: currentUser.nombre_completo
+        admin_nombre: currentUser.nombre_completo,
+        usuario_registro: currentUser.usuario
       })
     });
     const data = await res.json();
@@ -671,7 +681,8 @@ function seleccionarSugerenciaPaciente(p) {
   document.getElementById("pac-sugerencias").classList.add("hidden");
 }
 
-async function guardarAtencion(e) {
+// DOBLE VERIFICACIÓN PREVIA AL DESPACHO
+function prepararConfirmacionAtencion(e) {
   e.preventDefault();
 
   if (currentUser.rol === "AUDITOR") {
@@ -690,14 +701,36 @@ async function guardarAtencion(e) {
   const observaciones = document.getElementById("atencion-obs").value.trim();
 
   const medItems = [];
+  const medSummaryList = [];
+
   for (let rId of renglonesReceta) {
     const sel = document.getElementById(`med-select-${rId}`);
     const cantInput = document.getElementById(`med-cant-${rId}`);
     if (sel && sel.value) {
+      const mid = parseInt(sel.value);
+      const cant = parseInt(cantInput.value || 1);
+      const med = medicamentosCache.find(m => m.id === mid);
+      const nombreMed = med ? med.nombre : "Medicina";
+      const presMed = med ? (med.presentacion || "") : "";
+      const stockActual = med ? med.stock_actual : 0;
+
       medItems.push({
-        medicamento_id: parseInt(sel.value),
-        cantidad: parseInt(cantInput.value || 1)
+        medicamento_id: mid,
+        cantidad: cant
       });
+
+      medSummaryList.push(`
+        <div class="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg">
+          <div>
+            <span class="font-bold text-slate-800">${nombreMed}</span>
+            <span class="text-slate-500 ml-1">(${presMed})</span>
+          </div>
+          <div class="text-right">
+            <span class="font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded">${cant} unid</span>
+            <span class="text-[10px] text-slate-400 block">Stock queda: ${Math.max(0, stockActual - cant)}</span>
+          </div>
+        </div>
+      `);
     }
   }
 
@@ -706,15 +739,33 @@ async function guardarAtencion(e) {
     return;
   }
 
-  const payload = {
+  atencionPendiente = {
     fecha,
     paciente: { cedula, nombres, apellidos, edad, celular, piso_area },
     diagnostico,
     observaciones,
-    medicamentos: medItems
+    medicamentos: medItems,
+    usuario_registro: currentUser.usuario
   };
 
-  const btn = document.getElementById("btn-guardar-atencion");
+  document.getElementById("confirm-paciente-nombre").textContent = `${nombres} ${apellidos}`;
+  document.getElementById("confirm-paciente-detalle").textContent = `C.I: ${cedula || 'S/C'} • Área: ${piso_area || 'General'}`;
+  document.getElementById("confirm-diagnostico").textContent = diagnostico;
+  document.getElementById("confirm-meds-list").innerHTML = medSummaryList.join("");
+
+  document.getElementById("modal-confirmar-despacho").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalConfirmacion() {
+  document.getElementById("modal-confirmar-despacho").classList.add("hidden");
+  atencionPendiente = null;
+}
+
+async function ejecutarGuardadoAtencion() {
+  if (!atencionPendiente) return;
+
+  const btn = document.getElementById("btn-confirmar-definitivo");
   btn.disabled = true;
   btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Descontando de bodega...`;
 
@@ -722,7 +773,7 @@ async function guardarAtencion(e) {
     const res = await fetch("/api/atenciones", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(atencionPendiente)
     });
 
     const data = await res.json();
@@ -730,6 +781,7 @@ async function guardarAtencion(e) {
       showToast("Error en Despacho", data.error || "No se pudo registrar la atención.", "error");
     } else {
       showToast("¡Atención y Despacho Registrados!", `${data.mensaje} Paciente: ${data.paciente}.`, "success");
+      cerrarModalConfirmacion();
       resetFormAtencion();
       cargarMedicamentos();
       cargarPacientes();
@@ -740,7 +792,75 @@ async function guardarAtencion(e) {
     showToast("Error de Conexión", err.message, "error");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Guardar Atención y Descontar Stock`;
+    btn.innerHTML = `Confirmar y Despachar`;
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+// ANULACIÓN DE ATENCIÓN Y REVERSIÓN DE STOCK
+function abrirModalAnulacion(atencionId, pacienteNombre, medsSummary) {
+  if (currentUser.rol === "AUDITOR") {
+    showToast("Acceso Denegado", "El rol de Auditoría no puede anular atenciones.", "error");
+    return;
+  }
+
+  document.getElementById("anular-atencion-id").value = atencionId;
+  document.getElementById("anular-info-id").textContent = `#${atencionId}`;
+  document.getElementById("anular-info-paciente").textContent = pacienteNombre;
+  document.getElementById("anular-info-meds").innerHTML = medsSummary;
+  document.getElementById("anular-motivo").value = "";
+
+  document.getElementById("modal-anular-atencion").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalAnulacion() {
+  document.getElementById("modal-anular-atencion").classList.add("hidden");
+}
+
+async function ejecutarAnulacionAtencion(e) {
+  e.preventDefault();
+  const atencionId = parseInt(document.getElementById("anular-atencion-id").value);
+  const motivo = document.getElementById("anular-motivo").value.trim();
+
+  if (!motivo) {
+    showToast("Motivo Obligatorio", "Debe ingresar una justificación para revertir la consulta y devolver el stock.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("btn-confirmar-anulacion");
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Reversando stock...`;
+
+  try {
+    const res = await fetch("/api/atenciones/anular", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        atencion_id: atencionId,
+        motivo: motivo,
+        usuario_anula: currentUser.usuario,
+        rol: currentUser.rol
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Error al Anular", data.error || "No se pudo anular la atención.", "error");
+    } else {
+      showToast("Consulta Reversada", data.mensaje, "warning");
+      cerrarModalAnulacion();
+      cerrarModalExpediente();
+      cargarMedicamentos();
+      cargarPacientes();
+      cargarEstadisticas();
+      cargarHistorial();
+    }
+  } catch (err) {
+    showToast("Error de Red", err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Confirmar Anulación y Devolver`;
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -799,7 +919,18 @@ async function guardarEntradaBodega(e) {
     const res = await fetch("/api/entradas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ medicamento_id: mid, cantidad: cant, fecha, proveedor, factura, lote, observaciones })
+      body: JSON.stringify({
+        user_role: currentUser.rol,
+        usuario_nombre: currentUser.nombre_completo,
+        usuario_registro: currentUser.usuario,
+        medicamento_id: mid,
+        cantidad: cant,
+        fecha,
+        proveedor,
+        factura,
+        lote,
+        observaciones
+      })
     });
     const data = await res.json();
     if (!res.ok) {
@@ -823,7 +954,7 @@ async function abrirModalKardex(medId, medNombre, medPres) {
   document.getElementById("kardex-med-sub").textContent = `Presentación: ${medPres || 'N/A'} - Movimientos cronológicos`;
 
   const tbody = document.getElementById("tabla-kardex-modal-body");
-  tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">Cargando movimientos...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-slate-400">Cargando movimientos...</td></tr>`;
   document.getElementById("modal-kardex").classList.remove("hidden");
   if (window.lucide) lucide.createIcons();
 
@@ -832,7 +963,7 @@ async function abrirModalKardex(medId, medNombre, medPres) {
     const list = await res.json();
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">Sin movimientos registrados.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-slate-400">Sin movimientos registrados.</td></tr>`;
       return;
     }
 
@@ -842,6 +973,8 @@ async function abrirModalKardex(medId, medNombre, medPres) {
         badge = `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">+ ENTRADA</span>`;
       } else if (k.tipo_movimiento === "AJUSTE_AUDITORIA") {
         badge = `<span class="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[10px]">⚙️ AJUSTE</span>`;
+      } else if (k.tipo_movimiento === "REVERSION_ANULACION") {
+        badge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">↩️ REVERSIÓN</span>`;
       } else {
         badge = `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]">- SALIDA</span>`;
       }
@@ -856,11 +989,12 @@ async function abrirModalKardex(medId, medNombre, medPres) {
           </td>
           <td class="py-2 px-3 text-center text-slate-400">${k.stock_anterior}</td>
           <td class="py-2 px-3 text-center font-bold text-slate-800 bg-slate-50">${k.stock_nuevo}</td>
+          <td class="py-2 px-3 text-slate-600 font-mono text-[11px]">${k.usuario_registro || 'sistema'}</td>
         </tr>
       `;
     }).join("");
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-rose-500">Error al cargar Kardex: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-rose-500">Error al cargar Kardex: ${err.message}</td></tr>`;
   }
 }
 
@@ -943,22 +1077,55 @@ async function abrirModalExpediente(pid) {
       return;
     }
 
+    const esAdmin = currentUser.rol === "ADMINISTRADOR";
+
     atListDiv.innerHTML = pac.historial.map(at => {
+      const esAnulada = at.estado === "ANULADA";
       const medListHtml = at.medicamentos && at.medicamentos.length > 0 
-        ? at.medicamentos.map(m => `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-slate-700">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
+        ? at.medicamentos.map(m => `<span class="bg-white border ${esAnulada ? 'border-slate-200 text-slate-400 line-through' : 'border-slate-200 text-slate-700'} px-2 py-0.5 rounded text-[11px] font-medium">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
         : `<span class="text-slate-400 italic">Solo consulta / curación</span>`;
 
+      const medsSummaryEscaped = at.medicamentos && at.medicamentos.length > 0
+        ? at.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>")
+        : "Sin medicinas";
+
+      const pacNombre = `${pac.nombres} ${pac.apellidos}`.replace(/'/g, "\\'");
+
+      let anularBtnHtml = "";
+      if (!esAnulada && esAdmin) {
+        anularBtnHtml = `
+          <button onclick="abrirModalAnulacion(${at.id}, '${pacNombre}', '${medsSummaryEscaped}')" class="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition">
+            Anular
+          </button>
+        `;
+      }
+
       return `
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 ${esAnulada ? 'opacity-70 bg-slate-100/60' : ''}">
           <div class="flex items-center justify-between">
-            <span class="font-mono font-bold text-slate-800 text-xs">${at.fecha}</span>
-            <span class="text-[11px] text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded">Atención #${at.id}</span>
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-bold text-slate-800 text-xs">${at.fecha}</span>
+              ${esAnulada 
+                ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]" title="${at.motivo_anulacion || ''}">ANULADA</span>`
+                : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">ACTIVA</span>`}
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded">Atención #${at.id}</span>
+              ${anularBtnHtml}
+            </div>
           </div>
-          <div class="text-slate-800 font-semibold text-xs">Diagnóstico: <span class="font-normal">${at.diagnostico}</span></div>
+          <div class="text-slate-800 font-semibold text-xs">
+            Diagnóstico: <span class="font-normal ${esAnulada ? 'line-through text-slate-400' : ''}">${at.diagnostico}</span>
+          </div>
           <div class="pt-1 flex flex-wrap gap-1 items-center">
             <span class="text-[10px] uppercase font-bold text-slate-400">Medicinas:</span>
             ${medListHtml}
           </div>
+          ${esAnulada && at.motivo_anulacion ? `
+            <div class="text-[11px] text-rose-700 bg-rose-50 p-1.5 rounded border border-rose-100">
+              <strong>Motivo anulación:</strong> ${at.motivo_anulacion} (por ${at.anulado_por || 'admin'})
+            </div>
+          ` : ''}
         </div>
       `;
     }).join("");
@@ -1052,7 +1219,7 @@ async function cargarEstadisticas() {
 }
 
 // ================================================================
-// 8. HISTORIAL GENERAL
+// 8. HISTORIAL GENERAL (CON TRAZABILIDAD DE USUARIO Y ANULACIÓN)
 // ================================================================
 async function cargarHistorial() {
   try {
@@ -1062,28 +1229,186 @@ async function cargarHistorial() {
     if (!tbody) return;
 
     if (atenciones.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Sin atenciones registradas.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Sin atenciones registradas.</td></tr>`;
       return;
     }
 
+    const esAdmin = currentUser.rol === "ADMINISTRADOR";
+
     tbody.innerHTML = atenciones.map(a => {
-      const medList = a.medicamentos && a.medicamentos.length > 0
-        ? a.medicamentos.map(m => `<span class="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[11px] text-slate-800 font-medium">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
-        : `<span class="text-slate-400 italic">Procedimiento</span>`;
+      const esAnulada = a.estado === "ANULADA";
+
+      let medList = "";
+      if (a.medicamentos && a.medicamentos.length > 0) {
+        medList = a.medicamentos.map(m => `
+          <span class="px-2 py-0.5 rounded text-[11px] font-medium border ${esAnulada ? 'bg-slate-100 text-slate-400 line-through border-slate-200' : 'bg-brand-50 text-brand-800 border-brand-200'}">
+            ${m.nombre} (${m.presentacion || ''}) x${m.cantidad}
+          </span>
+        `).join(" ");
+      } else {
+        medList = `<span class="text-slate-400 italic">Procedimiento</span>`;
+      }
+
+      const medsSummaryEscaped = a.medicamentos && a.medicamentos.length > 0
+        ? a.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>")
+        : "Sin medicinas";
+
+      const estadoBadge = esAnulada
+        ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1" title="${a.motivo_anulacion || 'Consulta anulada'}">
+             <i data-lucide="ban" class="w-3 h-3"></i> ANULADA
+           </span>`
+        : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+             <i data-lucide="check" class="w-3 h-3"></i> ACTIVA
+           </span>`;
+
+      let accionesHtml = "";
+      if (esAnulada) {
+        accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">Reversada</span>`;
+      } else if (esAdmin) {
+        const pacienteNombreCompleto = `${a.nombres} ${a.apellidos}`.replace(/'/g, "\\'");
+        accionesHtml = `
+          <button onclick="abrirModalAnulacion(${a.id}, '${pacienteNombreCompleto}', '${medsSummaryEscaped}')" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
+            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Anular
+          </button>
+        `;
+      } else {
+        accionesHtml = `<span class="text-slate-300 text-[11px]">-</span>`;
+      }
 
       return `
-        <tr class="hover:bg-slate-50/80 transition">
-          <td class="py-2.5 px-4 font-mono font-medium text-slate-700">${a.fecha}</td>
-          <td class="py-2.5 px-4 font-mono text-slate-600">${a.cedula || '<span class="text-slate-300">S/C</span>'}</td>
-          <td class="py-2.5 px-4 font-bold text-slate-800">${a.nombres} ${a.apellidos}</td>
-          <td class="py-2.5 px-4 text-slate-600">${a.piso_area || '-'}</td>
-          <td class="py-2.5 px-4 text-slate-700">${a.diagnostico}</td>
-          <td class="py-2.5 px-4 flex flex-wrap gap-1 items-center">${medList}</td>
+        <tr class="hover:bg-slate-50/80 transition ${esAnulada ? 'bg-slate-50/40 opacity-75' : ''}">
+          <td class="py-2.5 px-3">
+            <span class="font-mono font-bold text-slate-800 text-xs">#${a.id}</span>
+            <span class="block font-mono text-[11px] text-slate-400">${a.fecha}</span>
+          </td>
+          <td class="py-2.5 px-3 text-center">${estadoBadge}</td>
+          <td class="py-2.5 px-3">
+            <div class="font-bold text-slate-800 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.nombres} ${a.apellidos}</div>
+            <div class="text-[11px] font-mono text-slate-400">${a.cedula || 'Sin Cédula'}</div>
+          </td>
+          <td class="py-2.5 px-3 text-slate-600">${a.piso_area || '-'}</td>
+          <td class="py-2.5 px-3 font-medium text-slate-700 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.diagnostico}</td>
+          <td class="py-2.5 px-3 flex flex-wrap gap-1 items-center">${medList}</td>
+          <td class="py-2.5 px-3">
+            <span class="font-semibold text-slate-700 capitalize text-xs">${a.usuario_registro || 'sistema'}</span>
+            ${esAnulada && a.anulado_por ? `<div class="text-[10px] text-rose-600 font-medium">Anuló: ${a.anulado_por}</div>` : ''}
+          </td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">${accionesHtml}</td>
         </tr>
       `;
     }).join("");
 
+    if (window.lucide) lucide.createIcons();
+
   } catch (err) {
     console.error("Error al cargar historial:", err);
+  }
+}
+
+// ================================================================
+// 9. CONFIGURACIÓN Y MATRIZ DE PERMISOS (ADMINISTRADOR)
+// ================================================================
+const FUNCIONES_SISTEMA = [
+  { clave: "registrar_atenciones", nombre: "Registrar Atenciones Clínicas y Despacho", desc: "Permite atender pacientes y descontar recetas automáticamente de bodega." },
+  { clave: "anular_atenciones", nombre: "Anular Atenciones y Reversar Stock", desc: "Permite cancelar consultas erróneas devolviendo los medicamentos al inventario." },
+  { clave: "registrar_entradas", nombre: "Ingresar Compras / Donaciones a Bodega", desc: "Permite asentar ingresos de mercadería en el Kardex y subir stock." },
+  { clave: "ajustar_stock", nombre: "Ajuste Físico de Stock (Auditoría)", desc: "Permite cambiar saldos para cuadrar con el conteo físico en perchas." },
+  { clave: "gestionar_medicamentos", nombre: "Crear y Editar Medicamentos en Catálogo", desc: "Permite modificar nombres, presentaciones, marcas y agregar nuevos fármacos." },
+  { clave: "gestionar_permisos", nombre: "Administrar Matriz de Permisos de Roles", desc: "Permite personalizar accesos y exclusiones para cada perfil." },
+  { clave: "descargar_excel", nombre: "Descargar Reportes en Excel Maestro", desc: "Permite exportar balances en vivo, bitácora y Kardex a formato Excel." }
+];
+
+async function cargarMatrizPermisos() {
+  if (currentUser.rol !== "ADMINISTRADOR") {
+    showToast("Permiso Denegado", "Solo el Administrador puede ver o modificar la matriz de permisos.", "error");
+    return;
+  }
+
+  const tbody = document.getElementById("tabla-permisos-body");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Cargando matriz de permisos...</td></tr>`;
+
+  try {
+    const res = await fetch("/api/permisos");
+    permisosCache = await res.json();
+
+    const permMap = {};
+    permisosCache.forEach(p => {
+      permMap[p.rol] = p;
+    });
+
+    tbody.innerHTML = FUNCIONES_SISTEMA.map(f => {
+      const adminChecked = permMap["ADMINISTRADOR"] ? (permMap["ADMINISTRADOR"][f.clave] === 1) : true;
+      const enfChecked = permMap["ENFERMERIA"] ? (permMap["ENFERMERIA"][f.clave] === 1) : false;
+      const audChecked = permMap["AUDITOR"] ? (permMap["AUDITOR"][f.clave] === 1) : false;
+
+      // Administrador siempre tiene gestionar_permisos deshabilitado (bloqueado en true por seguridad)
+      const adminDisabled = f.clave === "gestionar_permisos" ? "disabled" : "";
+
+      return `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-800 text-xs">${f.nombre}</div>
+            <div class="text-[11px] text-slate-500">${f.desc}</div>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <input type="checkbox" id="perm-ADMINISTRADOR-${f.clave}" ${adminChecked ? 'checked' : ''} ${adminDisabled} class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+          </td>
+          <td class="py-3 px-4 text-center">
+            <input type="checkbox" id="perm-ENFERMERIA-${f.clave}" ${enfChecked ? 'checked' : ''} class="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer">
+          </td>
+          <td class="py-3 px-4 text-center">
+            <input type="checkbox" id="perm-AUDITOR-${f.clave}" ${audChecked ? 'checked' : ''} class="w-4 h-4 text-slate-600 rounded border-slate-300 focus:ring-slate-500 cursor-pointer">
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-rose-500">Error al cargar matriz: ${err.message}</td></tr>`;
+  }
+}
+
+async function guardarMatrizPermisos() {
+  if (currentUser.rol !== "ADMINISTRADOR") {
+    showToast("Permiso Denegado", "Solo el Administrador puede guardar la matriz de permisos.", "error");
+    return;
+  }
+
+  const roles = ["ADMINISTRADOR", "ENFERMERIA", "AUDITOR"];
+  const matrix = roles.map(rol => {
+    const obj = { rol };
+    FUNCIONES_SISTEMA.forEach(f => {
+      const cb = document.getElementById(`perm-${rol}-${f.clave}`);
+      if (rol === "ADMINISTRADOR" && f.clave === "gestionar_permisos") {
+        obj[f.clave] = 1;
+      } else {
+        obj[f.clave] = cb && cb.checked ? 1 : 0;
+      }
+    });
+    return obj;
+  });
+
+  try {
+    const res = await fetch("/api/permisos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_role: currentUser.rol,
+        permisos: matrix
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Error", data.error || "No se pudo actualizar los permisos.", "error");
+    } else {
+      showToast("Permisos Actualizados", "La matriz de accesos y exclusiones se guardó correctamente.", "success");
+      aplicarPermisosRol();
+    }
+  } catch (err) {
+    showToast("Error de Conexión", err.message, "error");
   }
 }

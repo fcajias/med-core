@@ -2,18 +2,26 @@
 
 Sistema integral para la gestión médica y control de inventario farmacéutico desarrollado para el dispensario médico ocupacional FYDI.
 
+## 📖 Manual de Usuario y Sistema
+Para una explicación paso a paso de cada módulo, consulte el documento completo:
+👉 **[MANUAL DE USUARIO Y SISTEMA (MANUAL_DE_USUARIO_Y_SISTEMA.md)](MANUAL_DE_USUARIO_Y_SISTEMA.md)**
+
+---
+
 ## 🚀 Características Principales
 
-- **Gestión Clínica & Despacho Automático:** Registro de atenciones médicas con recetas múltiples. El stock se descuenta en tiempo real de bodega mediante transacciones atómicas.
-- **Traductor de Marcas Comerciales a Genéricos:** Búsqueda predictiva (Analgan, Acitip, Digesflat, Finalin, Sal Andrews, etc.).
-- **Control de Bodega & Kardex en Tiempo Real:** 57 ítems de catálogo cuadrados al 100% con la toma física de bodega. Trazabilidad completa de entradas, salidas y ajustes.
-- **Control de Acceso por Roles (RBAC):**
-  - 🛡️ **Administrador:** Control total, edición de catálogo, ajuste físico justificado de stock y registro de entradas.
-  - 🩺 **Enfermería:** Registro de atenciones y recetas (descuento automático). Bloqueado para alterar inventario o catálogo.
+- **Gestión Clínica & Despacho Asistido:** Registro de atenciones médicas con recetas múltiples y autocompletado inteligente de pacientes por cédula o nombre.
+- **Doble Verificación Previa (Double-Check):** Modal de confirmación antes de guardar para verificar paciente, diagnóstico y medicinas a descontar, evitando errores involuntarios.
+- **Anulación y Reversión Automática de Stock:** Si se registra una atención por error o de prueba, el Administrador puede anularla con motivo obligatorio; el sistema reintegra automáticamente las unidades a la bodega y asienta el movimiento `REVERSION_ANULACION` en el Kardex.
+- **Trazabilidad Total de Usuario (`usuario_registro`):** Cada consulta, entrada a bodega, ajuste físico o anulación queda registrada con el usuario y rol exacto que la ejecutó.
+- **Control de Acceso por Roles (RBAC) & Matriz de Permisos:**
+  - 🛡️ **Administrador / Supervisor:** Control total, edición de catálogo, ajuste físico justificado, anulación de consultas y configuración dinámica de la matriz de permisos.
+  - 🩺 **Enfermería:** Registro de atenciones y recetas con doble confirmación. Bloqueado para alterar inventario o catálogo.
   - 👁️ **Auditoría / Consulta:** Visualización y descarga de balances sin permisos de modificación.
-- **Generación Dinámica de Excel:** Descarga en vivo del balance maestro (`.xlsx`) consultando la base de datos al segundo exacto de la petición.
+- **Generador de Excel en Tiempo Real:** Descarga en vivo del balance maestro (`.xlsx`) consultando la base de datos al segundo exacto de la petición, con 4 hojas profesionales (`INVENTARIO_ACTUAL`, `PARTE_DIARIO`, `KARDEX_MOVIMIENTOS`, `ESTADISTICAS_CONSUMO`).
+- **Control de Bodega Cuadrado al 100%:** 57 ítems de catálogo sincronizados con el conteo físico real de Septiembre 2026.
 - **Directorio y Expediente Clínico de Pacientes:** Historial de consultas, patologías previas y medicamentos recibidos por empleado.
-- **Estadísticas Automáticas:** Top 10 más consumidos, top 10 menos consumidos (medicinas estancadas), patologías frecuentes y evolución mensual.
+- **Estadísticas de Consumo:** Top 10 más consumidos, top 10 estancados, patologías frecuentes y evolución mensual.
 
 ## 💻 Tecnologías Utilizadas
 
@@ -30,11 +38,11 @@ Sistema integral para la gestión médica y control de inventario farmacéutico 
 
 ### 🔑 Credenciales Predeterminadas
 
-| Rol | Usuario | Contraseña |
-| :--- | :--- | :--- |
-| **Administrador** | `admin` | `admin123` |
-| **Enfermería** | `enfermeria` | `enfermera123` |
-| **Auditoría** | `auditor` | `auditor123` |
+| Rol | Usuario | Contraseña | Capacidades Principales |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin` | `admin123` | Control total, ajuste de stock, anulación, permisos |
+| **Enfermería** | `enfermeria` | `enfermera123` | Atención diaria y recetas con doble confirmación |
+| **Auditoría** | `auditor` | `auditor123` | Solo lectura y descarga de reportes en vivo |
 
 ---
-Desarrollado para Dispensario Médico FYDI.
+Desarrollado para Dispensario Médico FYDI — Septiembre 2026.
