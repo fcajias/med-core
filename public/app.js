@@ -409,20 +409,15 @@ function abrirModalNuevoMedicamento() {
   setVal("edit-med-concentracion", "");
   setVal("edit-med-marcas", "");
   setVal("edit-med-stockmin", "10");
+  setVal("edit-med-stock-inicial", "0");
 
-  const labelStock = document.getElementById("label-stock-actual");
-  if (labelStock) {
-    const span = labelStock.querySelector("span");
-    if (span) span.textContent = typeof t === "function" ? t("stock_inicial_apertura") : "Stock Inicial de Apertura *";
-  }
-  const stockActualEl = document.getElementById("edit-med-stock-actual");
-  if (stockActualEl) {
-    stockActualEl.value = "0";
-    stockActualEl.setAttribute("data-prev-stock", "0");
-  }
-  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
-  if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
-  setVal("edit-med-motivo-ajuste", "");
+  // Mostrar selector de stock inicial para producto nuevo
+  const wNuevo = document.getElementById("wrapper-stock-nuevo-prod");
+  if (wNuevo) wNuevo.classList.remove("hidden");
+
+  // Ocultar bloque de stock existente
+  const wEdit = document.getElementById("wrapper-stock-info-edit");
+  if (wEdit) wEdit.classList.add("hidden");
 
   const modal = document.getElementById("modal-editar-med");
   if (modal) modal.classList.remove("hidden");
@@ -443,7 +438,7 @@ function abrirModalEditarMed(medId) {
 
     const titleEl = document.getElementById("modal-editar-med-title");
     if (titleEl) {
-      const editLabel = typeof t === "function" ? t("modal_edit_title") : "Editar Datos";
+      const editLabel = typeof t === "function" ? t("modal_edit_title") : "Editar Ficha Técnica";
       titleEl.innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-purple-600"></i> ${editLabel}: ${med.nombre}`;
     }
 
@@ -460,20 +455,18 @@ function abrirModalEditarMed(medId) {
     setVal("edit-med-concentracion", med.concentracion || "");
     setVal("edit-med-marcas", med.marcas_comerciales || "");
     setVal("edit-med-stockmin", med.stock_minimo);
+    setVal("edit-med-stock-ref", `${med.stock_actual} unid`);
 
-    const labelStock = document.getElementById("label-stock-actual");
-    if (labelStock) {
-      const span = labelStock.querySelector("span");
-      if (span) span.textContent = typeof t === "function" ? t("stock_actual_bodega") : "Stock Actual en Bodega *";
+    // Guardar referencia del ID actual en el botón para ir a Ajuste
+    const wEdit = document.getElementById("wrapper-stock-info-edit");
+    if (wEdit) {
+      wEdit.classList.remove("hidden");
+      wEdit.setAttribute("data-med-id", med.id);
     }
-    const stockActualEl = document.getElementById("edit-med-stock-actual");
-    if (stockActualEl) {
-      stockActualEl.value = med.stock_actual;
-      stockActualEl.setAttribute("data-prev-stock", med.stock_actual);
-    }
-    const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
-    if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
-    setVal("edit-med-motivo-ajuste", "");
+
+    // Ocultar bloque de stock inicial de alta nueva
+    const wNuevo = document.getElementById("wrapper-stock-nuevo-prod");
+    if (wNuevo) wNuevo.classList.add("hidden");
 
     const modal = document.getElementById("modal-editar-med");
     if (modal) modal.classList.remove("hidden");
@@ -484,19 +477,12 @@ function abrirModalEditarMed(medId) {
   }
 }
 
-function verificarCambioStockEdit() {
-  const mid = document.getElementById("edit-med-id").value;
-  const input = document.getElementById("edit-med-stock-actual");
-  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
-  if (!input || !wrapperMotivo) return;
-
-  const prev = parseInt(input.getAttribute("data-prev-stock") || 0);
-  const val = parseInt(input.value || 0);
-
-  if (mid && val !== prev) {
-    wrapperMotivo.classList.remove("hidden");
-  } else {
-    wrapperMotivo.classList.add("hidden");
+function irAAjusteDesdeEdit() {
+  const wEdit = document.getElementById("wrapper-stock-info-edit");
+  const mid = wEdit ? parseInt(wEdit.getAttribute("data-med-id")) : null;
+  cerrarModalEditarMed();
+  if (mid) {
+    abrirModalAjusteStock(mid);
   }
 }
 
@@ -507,8 +493,9 @@ function cerrarModalEditarMed() {
 async function guardarMedicamentoAdmin(e) {
   e.preventDefault();
   const mid = document.getElementById("edit-med-id").value;
-  const stockActual = parseInt(document.getElementById("edit-med-stock-actual").value || 0);
-  const motivoAjuste = document.getElementById("edit-med-motivo-ajuste") ? document.getElementById("edit-med-motivo-ajuste").value.trim() : "";
+  const stockInicial = document.getElementById("edit-med-stock-inicial") 
+    ? parseInt(document.getElementById("edit-med-stock-inicial").value || 0) 
+    : 0;
 
   const payload = {
     user_role: currentUser.rol,
@@ -521,8 +508,7 @@ async function guardarMedicamentoAdmin(e) {
     concentracion: document.getElementById("edit-med-concentracion").value.trim(),
     marcas_comerciales: document.getElementById("edit-med-marcas").value.trim(),
     stock_minimo: parseInt(document.getElementById("edit-med-stockmin").value || 10),
-    stock_actual: stockActual,
-    motivo_ajuste: motivoAjuste
+    stock_inicial: stockInicial
   };
 
   try {
