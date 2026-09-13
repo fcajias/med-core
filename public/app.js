@@ -15,6 +15,7 @@ let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  initIdioma();
   initReloj();
   initFechaHoy();
   aplicarPermisosRol();
@@ -76,8 +77,8 @@ function aplicarPermisosRol() {
     badgeEl.className = "text-[10px] font-bold text-purple-300 uppercase tracking-wider";
     bannerContainer.className = "mb-5 p-3 rounded-xl border border-purple-200 bg-purple-50 text-xs flex items-center justify-between";
     bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-purple-200 text-purple-900";
-    bannerBadge.textContent = "ROL: ADMINISTRADOR / SUPERVISOR";
-    bannerDesc.textContent = "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico, anular consultas y configurar permisos.";
+    bannerBadge.textContent = typeof t === "function" ? t("role_admin_banner") : "ROL: ADMINISTRADOR / SUPERVISOR";
+    bannerDesc.textContent = typeof t === "function" ? t("role_admin_desc") : "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico, anular consultas y configurar permisos.";
     if (btnNuevoProd) btnNuevoProd.classList.remove("hidden");
     if (readonlyNotice) readonlyNotice.classList.add("hidden");
     if (tabPermisosBtn) tabPermisosBtn.classList.remove("hidden");
@@ -89,8 +90,8 @@ function aplicarPermisosRol() {
     badgeEl.className = "text-[10px] font-bold text-sky-300 uppercase tracking-wider";
     bannerContainer.className = "mb-5 p-3 rounded-xl border border-sky-200 bg-sky-50 text-xs flex items-center justify-between";
     bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
-    bannerBadge.textContent = "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
-    bannerDesc.textContent = "Puedes registrar atenciones a pacientes y recetar medicinas con doble confirmación. La edición de catálogo y ajustes están restringidos.";
+    bannerBadge.textContent = typeof t === "function" ? t("role_enf_banner") : "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
+    bannerDesc.textContent = typeof t === "function" ? t("role_enf_desc") : "Puedes registrar atenciones a pacientes y recetar medicinas con doble confirmación. La edición de catálogo y ajustes están restringidos.";
     if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
     if (readonlyNotice) readonlyNotice.classList.add("hidden");
     if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
@@ -102,8 +103,8 @@ function aplicarPermisosRol() {
     badgeEl.className = "text-[10px] font-bold text-slate-300 uppercase tracking-wider";
     bannerContainer.className = "mb-5 p-3 rounded-xl border border-slate-200 bg-slate-100 text-xs flex items-center justify-between";
     bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-900";
-    bannerBadge.textContent = "ROL: AUDITORÍA (SOLO CONSULTA)";
-    bannerDesc.textContent = "Acceso de solo lectura para supervisión de Kardex, bitácora de atenciones y descarga de balances.";
+    bannerBadge.textContent = typeof t === "function" ? t("role_aud_banner") : "ROL: AUDITORÍA (SOLO CONSULTA)";
+    bannerDesc.textContent = typeof t === "function" ? t("role_aud_desc") : "Acceso de solo lectura para supervisión de Kardex, bitácora de atenciones y descarga de balances.";
     if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
     if (readonlyNotice) readonlyNotice.classList.remove("hidden");
     if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
@@ -268,29 +269,36 @@ function renderInventarioTabla(lista) {
 
     let badgeHtml = "";
     if (m.estado === "DISPONIBLE") {
-      badgeHtml = `<span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">🟢 DISPONIBLE</span>`;
+      const txt = typeof t === "function" ? t("badge_disponible") : "🟢 DISPONIBLE";
+      badgeHtml = `<span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">${txt}</span>`;
     } else if (m.estado === "STOCK BAJO") {
-      badgeHtml = `<span class="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">🟡 STOCK BAJO</span>`;
+      const txt = typeof t === "function" ? t("badge_stock_bajo") : "🟡 STOCK BAJO";
+      badgeHtml = `<span class="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">${txt}</span>`;
     } else {
-      badgeHtml = `<span class="bg-rose-100 text-rose-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">🔴 AGOTADO</span>`;
+      const txt = typeof t === "function" ? t("badge_agotado") : "🔴 AGOTADO";
+      badgeHtml = `<span class="bg-rose-100 text-rose-800 font-semibold px-2 py-0.5 rounded-full text-[10px]">${txt}</span>`;
     }
 
     const marcasHtml = m.marcas_comerciales ? `<span class="text-slate-500 italic text-[11px]">${m.marcas_comerciales}</span>` : `<span class="text-slate-300">-</span>`;
 
+    const lblKardex = typeof t === "function" ? t("btn_kardex") : "Kardex";
+    const lblEditar = typeof t === "function" ? t("btn_editar") : "Editar";
+    const lblAjustar = typeof t === "function" ? t("btn_ajustar") : "Ajustar";
+
     // Acciones según rol
     let accionesHtml = `
       <button onclick="abrirModalKardex(${m.id}, '${m.nombre}', '${m.presentacion || ''}')" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition" title="Ver movimientos Kardex">
-        <i data-lucide="list-collapse" class="w-3 h-3"></i> Kardex
+        <i data-lucide="list-collapse" class="w-3 h-3"></i> ${lblKardex}
       </button>
     `;
 
     if (esAdmin) {
       accionesHtml += `
         <button onclick="abrirModalEditarMed(${m.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg transition ml-1" title="Editar catálogo">
-          <i data-lucide="edit-2" class="w-3 h-3"></i> Editar
+          <i data-lucide="edit-2" class="w-3 h-3"></i> ${lblEditar}
         </button>
         <button onclick="abrirModalAjusteStock(${m.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded-lg transition ml-1" title="Ajuste físico de stock">
-          <i data-lucide="sliders" class="w-3 h-3"></i> Ajustar
+          <i data-lucide="sliders" class="w-3 h-3"></i> ${lblAjustar}
         </button>
       `;
     }
@@ -382,21 +390,30 @@ function renderAlertasPanel(lista) {
 // ================================================================
 function abrirModalNuevoMedicamento() {
   if (currentUser.rol !== "ADMINISTRADOR") {
-    showToast("Permiso Denegado", "Solo el Administrador puede agregar nuevos productos.", "error");
+    showToast("Permiso Denegado", typeof t === "function" ? t("role_admin_banner") : "Solo el Administrador puede agregar nuevos productos.", "error");
     return;
   }
-  document.getElementById("modal-editar-med-title").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-purple-600"></i> Registrar Nuevo Medicamento / Insumo`;
-  document.getElementById("edit-med-id").value = "";
-  document.getElementById("edit-med-codigo").value = "AUTO-GENERADO";
-  document.getElementById("edit-med-nombre").value = "";
-  document.getElementById("edit-med-presentacion").value = "";
-  document.getElementById("edit-med-concentracion").value = "";
-  document.getElementById("edit-med-marcas").value = "";
-  document.getElementById("edit-med-stockmin").value = "10";
+  const titleEl = document.getElementById("modal-editar-med-title");
+  if (titleEl) {
+    const titleText = typeof t === "function" ? t("modal_new_title") : "Registrar Nuevo Medicamento / Insumo";
+    titleEl.innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-purple-600"></i> ${titleText}`;
+  }
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  setVal("edit-med-id", "");
+  setVal("edit-med-codigo", "AUTO-GENERADO");
+  setVal("edit-med-nombre", "");
+  setVal("edit-med-presentacion", "");
+  setVal("edit-med-concentracion", "");
+  setVal("edit-med-marcas", "");
+  setVal("edit-med-stockmin", "10");
 
   const labelStock = document.getElementById("label-stock-actual");
-  if (labelStock && labelStock.querySelector("span")) {
-    labelStock.querySelector("span").textContent = "Stock Inicial de Apertura *";
+  if (labelStock) {
+    const span = labelStock.querySelector("span");
+    if (span) span.textContent = typeof t === "function" ? t("stock_inicial_apertura") : "Stock Inicial de Apertura *";
   }
   const stockActualEl = document.getElementById("edit-med-stock-actual");
   if (stockActualEl) {
@@ -405,47 +422,66 @@ function abrirModalNuevoMedicamento() {
   }
   const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
   if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
-  const motivoInput = document.getElementById("edit-med-motivo-ajuste");
-  if (motivoInput) motivoInput.value = "";
+  setVal("edit-med-motivo-ajuste", "");
 
-  document.getElementById("modal-editar-med").classList.remove("hidden");
+  const modal = document.getElementById("modal-editar-med");
+  if (modal) modal.classList.remove("hidden");
   if (window.lucide) lucide.createIcons();
 }
 
 function abrirModalEditarMed(medId) {
-  if (currentUser.rol !== "ADMINISTRADOR") {
-    showToast("Permiso Denegado", "Solo el Administrador puede modificar los datos del medicamento.", "error");
-    return;
-  }
-  const med = medicamentosCache.find(m => m.id === medId);
-  if (!med) return;
+  try {
+    if (currentUser.rol !== "ADMINISTRADOR") {
+      showToast("Permiso Denegado", "Solo el Administrador puede modificar los datos del medicamento.", "error");
+      return;
+    }
+    const med = medicamentosCache.find(m => m.id === medId);
+    if (!med) {
+      console.warn("Medicamento no encontrado con ID:", medId);
+      return;
+    }
 
-  document.getElementById("modal-editar-med-title").innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-purple-600"></i> Editar Datos: ${med.nombre}`;
-  document.getElementById("edit-med-id").value = med.id;
-  document.getElementById("edit-med-codigo").value = med.codigo;
-  document.getElementById("edit-med-categoria").value = med.categoria;
-  document.getElementById("edit-med-nombre").value = med.nombre;
-  document.getElementById("edit-med-presentacion").value = med.presentacion || "";
-  document.getElementById("edit-med-concentracion").value = med.concentracion || "";
-  document.getElementById("edit-med-marcas").value = med.marcas_comerciales || "";
-  document.getElementById("edit-med-stockmin").value = med.stock_minimo;
+    const titleEl = document.getElementById("modal-editar-med-title");
+    if (titleEl) {
+      const editLabel = typeof t === "function" ? t("modal_edit_title") : "Editar Datos";
+      titleEl.innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-purple-600"></i> ${editLabel}: ${med.nombre}`;
+    }
 
-  const labelStock = document.getElementById("label-stock-actual");
-  if (labelStock && labelStock.querySelector("span")) {
-    labelStock.querySelector("span").textContent = "Stock Actual en Bodega *";
-  }
-  const stockActualEl = document.getElementById("edit-med-stock-actual");
-  if (stockActualEl) {
-    stockActualEl.value = med.stock_actual;
-    stockActualEl.setAttribute("data-prev-stock", med.stock_actual);
-  }
-  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
-  if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
-  const motivoInput = document.getElementById("edit-med-motivo-ajuste");
-  if (motivoInput) motivoInput.value = "";
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val !== undefined && val !== null ? val : "";
+    };
 
-  document.getElementById("modal-editar-med").classList.remove("hidden");
-  if (window.lucide) lucide.createIcons();
+    setVal("edit-med-id", med.id);
+    setVal("edit-med-codigo", med.codigo);
+    setVal("edit-med-categoria", med.categoria);
+    setVal("edit-med-nombre", med.nombre);
+    setVal("edit-med-presentacion", med.presentacion || "");
+    setVal("edit-med-concentracion", med.concentracion || "");
+    setVal("edit-med-marcas", med.marcas_comerciales || "");
+    setVal("edit-med-stockmin", med.stock_minimo);
+
+    const labelStock = document.getElementById("label-stock-actual");
+    if (labelStock) {
+      const span = labelStock.querySelector("span");
+      if (span) span.textContent = typeof t === "function" ? t("stock_actual_bodega") : "Stock Actual en Bodega *";
+    }
+    const stockActualEl = document.getElementById("edit-med-stock-actual");
+    if (stockActualEl) {
+      stockActualEl.value = med.stock_actual;
+      stockActualEl.setAttribute("data-prev-stock", med.stock_actual);
+    }
+    const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
+    if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
+    setVal("edit-med-motivo-ajuste", "");
+
+    const modal = document.getElementById("modal-editar-med");
+    if (modal) modal.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error("Error al abrir modal de edición:", err);
+    showToast("Error", "No se pudo abrir el editor: " + err.message, "error");
+  }
 }
 
 function verificarCambioStockEdit() {
@@ -1085,7 +1121,7 @@ function renderPacientesTabla(lista) {
       <td class="py-2.5 px-4 text-center font-mono text-slate-500">${p.ultima_visita || '-'}</td>
       <td class="py-2.5 px-4 text-center">
         <button onclick="abrirModalExpediente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1 rounded-lg transition">
-          <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> Ver Historial
+          <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_ver_expediente") : "Ver Historial"}
         </button>
       </td>
     </tr>
@@ -1301,22 +1337,27 @@ async function cargarHistorial() {
         ? a.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>")
         : "Sin medicinas";
 
+      const txtAnulada = typeof t === "function" ? t("badge_anulada") : "ANULADA";
+      const txtActiva = typeof t === "function" ? t("badge_activa") : "ACTIVA";
+      const txtReversada = typeof t === "function" ? t("lbl_reversada") : "Reversada";
+      const txtBtnAnular = typeof t === "function" ? t("btn_anular") : "Anular";
+
       const estadoBadge = esAnulada
         ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1" title="${a.motivo_anulacion || 'Consulta anulada'}">
-             <i data-lucide="ban" class="w-3 h-3"></i> ANULADA
+             <i data-lucide="ban" class="w-3 h-3"></i> ${txtAnulada}
            </span>`
         : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
-             <i data-lucide="check" class="w-3 h-3"></i> ACTIVA
+             <i data-lucide="check" class="w-3 h-3"></i> ${txtActiva}
            </span>`;
 
       let accionesHtml = "";
       if (esAnulada) {
-        accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">Reversada</span>`;
+        accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">${txtReversada}</span>`;
       } else if (esAdmin) {
         const pacienteNombreCompleto = `${a.nombres} ${a.apellidos}`.replace(/'/g, "\\'");
         accionesHtml = `
           <button onclick="abrirModalAnulacion(${a.id}, '${pacienteNombreCompleto}', '${medsSummaryEscaped}')" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
-            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Anular
+            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> ${txtBtnAnular}
           </button>
         `;
       } else {
@@ -1460,3 +1501,124 @@ async function guardarMatrizPermisos() {
     showToast("Error de Conexión", err.message, "error");
   }
 }
+
+// ================================================================
+// 9. SOPORTE MULTI-IDIOMA (ESPAÑOL / ENGLISH / 中文)
+// ================================================================
+function initIdioma() {
+  const savedLang = localStorage.getItem("fydi_lang") || "es";
+  cambiarIdioma(savedLang, false);
+}
+
+function cambiarIdioma(lang, notify = true) {
+  if (typeof I18N === "undefined" || !I18N[lang]) {
+    console.warn("Idioma no disponible:", lang);
+    return;
+  }
+
+  currentLang = lang;
+  localStorage.setItem("fydi_lang", lang);
+
+  // Actualizar clases activas en los botones de idioma
+  const btns = {
+    es: document.getElementById("lang-btn-es"),
+    en: document.getElementById("lang-btn-en"),
+    zh: document.getElementById("lang-btn-zh")
+  };
+
+  Object.keys(btns).forEach(k => {
+    const b = btns[k];
+    if (!b) return;
+    if (k === lang) {
+      b.className = "lang-btn px-2 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 bg-brand-600 text-white shadow-sm";
+    } else {
+      b.className = "lang-btn px-2 py-1 rounded-lg font-medium text-[11px] transition flex items-center gap-1 text-slate-300 hover:text-white";
+    }
+  });
+
+  aplicarTraducciones();
+  aplicarPermisosRol();
+
+  // Re-renderizar tablas activas
+  if (medicamentosCache && medicamentosCache.length > 0) {
+    renderInventarioTabla(medicamentosCache);
+  }
+  if (pacientesCache && pacientesCache.length > 0) {
+    renderPacientesTabla(pacientesCache);
+  }
+
+  if (notify) {
+    const msgMap = {
+      es: "Idioma cambiado a Español.",
+      en: "Language switched to English.",
+      zh: "界面语言已切换为中文。"
+    };
+    showToast(t("app_title"), msgMap[lang] || "Language updated.", "success");
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function aplicarTraducciones() {
+  if (typeof t !== "function") return;
+
+  const setHtml = (id, html) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  };
+  const setText = (id, txt) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  };
+  const setAttr = (id, attr, val) => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute(attr, val);
+  };
+
+  // Botón Excel Header
+  setText("lbl-btn-download-excel", t("btn_download_excel"));
+
+  // Pestañas de Navegación
+  setHtml("tab-btn-atencion", `<i data-lucide="stethoscope" class="w-4 h-4"></i> ${t("tab_atencion")}`);
+  setHtml("tab-btn-inventario", `<i data-lucide="package" class="w-4 h-4"></i> ${t("tab_inventario")} <span id="badge-alertas" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>`);
+  setHtml("tab-btn-pacientes", `<i data-lucide="users" class="w-4 h-4"></i> ${t("tab_pacientes")}`);
+  setHtml("tab-btn-estadisticas", `<i data-lucide="bar-chart-3" class="w-4 h-4"></i> ${t("tab_estadisticas")}`);
+  setHtml("tab-btn-historial", `<i data-lucide="history" class="w-4 h-4"></i> ${t("tab_historial")}`);
+  setHtml("tab-btn-permisos", `<i data-lucide="shield-alert" class="w-4 h-4"></i> ${t("tab_permisos")}`);
+
+  // Botones de Acción de Inventario
+  const btnNuevoProd = document.getElementById("btn-admin-nuevo-producto");
+  if (btnNuevoProd) {
+    btnNuevoProd.innerHTML = `<i data-lucide="package-plus" class="w-4 h-4"></i> ${t("btn_nueva_med")}`;
+  }
+  const btnIngreso = document.getElementById("btn-ingreso-bodega");
+  if (btnIngreso) {
+    btnIngreso.innerHTML = `<i data-lucide="plus" class="w-4 h-4"></i> ${t("btn_entrada_bodega")}`;
+  }
+
+  // Placeholders de búsqueda
+  setAttr("filtro-inv-busqueda", "placeholder", t("search_placeholder"));
+  setAttr("filtro-pac-busqueda", "placeholder", t("pac_search"));
+  setAttr("atencion-diagnostico", "placeholder", t("diag_placeholder"));
+  setAttr("atencion-obs", "placeholder", t("obs_placeholder"));
+
+  // Select de Categorías Inventario
+  const selCat = document.getElementById("filtro-inv-categoria");
+  if (selCat && selCat.options.length >= 4) {
+    selCat.options[0].text = t("cat_todas");
+    selCat.options[1].text = t("cat_meds");
+    selCat.options[2].text = t("cat_insumos");
+    selCat.options[3].text = t("cat_alertas");
+  }
+
+  // Botones de Formulario de Atención
+  const btnAddRenglon = document.getElementById("btn-add-renglon");
+  if (btnAddRenglon) {
+    btnAddRenglon.innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i> ${t("btn_add_med")}`;
+  }
+  const btnGuardarAtencion = document.getElementById("btn-guardar-atencion");
+  if (btnGuardarAtencion) {
+    btnGuardarAtencion.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> ${t("btn_guardar_atencion")}`;
+  }
+}
+
