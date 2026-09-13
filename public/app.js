@@ -393,8 +393,21 @@ function abrirModalNuevoMedicamento() {
   document.getElementById("edit-med-concentracion").value = "";
   document.getElementById("edit-med-marcas").value = "";
   document.getElementById("edit-med-stockmin").value = "10";
-  document.getElementById("edit-med-stock-inicial").value = "0";
-  document.getElementById("wrapper-stock-inicial").classList.remove("hidden");
+
+  const labelStock = document.getElementById("label-stock-actual");
+  if (labelStock && labelStock.querySelector("span")) {
+    labelStock.querySelector("span").textContent = "Stock Inicial de Apertura *";
+  }
+  const stockActualEl = document.getElementById("edit-med-stock-actual");
+  if (stockActualEl) {
+    stockActualEl.value = "0";
+    stockActualEl.setAttribute("data-prev-stock", "0");
+  }
+  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
+  if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
+  const motivoInput = document.getElementById("edit-med-motivo-ajuste");
+  if (motivoInput) motivoInput.value = "";
+
   document.getElementById("modal-editar-med").classList.remove("hidden");
   if (window.lucide) lucide.createIcons();
 }
@@ -416,9 +429,39 @@ function abrirModalEditarMed(medId) {
   document.getElementById("edit-med-concentracion").value = med.concentracion || "";
   document.getElementById("edit-med-marcas").value = med.marcas_comerciales || "";
   document.getElementById("edit-med-stockmin").value = med.stock_minimo;
-  document.getElementById("wrapper-stock-inicial").classList.add("hidden");
+
+  const labelStock = document.getElementById("label-stock-actual");
+  if (labelStock && labelStock.querySelector("span")) {
+    labelStock.querySelector("span").textContent = "Stock Actual en Bodega *";
+  }
+  const stockActualEl = document.getElementById("edit-med-stock-actual");
+  if (stockActualEl) {
+    stockActualEl.value = med.stock_actual;
+    stockActualEl.setAttribute("data-prev-stock", med.stock_actual);
+  }
+  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
+  if (wrapperMotivo) wrapperMotivo.classList.add("hidden");
+  const motivoInput = document.getElementById("edit-med-motivo-ajuste");
+  if (motivoInput) motivoInput.value = "";
+
   document.getElementById("modal-editar-med").classList.remove("hidden");
   if (window.lucide) lucide.createIcons();
+}
+
+function verificarCambioStockEdit() {
+  const mid = document.getElementById("edit-med-id").value;
+  const input = document.getElementById("edit-med-stock-actual");
+  const wrapperMotivo = document.getElementById("wrapper-motivo-ajuste");
+  if (!input || !wrapperMotivo) return;
+
+  const prev = parseInt(input.getAttribute("data-prev-stock") || 0);
+  const val = parseInt(input.value || 0);
+
+  if (mid && val !== prev) {
+    wrapperMotivo.classList.remove("hidden");
+  } else {
+    wrapperMotivo.classList.add("hidden");
+  }
 }
 
 function cerrarModalEditarMed() {
@@ -428,9 +471,13 @@ function cerrarModalEditarMed() {
 async function guardarMedicamentoAdmin(e) {
   e.preventDefault();
   const mid = document.getElementById("edit-med-id").value;
+  const stockActual = parseInt(document.getElementById("edit-med-stock-actual").value || 0);
+  const motivoAjuste = document.getElementById("edit-med-motivo-ajuste") ? document.getElementById("edit-med-motivo-ajuste").value.trim() : "";
+
   const payload = {
     user_role: currentUser.rol,
     usuario_registro: currentUser.usuario,
+    admin_nombre: currentUser.nombre_completo,
     id: mid ? parseInt(mid) : null,
     categoria: document.getElementById("edit-med-categoria").value,
     nombre: document.getElementById("edit-med-nombre").value.trim().toUpperCase(),
@@ -438,7 +485,8 @@ async function guardarMedicamentoAdmin(e) {
     concentracion: document.getElementById("edit-med-concentracion").value.trim(),
     marcas_comerciales: document.getElementById("edit-med-marcas").value.trim(),
     stock_minimo: parseInt(document.getElementById("edit-med-stockmin").value || 10),
-    stock_inicial: parseInt(document.getElementById("edit-med-stock-inicial").value || 0)
+    stock_actual: stockActual,
+    motivo_ajuste: motivoAjuste
   };
 
   try {

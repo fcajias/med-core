@@ -624,6 +624,37 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 if mid:
+                    cur.execute("SELECT nombre, stock_actual FROM medicamentos WHERE id = ?", (mid,))
+                    med_existente = cur.fetchone()
+                    if not med_existente:
+                        self.send_json({"error": "Medicamento no encontrado."}, 404)
+                        return
+
+                    prev_stock = med_existente["stock_actual"]
+                    nuevo_stock_val = data.get("stock_actual")
+                    if nuevo_stock_val is not None:
+                        nuevo_stock = max(0, int(nuevo_stock_val))
+                    else:
+                        nuevo_stock = prev_stock
+
+                    stock_cambiado = (nuevo_stock != prev_stock)
+                    motivo_ajuste = data.get("motivo_ajuste", "").strip()
+                    admin_nombre = data.get("admin_nombre", "Administrador")
+
+                    if stock_cambiado:
+                        if not tiene_permiso(cur, user_role, "ajustar_stock"):
+                            self.send_json({"error": f"El rol '{user_role}' no tiene permiso para modificar el stock actual."}, 403)
+                            return
+
+                        delta = nuevo_stock - prev_stock
+                        motivo_desc = motivo_ajuste if motivo_ajuste else "Ajuste directo de stock físico en edición de catálogo"
+                        concepto = f"Ajuste en edición ({admin_nombre}): {motivo_desc} | Anterior: {prev_stock} -> Nuevo: {nuevo_stock}"
+
+                        cur.execute("""
+                            INSERT INTO kardex (fecha, medicamento_id, tipo_movimiento, concepto, cantidad, stock_anterior, stock_nuevo, creado_en, usuario_registro)
+                            VALUES (date('now'), ?, 'AJUSTE_AUDITORIA', ?, ?, ?, ?, datetime('now'), ?)
+                        """, (mid, concepto, abs(delta), prev_stock, nuevo_stock, f"{admin_nombre} ({user_role})"))
+
                     cur.execute("""
                         UPDATE medicamentos SET
                             nombre = ?,
@@ -631,11 +662,18 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                             concentracion = ?,
                             categoria = ?,
                             marcas_comerciales = ?,
-                            stock_minimo = ?
+                            stock_minimo = ?,
+                            stock_actual = ?
                         WHERE id = ?
-                    """, (nombre, presentacion, concentracion, categoria, marcas, stock_minimo, mid))
+                    """, (nombre, presentacion, concentracion, categoria, marcas, stock_minimo, nuevo_stock, mid))
                     conn.commit()
-                    self.send_json({"success": True, "mensaje": f"Medicamento '{nombre}' actualizado correctamente."})
+
+                    if stock_cambiado:
+                        msg = f"Medicamento '{nombre}' actualizado. Stock ajustado de {prev_stock} a {nuevo_stock} unidades (asentado en Kardex)."
+                    else:
+                        msg = f"Medicamento '{nombre}' actualizado correctamente."
+
+                    self.send_json({"success": True, "mensaje": msg, "nuevo_stock": nuevo_stock})
                 else:
                     if not codigo:
                         prefix = "INS" if categoria == "Insumo Médico" else "MED"
@@ -643,7 +681,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                         cnt = cur.fetchone()[0] + 1
                         codigo = f"{prefix}-{cnt:03d}"
 
-                    stock_inicial = int(data.get("stock_inicial", 0))
+                    stock_inicial = int(data.get("stock_actual", data.get("stock_inicial", 0)))
                     cur.execute("""
                         INSERT INTO medicamentos (codigo, nombre, presentacion, concentracion, categoria, marcas_comerciales, stock_actual, stock_minimo)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -651,13 +689,14 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     new_id = cur.lastrowid
 
                     if stock_inicial > 0:
+                        admin_nombre = data.get("admin_nombre", "Administrador")
                         cur.execute("""
                             INSERT INTO kardex (fecha, medicamento_id, tipo_movimiento, concepto, cantidad, stock_anterior, stock_nuevo, creado_en, usuario_registro)
-                            VALUES (date('now'), ?, 'INVENTARIO_INICIAL', 'Alta de nuevo producto en catálogo', ?, 0, ?, datetime('now'), 'admin')
-                        """, (new_id, stock_inicial, stock_inicial))
+                            VALUES (date('now'), ?, 'INVENTARIO_INICIAL', 'Alta de nuevo producto en catálogo', ?, 0, ?, datetime('now'), ?)
+                        """, (new_id, stock_inicial, stock_inicial, f"{admin_nombre} ({user_role})"))
 
                     conn.commit()
-                    self.send_json({"success": True, "mensaje": f"Nuevo producto '{nombre}' registrado con código {codigo}."})
+                    self.send_json({"success": True, "mensaje": f"Nuevo producto '{nombre}' registrado con código {codigo} y stock inicial de {stock_inicial} unidades."})
 
             # ---------------------------------------------------------
             # 6. AJUSTE MANUAL DE STOCK (PERMISO)
