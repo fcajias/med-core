@@ -161,11 +161,13 @@ const I18N = {
     th_k_nuevo: "Nuevo Saldo",
     th_k_usuario: "Registrado Por",
 
-    modal_login_title: "Control de Acceso Seguro",
-    modal_login_sub: "Ingresa tus credenciales autorizadas para acceder al sistema",
+    modal_login_title: "Dispensario Médico FYDI",
+    modal_login_sub: "Control Clínico, Trazabilidad Farmacéutica y Gestión de Stock",
     lbl_usuario: "Usuario Corporativo",
     lbl_password: "Password / Contraseña",
     lbl_cerrar_sesion: "Cerrar Sesión Segura",
+    login_fast_btn: "Verificar e Ingresar al Sistema",
+    login_remember: "Recordar sesión en este equipo",
 
     footer_text: "Dispensario Médico FYDI © 2026 • Control y Auditoría Sanitaria",
     footer_sync: "Base de Datos Sincronizada con Bodega Física"
@@ -330,11 +332,13 @@ const I18N = {
     th_k_nuevo: "New Balance",
     th_k_usuario: "Recorded By",
 
-    modal_login_title: "Secure Access Control",
-    modal_login_sub: "Enter your authorized credentials to access the dispensary system",
+    modal_login_title: "FYDI Medical Dispensary",
+    modal_login_sub: "Clinical Care, Pharmaceutical Traceability & Real-Time Stock Management",
     lbl_usuario: "Corporate Username",
     lbl_password: "Password",
     lbl_cerrar_sesion: "Secure Logout",
+    login_fast_btn: "Verify & Sign In to System",
+    login_remember: "Remember session on this device",
 
     footer_text: "FYDI Medical Dispensary © 2026 • Occupational Health & Medical Audit",
     footer_sync: "Database 100% Synchronized with Physical Warehouse"
@@ -499,11 +503,13 @@ const I18N = {
     th_k_nuevo: "变动后结存",
     th_k_usuario: "经办人",
 
-    modal_login_title: "安全身份验证与访问控制",
-    modal_login_sub: "请输入已授权的企业工号及密码登录医务系统",
+    modal_login_title: "FYDI 医务室智能监管系统",
+    modal_login_sub: "临床诊疗、药品全流程追溯与实物库存管控",
     lbl_usuario: "企业登录账号",
     lbl_password: "安全登录密码",
     lbl_cerrar_sesion: "安全退出系统",
+    login_fast_btn: "验证凭据并进入系统",
+    login_remember: "在此设备上记住登录状态",
 
     footer_text: "FYDI 医务室监管系统 © 2026 • 医疗卫生与劳动保护",
     footer_sync: "数据与药房实物 100% 严密同步"
