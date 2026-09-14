@@ -8,9 +8,9 @@ import hashlib
 from datetime import datetime
 from excel_generator import generar_excel_en_memoria
 
-PORT = 5000
+PORT = int(os.environ.get("PORT", 5000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "dispensario_fydi.db")
+DB_PATH = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "dispensario_fydi.db"))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 
 def get_db():
