@@ -6,19 +6,21 @@ let renglonIdCounter = 0;
 let atencionPendiente = null;
 let permisosCache = [];
 
-// Estado de sesión activa
-let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || {
-  usuario: "enfermeria",
-  nombre_completo: "Lic. Enfermería Dispensario",
-  rol: "ENFERMERIA",
-  token: "default"
-};
+// Estado de sesión activa (Exige autenticación corporativa real)
+let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initIdioma();
   initReloj();
   initFechaHoy();
-  aplicarPermisosRol();
+
+  // Verificar si hay sesión activa; si no, abrir pantalla de login corporativo
+  if (!currentUser || !currentUser.usuario) {
+    abrirModalLogin();
+  } else {
+    aplicarPermisosRol();
+  }
+
   cargarMedicamentos();
   cargarPacientes();
   cargarEstadisticas();
@@ -69,6 +71,13 @@ function aplicarPermisosRol() {
   const formAtencion = document.getElementById("form-atencion");
   const tabPermisosBtn = document.getElementById("tab-btn-permisos");
 
+  if (!currentUser) {
+    if (nameEl) nameEl.textContent = "Sin autenticar";
+    if (badgeEl) badgeEl.textContent = "ACCESO RESTRINGIDO";
+    if (formAtencion) formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = true);
+    return;
+  }
+
   nameEl.textContent = currentUser.nombre_completo;
   badgeEl.textContent = currentUser.rol;
 
@@ -117,34 +126,80 @@ function aplicarPermisosRol() {
 }
 
 function abrirModalLogin() {
-  document.getElementById("modal-login").classList.remove("hidden");
+  const modal = document.getElementById("modal-login");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+
+  // Limpiar formulario y errores previos
+  const errBox = document.getElementById("login-error-msg");
+  if (errBox) errBox.classList.add("hidden");
+  const pInput = document.getElementById("login-password");
+  if (pInput) pInput.value = "";
+
   if (window.lucide) lucide.createIcons();
 }
 
 function cerrarModalLogin() {
+  // Solo se puede cerrar si ya existe un usuario autenticado
+  if (!currentUser || !currentUser.usuario) {
+    showToast("Autenticación Obligatoria", "Debe ingresar sus credenciales para acceder al sistema.", "warning");
+    return;
+  }
   document.getElementById("modal-login").classList.add("hidden");
 }
 
-async function loginRapido(usuario, password) {
-  await ejecutarLogin(usuario, password);
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPass = input.type === "password";
+  input.type = isPass ? "text" : "password";
+  btn.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>`;
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarSesion() {
+  localStorage.removeItem("fydi_user");
+  currentUser = null;
+  showToast("Sesión Finalizada", "Has salido del sistema de manera segura.", "warning");
+  aplicarPermisosRol();
+  abrirModalLogin();
 }
 
 async function handleLoginSubmit(e) {
   e.preventDefault();
   const u = document.getElementById("login-usuario").value.trim();
   const p = document.getElementById("login-password").value.trim();
-  await ejecutarLogin(u, p);
-}
+  const errBox = document.getElementById("login-error-msg");
+  const errTxt = document.getElementById("login-error-text");
+  const btnSubmit = document.getElementById("btn-login-submit");
 
-async function ejecutarLogin(usuario, password) {
+  if (!u || !p) {
+    if (errBox) {
+      errBox.classList.remove("hidden");
+      errTxt.textContent = "Debe ingresar usuario y contraseña.";
+    }
+    return;
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Validando credenciales...`;
+    if (window.lucide) lucide.createIcons();
+  }
+
   try {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario, password })
+      body: JSON.stringify({ usuario: u, password: p })
     });
     const data = await res.json();
+
     if (!res.ok) {
+      if (errBox) {
+        errBox.classList.remove("hidden");
+        errTxt.textContent = data.error || "Credenciales incorrectas. Verifique usuario y contraseña.";
+      }
       showToast("Error de Acceso", data.error || "Credenciales incorrectas.", "error");
     } else {
       currentUser = {
@@ -154,13 +209,22 @@ async function ejecutarLogin(usuario, password) {
         token: data.token
       };
       localStorage.setItem("fydi_user", JSON.stringify(currentUser));
-      cerrarModalLogin();
+      document.getElementById("modal-login").classList.add("hidden");
       aplicarPermisosRol();
       renderInventarioTabla(medicamentosCache);
-      showToast("Sesión Iniciada", `Bienvenido(a), ${data.nombre_completo} (${data.rol})`, "success");
+      showToast("Acceso Autorizado", `Bienvenido(a), ${data.nombre_completo} (${data.rol})`, "success");
     }
   } catch (err) {
-    showToast("Error de Conexión", err.message, "error");
+    if (errBox) {
+      errBox.classList.remove("hidden");
+      errTxt.textContent = "Error de conexión con el servidor: " + err.message;
+    }
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> <span>Verificar e Ingresar al Sistema</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
   }
 }
 

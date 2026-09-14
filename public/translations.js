@@ -161,8 +161,11 @@ const I18N = {
     th_k_nuevo: "Nuevo Saldo",
     th_k_usuario: "Registrado Por",
 
-    modal_login_title: "Control de Acceso por Roles",
-    modal_login_sub: "Selecciona tu perfil de trabajo o ingresa con credenciales",
+    modal_login_title: "Control de Acceso Seguro",
+    modal_login_sub: "Ingresa tus credenciales autorizadas para acceder al sistema",
+    lbl_usuario: "Usuario Corporativo",
+    lbl_password: "Password / Contraseña",
+    lbl_cerrar_sesion: "Cerrar Sesión Segura",
 
     footer_text: "Dispensario Médico FYDI © 2026 • Control y Auditoría Sanitaria",
     footer_sync: "Base de Datos Sincronizada con Bodega Física"
@@ -327,8 +330,11 @@ const I18N = {
     th_k_nuevo: "New Balance",
     th_k_usuario: "Recorded By",
 
-    modal_login_title: "Role-Based Access Control",
-    modal_login_sub: "Select your working profile or sign in with credentials",
+    modal_login_title: "Secure Access Control",
+    modal_login_sub: "Enter your authorized credentials to access the dispensary system",
+    lbl_usuario: "Corporate Username",
+    lbl_password: "Password",
+    lbl_cerrar_sesion: "Secure Logout",
 
     footer_text: "FYDI Medical Dispensary © 2026 • Occupational Health & Medical Audit",
     footer_sync: "Database 100% Synchronized with Physical Warehouse"
@@ -493,8 +499,11 @@ const I18N = {
     th_k_nuevo: "变动后结存",
     th_k_usuario: "经办人",
 
-    modal_login_title: "岗位角色安全切换",
-    modal_login_sub: "请选择您的工作身份或输入账号密码登录",
+    modal_login_title: "安全身份验证与访问控制",
+    modal_login_sub: "请输入已授权的企业工号及密码登录医务系统",
+    lbl_usuario: "企业登录账号",
+    lbl_password: "安全登录密码",
+    lbl_cerrar_sesion: "安全退出系统",
 
     footer_text: "FYDI 医务室监管系统 © 2026 • 医疗卫生与劳动保护",
     footer_sync: "数据与药房实物 100% 严密同步"

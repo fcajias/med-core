@@ -79,8 +79,9 @@
             <div id="user-display-name" class="font-bold text-white text-[11px] leading-tight">Cargando...</div>
             <div id="user-role-badge" class="text-[10px] font-semibold text-cyan-300 uppercase tracking-wider">ROL</div>
           </div>
-          <button onclick="abrirModalLogin()" class="ml-2 text-slate-300 hover:text-white p-1 rounded hover:bg-brand-700/50" title="Cambiar de usuario o rol">
+          <button onclick="cerrarSesion()" class="ml-2 text-slate-300 hover:text-rose-400 p-1.5 rounded-lg hover:bg-brand-700/50 transition flex items-center gap-1 text-[11px]" title="Cerrar sesión segura">
             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline text-[10px]">Salir</span>
           </button>
         </div>
 
@@ -732,81 +733,70 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: LOGIN / SELECCIÓN DE ROL                          -->
+  <!-- MODAL: LOGIN CORPORATIVO DE ALTA SEGURIDAD               -->
   <!-- ======================================================== -->
-  <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-fade-in">
-      <div class="text-center mb-5">
-        <div class="w-12 h-12 rounded-2xl bg-brand-600 text-white mx-auto flex items-center justify-center mb-2 shadow-lg shadow-brand-500/30">
-          <i data-lucide="lock" class="w-6 h-6"></i>
+  <div id="modal-login" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200/80 animate-fade-in">
+      
+      <!-- Banner Cabecera Moderno -->
+      <div class="bg-gradient-to-tr from-brand-950 via-brand-900 to-slate-900 p-6 text-white text-center relative">
+        <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-cyan-400 mx-auto flex items-center justify-center mb-3 shadow-inner">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
         </div>
-        <h3 class="text-lg font-bold text-slate-800">Control de Acceso por Roles</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Selecciona tu perfil de trabajo o ingresa con contraseña</p>
+        <h3 id="lbl-modal-login-title" class="text-lg font-black tracking-tight text-white">Dispensario Médico FYDI</h3>
+        <p id="lbl-modal-login-sub" class="text-xs text-sky-200 mt-1 max-w-xs mx-auto">Portal Seguro de Control Clínico y Farmacia</p>
       </div>
 
-      <!-- Selección Rápida de Perfil -->
-      <div class="space-y-2.5 mb-5">
-        <div onclick="loginRapido('admin', 'admin123')" class="p-3 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 cursor-pointer flex items-center justify-between transition group">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold">
-              <i data-lucide="shield" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-purple-900 group-hover:text-purple-950">Administrador / Supervisor</div>
-              <div class="text-[11px] text-purple-700">Control total: editar medicamentos, ajustar stock, anular consultas</div>
-            </div>
-          </div>
-          <span class="text-xs text-purple-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
+      <!-- Formulario de Credenciales Reales -->
+      <div class="p-6">
+        <div class="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-[11px] text-slate-600 flex items-start gap-2.5">
+          <i data-lucide="info" class="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5"></i>
+          <span>Ingresa con tu usuario y contraseña institucional para desbloquear tus permisos correspondientes.</span>
         </div>
 
-        <div onclick="loginRapido('enfermeria', 'enfermera123')" class="p-3 rounded-xl border border-sky-200 bg-sky-50/60 hover:bg-sky-100/70 cursor-pointer flex items-center justify-between transition group">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold">
-              <i data-lucide="stethoscope" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-sky-900 group-hover:text-sky-950">Enfermería</div>
-              <div class="text-[11px] text-sky-700">Atención de pacientes y recetas con doble confirmación</div>
-            </div>
+        <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-brand-600"></i>
+              Usuario Institucional *
+            </label>
+            <input type="text" id="login-usuario" required placeholder="Ej. admin, enfermeria o auditor" autocomplete="username" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition bg-slate-50/50 hover:bg-white focus:bg-white">
           </div>
-          <span class="text-xs text-sky-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
-        </div>
 
-        <div onclick="loginRapido('auditor', 'auditor123')" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition group">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-slate-600 text-white flex items-center justify-center font-bold">
-              <i data-lucide="eye" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-slate-800">Auditoría / Consulta</div>
-              <div class="text-[11px] text-slate-500">Solo visualización y descarga de balances</div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="key-round" class="w-3.5 h-3.5 text-brand-600"></i>
+              Contraseña de Acceso *
+            </label>
+            <div class="relative">
+              <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition bg-slate-50/50 hover:bg-white focus:bg-white">
+              <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
-          <span class="text-xs text-slate-600 font-bold group-hover:translate-x-0.5 transition">&rarr;</span>
+
+          <div id="login-error-msg" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
+            <span id="login-error-text">Credenciales incorrectas.</span>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="btn-login-submit" class="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+              <span>Verificar e Ingresar al Sistema</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+          <span>Seguridad Criptográfica SHA-256</span>
+          <span class="flex items-center gap-1 text-emerald-600 font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conexión Segura
+          </span>
         </div>
       </div>
 
-      <div class="relative flex py-2 items-center">
-        <div class="flex-grow border-t border-slate-200"></div>
-        <span class="flex-shrink mx-3 text-slate-400 text-[11px]">O ingresar credenciales manuales</span>
-        <div class="flex-grow border-t border-slate-200"></div>
-      </div>
-
-      <form onsubmit="handleLoginSubmit(event)" class="space-y-3 mt-3 text-xs">
-        <div>
-          <label class="block font-medium text-slate-700 mb-1">Usuario</label>
-          <input type="text" id="login-usuario" required placeholder="admin, enfermeria o auditor" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-700 mb-1">Contraseña</label>
-          <input type="password" id="login-password" required placeholder="••••••••" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
-        </div>
-        <div class="pt-2">
-          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm">
-            Ingresar al Sistema
-          </button>
-        </div>
-      </form>
     </div>
   </div>
 
@@ -1123,7 +1113,7 @@
     </div>
   </footer>
 
-  <script src="translations.js?v=2.6"></script>
-  <script src="app.js?v=2.6"></script>
+  <script src="translations.js?v=2.7"></script>
+  <script src="app.js?v=2.7"></script>
 </body>
 </html>
