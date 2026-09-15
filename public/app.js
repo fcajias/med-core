@@ -130,30 +130,16 @@ function abrirModalLogin() {
   if (!modal) return;
   modal.classList.remove("hidden");
 
-  // Limpiar mensajes previos
+  // Limpiar mensajes y contraseña siempre
   const errBox = document.getElementById("login-error-msg");
   if (errBox) errBox.classList.add("hidden");
 
-  // Recuperar usuario recordado si existe
-  const savedUser = localStorage.getItem("fydi_remembered_user");
-  const uInput = document.getElementById("login-usuario");
   const pInput = document.getElementById("login-password");
+  if (pInput) pInput.value = "";
 
-  if (savedUser && uInput && !uInput.value) {
-    if (savedUser === "enfermeria") {
-      seleccionarPerfilSmart("enfermeria", "enfermeria123");
-    } else if (savedUser === "admin") {
-      seleccionarPerfilSmart("admin", "admin123");
-    } else if (savedUser === "auditor") {
-      seleccionarPerfilSmart("auditor", "auditor123");
-    } else {
-      uInput.value = savedUser;
-      if (pInput) pInput.focus();
-    }
-  } else {
-    // Por defecto seleccionar enfermería listo para 1-clic
-    seleccionarPerfilSmart("enfermeria", "enfermeria123");
-  }
+  // Recordar el último usuario/rol utilizado sin guardar contraseñas
+  const savedUser = localStorage.getItem("fydi_remembered_user") || "enfermeria";
+  seleccionarPerfil(savedUser);
 
   if (window.lucide) lucide.createIcons();
 }
@@ -167,7 +153,7 @@ function cerrarModalLogin() {
   document.getElementById("modal-login").classList.add("hidden");
 }
 
-function seleccionarPerfilSmart(usuario, password) {
+function seleccionarPerfil(usuario) {
   const uInput = document.getElementById("login-usuario");
   const pInput = document.getElementById("login-password");
   const hint = document.getElementById("role-quick-hint");
@@ -175,7 +161,12 @@ function seleccionarPerfilSmart(usuario, password) {
 
   if (errBox) errBox.classList.add("hidden");
   if (uInput) uInput.value = usuario;
-  if (pInput) pInput.value = password;
+
+  // SEGURIDAD: La contraseña NUNCA se autocompleta por código; se limpia y se pide al usuario
+  if (pInput) {
+    pInput.value = "";
+    setTimeout(() => pInput.focus(), 50);
+  }
 
   // Actualizar tarjetas de rol visuales
   document.querySelectorAll(".role-smart-card").forEach(el => el.classList.remove("active-role"));
@@ -183,7 +174,12 @@ function seleccionarPerfilSmart(usuario, password) {
   if (card) card.classList.add("active-role");
 
   if (hint) {
-    hint.textContent = `⚡ Perfil: ${usuario.toUpperCase()}`;
+    const rolNombres = {
+      enfermeria: "Enfermería Clínica",
+      admin: "Administrador Central",
+      auditor: "Auditoría Médica"
+    };
+    hint.textContent = `Puesto: ${rolNombres[usuario] || usuario.toUpperCase()}`;
     hint.classList.remove("hidden");
   }
 
@@ -265,11 +261,8 @@ async function handleLoginSubmit(e) {
       };
       localStorage.setItem("fydi_user", JSON.stringify(currentUser));
 
-      if (remember) {
-        localStorage.setItem("fydi_remembered_user", data.usuario);
-      } else {
-        localStorage.removeItem("fydi_remembered_user");
-      }
+      // Guarda el rol para recordarlo en la siguiente sesión, sin contraseñas
+      localStorage.setItem("fydi_remembered_user", data.usuario);
 
       document.getElementById("modal-login").classList.add("hidden");
       aplicarPermisosRol();

@@ -777,19 +777,19 @@
 
       <div class="px-6 pb-6 relative z-10 space-y-4">
         
-        <!-- Smart Interactive Role Cards (One-Click Selection & Auto-Fill) -->
+        <!-- Smart Interactive Role Cards (Selects Identity / Username) -->
         <div>
           <div class="flex items-center justify-between mb-2">
             <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
               <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
-              Selección Inteligente de Perfil:
+              Selecciona tu Puesto de Trabajo:
             </span>
-            <span class="text-[10px] text-cyan-400 font-medium">Clic para seleccionar</span>
+            <span class="text-[10px] text-cyan-400 font-medium">Elige tu rol para iniciar</span>
           </div>
 
           <div class="grid grid-cols-3 gap-2">
             <!-- Role 1: Enfermería -->
-            <div onclick="seleccionarPerfilSmart('enfermeria', 'enfermeria123')" id="card-role-enfermeria" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-cyan-500/60 cursor-pointer transition-all group text-left">
+            <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-cyan-500/60 cursor-pointer transition-all group text-left">
               <div class="flex items-center justify-between mb-1">
                 <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-xs">
                   <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
@@ -801,7 +801,7 @@
             </div>
 
             <!-- Role 2: Administrador -->
-            <div onclick="seleccionarPerfilSmart('admin', 'admin123')" id="card-role-admin" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-purple-500/60 cursor-pointer transition-all group text-left">
+            <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-purple-500/60 cursor-pointer transition-all group text-left">
               <div class="flex items-center justify-between mb-1">
                 <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">
                   <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
@@ -813,7 +813,7 @@
             </div>
 
             <!-- Role 3: Auditor -->
-            <div onclick="seleccionarPerfilSmart('auditor', 'auditor123')" id="card-role-auditor" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all group text-left">
+            <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all group text-left">
               <div class="flex items-center justify-between mb-1">
                 <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
                   <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
@@ -826,8 +826,8 @@
           </div>
         </div>
 
-        <!-- Credentials Form -->
-        <form onsubmit="handleLoginSubmit(event)" class="space-y-3.5 text-xs">
+        <!-- Credentials Form (Browser Native Password Manager Compliant) -->
+        <form onsubmit="handleLoginSubmit(event)" class="space-y-3.5 text-xs" autocomplete="on">
           <div>
             <label class="block font-medium text-slate-300 mb-1 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
@@ -836,7 +836,7 @@
               </span>
               <span id="role-quick-hint" class="text-[10px] text-cyan-400 font-mono hidden"></span>
             </label>
-            <input type="text" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition">
+            <input type="text" name="username" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition">
           </div>
 
           <div>
@@ -850,22 +850,25 @@
               </span>
             </label>
             <div class="relative">
-              <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition font-mono">
+              <input type="password" name="password" id="login-password" required placeholder="Escribe tu contraseña secreta..." autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition font-mono">
               <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-white transition">
                 <i data-lucide="eye" class="w-4 h-4"></i>
               </button>
             </div>
+            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+              <i data-lucide="shield" class="w-3 h-3 text-cyan-400"></i>
+              <span>Por seguridad, ingresa tu contraseña manualmente o usa las credenciales guardadas en tu navegador.</span>
+            </p>
           </div>
 
-          <!-- Remember Device -->
-          <div class="flex items-center justify-between text-[11px] text-slate-400">
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="login-remember" checked class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-700 text-cyan-500 focus:ring-0 focus:ring-offset-0">
-              <span id="lbl-login-remember">Recordar sesión en este equipo</span>
-            </label>
+          <!-- Security Status -->
+          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+            <span class="text-[10px] text-slate-400 flex items-center gap-1">
+              <i data-lucide="info" class="w-3 h-3 text-cyan-400"></i>
+              <span>Tu navegador te ofrecerá guardar la contraseña al ingresar.</span>
+            </span>
             <span class="text-[10px] text-slate-500 flex items-center gap-1">
               <i data-lucide="lock" class="w-3 h-3 text-cyan-400"></i> SHA-256
-            </span>
           </div>
 
           <!-- Error Alert Container -->
@@ -1213,7 +1216,7 @@
     </div>
   </footer>
 
-  <script src="translations.js?v=2.8"></script>
-  <script src="app.js?v=2.8"></script>
+  <script src="translations.js?v=2.9"></script>
+  <script src="app.js?v=2.9"></script>
 </body>
 </html>
