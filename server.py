@@ -13,7 +13,97 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "dispensario_fydi.db"))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 
+TURSO_DATABASE_URL = os.environ.get("TURSO_DATABASE_URL", "https://dispensario-fydi-fcajias.aws-us-east-2.turso.io")
+TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk2NzY0MTcsImlkIjoiMDFhMGIwZmYtNjQwMS03ZWUwLWFkOGMtNWUzMDk2YjY5Y2NlIiwia2lkIjoic21ZNGFhYkhnbEVJSFVDZlVsQ08tUzRFbWdtYUlQZEF0Wk41QXdVblJpayIsInJpZCI6IjI5M2UwMTFlLThmMTUtNDkwZi1iNDIyLTJhMDg5YTQzMjcxMSJ9.saCriN_FRQci10TEQ3aB9mBdnip-2jHsNfPzjV5ZuVm4ShfcasgwRM5M0O_E0mWiUyWqEnKBSlBbIUeF4e8iCg")
+
+try:
+    import libsql_client
+    HAS_LIBSQL = True
+except ImportError:
+    HAS_LIBSQL = False
+
+class TursoRow:
+    """Wrapper para compatibilidad 100% con sqlite3.Row"""
+    def __init__(self, columns, values):
+        self._columns = tuple(columns)
+        self._values = tuple(values)
+        self._dict = dict(zip(columns, values))
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self._values[item]
+        return self._dict[item]
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def keys(self):
+        return self._columns
+
+    def items(self):
+        return self._dict.items()
+
+    def values(self):
+        return self._values
+
+    def get(self, key, default=None):
+        return self._dict.get(key, default)
+
+    def __repr__(self):
+        return f"<TursoRow {self._dict}>"
+
+class TursoCursor:
+    """Cursor compatible con la API de sqlite3 para Turso Cloud"""
+    def __init__(self, client):
+        self.client = client
+        self._iter = None
+        self.lastrowid = None
+        self.rowcount = 0
+
+    def execute(self, sql, params=()):
+        args = list(params) if params else []
+        res = self.client.execute(sql, args)
+        self.lastrowid = res.last_insert_rowid
+        self.rowcount = res.rows_affected
+        cols = res.columns
+        rows = [TursoRow(cols, r) for r in res.rows]
+        self._iter = iter(rows)
+        return self
+
+    def fetchone(self):
+        return next(self._iter, None) if self._iter is not None else None
+
+    def fetchall(self):
+        return list(self._iter) if self._iter is not None else []
+
+class TursoConnection:
+    """Conexión persistente a Turso Cloud SQLite"""
+    def __init__(self, url, token):
+        if url.startswith("libsql://"):
+            url = "https://" + url[len("libsql://"):]
+        self.client = libsql_client.create_client_sync(url, auth_token=token)
+
+    def cursor(self):
+        return TursoCursor(self.client)
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def close(self):
+        try:
+            self.client.close()
+        except Exception:
+            pass
+
 def get_db():
+    if HAS_LIBSQL and TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
+        try:
+            return TursoConnection(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN)
+        except Exception as e:
+            print(f"[TURSO ERROR] Fallback a SQLite local: {e}")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
