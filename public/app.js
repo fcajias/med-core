@@ -2080,7 +2080,46 @@ function abrirModalSolicitudPiso(piso = 1) {
   if (exitoBox) exitoBox.classList.add("hidden");
 
   seleccionarPisoSolicitud(piso);
+  actualizarCargosPorMacroArea();
   if (window.lucide) lucide.createIcons();
+}
+
+function actualizarCargosPorMacroArea() {
+  const macro = document.getElementById("sol-macro-area")?.value || "OPERATIVA";
+  const cargoSel = document.getElementById("sol-cargo");
+  if (!cargoSel) return;
+
+  const cargosOperativa = [
+    "Asesor de Cobranza",
+    "Auditor de Cobranza",
+    "Líder de Cobranza",
+    "Gerente de Cobranza"
+  ];
+
+  const cargosAdmin = [
+    "Sistemas",
+    "Jefe de Aplicaciones",
+    "Contabilidad",
+    "Recursos Humanos",
+    "Gerencia",
+    "Seguridad"
+  ];
+
+  const lista = macro === "ADMINISTRATIVA" ? cargosAdmin : cargosOperativa;
+  cargoSel.innerHTML = lista.map(c => `<option value="${c}">${c}</option>`).join("");
+  sincronizarAreaCampanaTexto();
+}
+
+function sincronizarAreaCampanaTexto() {
+  const macro = document.getElementById("sol-macro-area")?.value || "OPERATIVA";
+  const cargo = document.getElementById("sol-cargo")?.value || "Asesor de Cobranza";
+  const puesto = document.getElementById("sol-ubicacion-puesto")?.value.trim() || "";
+
+  const areaHidden = document.getElementById("sol-area");
+  if (areaHidden) {
+    const macroNombre = macro === "ADMINISTRATIVA" ? "Administrativa" : "Operativa";
+    areaHidden.value = puesto ? `[${macroNombre} - ${cargo}] ${puesto}` : `[${macroNombre} - ${cargo}]`;
+  }
 }
 
 function cerrarModalSolicitudPiso() {
@@ -2106,6 +2145,7 @@ function seleccionarPisoSolicitud(piso) {
 
 async function enviarSolicitudPiso(e) {
   e.preventDefault();
+  sincronizarAreaCampanaTexto();
   const piso = parseInt(document.getElementById("sol-piso").value) || 1;
   const area_campana = document.getElementById("sol-area").value.trim();
   const nombre_paciente = document.getElementById("sol-nombre").value.trim().toUpperCase();
@@ -2154,11 +2194,13 @@ async function enviarSolicitudPiso(e) {
     if (ticketDetEl) ticketDetEl.textContent = `Piso ${piso} • ${area_campana} • ${nombre_paciente}`;
 
     // Resetear campos del formulario
-    document.getElementById("sol-area").value = "";
+    const puestoEl = document.getElementById("sol-ubicacion-puesto");
+    if (puestoEl) puestoEl.value = "";
     document.getElementById("sol-nombre").value = "";
     document.getElementById("sol-cedula").value = "";
     document.getElementById("sol-extension").value = "";
     document.getElementById("sol-motivo").value = "";
+    sincronizarAreaCampanaTexto();
 
     // Actualizar badge si la sesión médica está activa
     cargarSolicitudesPisos();
