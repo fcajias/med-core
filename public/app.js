@@ -175,12 +175,11 @@ function abrirModalLogin() {
 }
 
 function cerrarModalLogin() {
-  // Solo se puede cerrar si ya existe un usuario autenticado
+  const modal = document.getElementById("modal-login");
+  if (modal) modal.classList.add("hidden");
   if (!currentUser || !currentUser.usuario) {
-    showToast("Autenticación Obligatoria", "Debe identificarse para acceder al sistema.", "warning");
-    return;
+    mostrarPortalPublico();
   }
-  document.getElementById("modal-login").classList.add("hidden");
 }
 
 function seleccionarPerfil(usuario) {
@@ -2238,6 +2237,19 @@ function cerrarModalConsultarTicket() {
   if (modal) modal.classList.add("hidden");
 }
 
+function consultarQuickTicket() {
+  const input = document.getElementById("quick-ticket-input");
+  const ticketId = input ? input.value.trim() : "";
+  abrirModalConsultarTicket();
+  if (ticketId) {
+    const modalInput = document.getElementById("input-buscar-ticket");
+    if (modalInput) {
+      modalInput.value = ticketId;
+      ejecutarConsultaTicket();
+    }
+  }
+}
+
 async function ejecutarConsultaTicket(e) {
   if (e) e.preventDefault();
   const input = document.getElementById("input-buscar-ticket");
@@ -2660,3 +2672,14 @@ function atenderSolicitudEnFormulario(solicitudId) {
     "success"
   );
 }
+
+// Cerrar modales con tecla Escape para máxima accesibilidad y excelente UX
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    cerrarModalLogin();
+    cerrarModalSolicitudPiso();
+    cerrarModalConsultarTicket();
+    cerrarModalResponderSolicitud();
+  }
+});
+

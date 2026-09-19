@@ -33,182 +33,294 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
 
-  <!-- ======================================================== -->
+    <!-- ======================================================== -->
   <!-- VISTA PÚBLICA: PORTAL DE SALUD & BIENESTAR FYDI          -->
   <!-- (Para personal de operaciones de los 7 pisos)            -->
   <!-- ======================================================== -->
   <div id="landing-portal-salud" class="flex-1 flex flex-col w-full bg-slate-50">
     
-    <!-- Top Landing Bar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+    <!-- Top Corporate Navigation Header -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-xs transition-all">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        
         <!-- Logo & Branding -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-500 flex items-center justify-center shadow-md text-white font-bold">
+        <div class="flex items-center space-x-3.5 cursor-pointer" onclick="mostrarPortalPublico()">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-700 via-sky-600 to-cyan-500 flex items-center justify-center shadow-md shadow-brand-600/20 text-white font-black text-xl">
             <i data-lucide="cross" class="w-6 h-6"></i>
           </div>
           <div>
             <div class="flex items-center gap-2">
               <span class="text-base font-black text-slate-900 tracking-tight" id="lbl-landing-brand-title">Dispensario Médico FYDI</span>
-              <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full border border-sky-200">Call Center & Ops</span>
+              <span class="text-[10px] bg-sky-50 text-sky-700 font-bold px-2 py-0.5 rounded-full border border-sky-200/80">Call Center & Cobranzas</span>
             </div>
-            <p class="text-xs text-slate-500" id="lbl-landing-brand-sub">Portal de Salud Ocupacional & Bienestar en el Trabajo</p>
+            <p class="text-xs text-slate-500 font-medium" id="lbl-landing-brand-sub">Portal de Salud Ocupacional & Bienestar en el Trabajo</p>
           </div>
         </div>
 
-        <!-- Quick actions: Language switcher, Emergencias, and Access -->
+        <!-- Right Quick Actions -->
         <div class="flex items-center space-x-2 sm:space-x-3">
           <!-- Urgent Phone Pill -->
-          <div class="hidden lg:flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-xl text-xs font-semibold">
-            <i data-lucide="phone-call" class="w-3.5 h-3.5 text-rose-600 animate-pulse"></i>
-            <span>Urgencias: Ext. 102 (Piso 2)</span>
+          <div class="hidden lg:flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-200/80 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
+            <i data-lucide="phone-call" class="w-3.5 h-3.5 text-rose-600"></i>
+            <span>Urgencias: Ext. 102 &bull; Piso 2</span>
           </div>
 
           <!-- Language Selector -->
           <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-xs">
-            <button onclick="cambiarIdioma('es')" class="landing-lang-btn px-2 py-1 rounded-lg font-bold text-[11px] transition text-slate-700 hover:text-brand-600">ES</button>
-            <button onclick="cambiarIdioma('en')" class="landing-lang-btn px-2 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-brand-600">EN</button>
-            <button onclick="cambiarIdioma('zh')" class="landing-lang-btn px-2 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-brand-600">中文</button>
+            <button onclick="cambiarIdioma('es')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-bold text-[11px] transition text-slate-700 hover:text-brand-600">🇪🇸 ES</button>
+            <button onclick="cambiarIdioma('en')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-brand-600">🇺🇸 EN</button>
+            <button onclick="cambiarIdioma('zh')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-brand-600">🇨🇳 中文</button>
           </div>
 
           <!-- Tracker Button -->
-          <button onclick="abrirModalConsultarTicket()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1.5 transition border border-slate-200">
-            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500"></i>
+          <button onclick="abrirModalConsultarTicket()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition border border-slate-200/90 shadow-2xs">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-brand-600"></i>
             <span id="lbl-landing-btn-consultar">Consultar Ticket</span>
           </button>
 
           <!-- Personal Médico Login Button -->
-          <button onclick="abrirModalLogin()" class="px-3.5 py-2 bg-brand-700 hover:bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm border border-brand-800">
-            <i data-lucide="stethoscope" class="w-3.5 h-3.5 text-cyan-200"></i>
+          <button onclick="abrirModalLogin()" class="px-4 py-2 bg-slate-900 hover:bg-brand-900 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition shadow-md shadow-slate-900/15 border border-slate-800">
+            <i data-lucide="stethoscope" class="w-4 h-4 text-cyan-300"></i>
             <span id="lbl-landing-btn-login">Acceso Personal Médico</span>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-b from-white via-sky-50/50 to-slate-50 pt-10 pb-12 border-b border-slate-200">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <!-- Badge -->
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold mb-4 shadow-2xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="lbl-landing-badge">Call Center FYDI • 7 Pisos Conectados en Tiempo Real</span>
+    <!-- Hero Section (Executive Dark Navy & Illuminated Glow) -->
+    <section class="relative bg-gradient-to-b from-[#0B1727] via-[#0A2240] to-[#0B1727] text-white pt-14 pb-16 px-4 sm:px-6 overflow-hidden border-b border-slate-800">
+      
+      <!-- Subtle Background Ambient Glows -->
+      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[750px] h-[350px] bg-gradient-to-r from-sky-500/20 via-brand-500/20 to-teal-500/15 blur-3xl pointer-events-none rounded-full"></div>
+      <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 blur-3xl pointer-events-none rounded-full"></div>
+      
+      <div class="max-w-5xl mx-auto text-center relative z-10">
+        
+        <!-- Eyebrow Badge -->
+        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-sky-200 text-xs font-bold mb-6 shadow-sm">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </span>
+          <span id="lbl-landing-badge">SISTEMA INTEGRAL DE SALUD OCUPACIONAL &bull; 7 PISOS CONECTADOS EN TIEMPO REAL</span>
         </div>
 
-        <h1 id="lbl-landing-hero-title" class="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl mx-auto">
-          Cuidamos tu salud en cada llamada y en cada jornada
+        <h1 id="lbl-landing-hero-title" class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-4xl mx-auto text-white">
+          Cuidamos tu salud en cada llamada, <br class="hidden sm:inline">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-blue-300">garantizando tu bienestar en cada piso</span>
         </h1>
-        <p id="lbl-landing-hero-sub" class="text-sm sm:text-base text-slate-600 mt-4 max-w-2xl mx-auto leading-relaxed">
-          Medicina ocupacional y asistencia rápida para asesores telefónicos, supervisores y personal administrativo. Si no puedes bajar al consultorio, la enfermera acude a tu piso.
+        
+        <p id="lbl-landing-hero-sub" class="text-sm sm:text-base text-slate-300 mt-5 max-w-2xl mx-auto leading-relaxed font-normal">
+          Medicina ocupacional, prevención ergonómica y atención rápida para asesores de cobranza, auditores, líderes y personal administrativo. Si no puedes bajar al consultorio, la enfermera acude a tu estación de trabajo.
         </p>
 
         <!-- Main Call To Action Buttons -->
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button onclick="abrirModalSolicitudPiso()" class="px-6 py-3.5 bg-gradient-to-r from-brand-600 to-sky-600 hover:from-brand-700 hover:to-sky-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-sky-600/20 hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2.5">
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+          <button onclick="abrirModalSolicitudPiso()" class="px-7 py-4 bg-gradient-to-r from-brand-600 via-sky-600 to-cyan-600 hover:from-brand-500 hover:to-sky-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-sky-600/30 hover:shadow-cyan-500/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-3 border border-white/20">
             <i data-lucide="bell-ring" class="w-5 h-5 text-yellow-300 animate-bounce"></i>
             <span id="lbl-landing-cta-solicitar">🚨 Solicitar Asistencia Médica a mi Piso (Pisos 1 al 7)</span>
           </button>
           
-          <button onclick="abrirModalConsultarTicket()" class="px-5 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm rounded-2xl border border-slate-300 shadow-sm transition-all flex items-center gap-2">
-            <i data-lucide="clipboard-check" class="w-5 h-5 text-brand-600"></i>
+          <button onclick="abrirModalConsultarTicket()" class="px-6 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-2xl border border-white/20 backdrop-blur-md shadow-sm transition-all flex items-center gap-2.5">
+            <i data-lucide="clipboard-check" class="w-5 h-5 text-cyan-300"></i>
             <span id="lbl-landing-cta-consultar">🔍 Consultar Estado de mi Solicitud</span>
           </button>
         </div>
 
-        <!-- Emergency Banner Pill -->
-        <div class="mt-6 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2 rounded-xl text-xs">
-          <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0"></i>
-          <span id="lbl-landing-urgencias">Emergencias Inmediatas: Extensión interna 102 • Consultorio Central en Piso 2</span>
+        <!-- 4 Corporate Executive Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-12 max-w-4xl mx-auto text-left">
+          <div class="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="building-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-white">7 Pisos Conectados</div>
+              <div class="text-[10px] text-slate-300">Cobertura total en edificio</div>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-white">&lt; 5 Minutos</div>
+              <div class="text-[10px] text-slate-300">Respuesta ágil en estación</div>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="stethoscope" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-white">Dispensario Piso 2</div>
+              <div class="text-[10px] text-slate-300">Atención 07:00 a 19:00</div>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-white">100% Protegidos</div>
+              <div class="text-[10px] text-slate-300">Cobranzas & Administración</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Fast Inline Ticket Tracker Widget -->
+    <section class="max-w-4xl mx-auto px-4 -mt-6 relative z-20 w-full">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3 text-left">
+          <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center shrink-0">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-xs text-slate-900">¿Ya solicitaste asistencia médica a tu piso?</h4>
+            <p class="text-[11px] text-slate-500">Ingresa tu número de ticket para conocer si la enfermera ya va en camino:</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <input type="number" id="quick-ticket-input" min="1" placeholder="Ej. 1" class="border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none w-full sm:w-28 font-bold text-center">
+          <button onclick="consultarQuickTicket()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <span>Ver Estado</span>
+          </button>
         </div>
       </div>
     </section>
 
     <!-- Fast Floor Assistance Selector (Pisos 1 al 7) -->
-    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
-      <div class="text-center mb-6">
-        <h2 id="lbl-landing-pisos-title" class="text-xl font-bold text-slate-900 flex items-center justify-center gap-2">
-          <i data-lucide="building-2" class="w-5 h-5 text-brand-600"></i>
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-10 w-full">
+      <div class="text-center mb-7">
+        <span class="text-xs font-bold text-brand-600 uppercase tracking-wider bg-brand-50 px-3.5 py-1 rounded-full border border-brand-100">Infraestructura Corporativa</span>
+        <h2 id="lbl-landing-pisos-title" class="text-2xl font-black text-slate-900 mt-2 flex items-center justify-center gap-2">
+          <i data-lucide="building-2" class="w-6 h-6 text-brand-600"></i>
           Cobertura Médica Inmediata en los 7 Pisos del Edificio
         </h2>
-        <p id="lbl-landing-pisos-sub" class="text-xs text-slate-500 mt-1">Haz clic en tu piso para solicitar que la enfermera suba directamente a tu estación:</p>
+        <p id="lbl-landing-pisos-sub" class="text-xs text-slate-500 mt-1 max-w-xl mx-auto">Selecciona tu piso de trabajo para solicitar que la enfermera acuda con el botiquín y equipos de diagnóstico a tu estación:</p>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        
         <!-- Piso 1 -->
-        <div onclick="abrirModalSolicitudPiso(1)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">1</div>
-          <div class="font-bold text-xs text-slate-800">Piso 1</div>
-          <div class="text-[10px] text-slate-500">Recepción / Seguridad</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(1)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">1</div>
+            <div class="font-black text-xs text-slate-900">Piso 1</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Recepción & Seguridad</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-brand-600 group-hover:text-brand-700 flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
-        <!-- Piso 2 -->
-        <div onclick="abrirModalSolicitudPiso(2)" class="bg-white p-3.5 rounded-2xl border-2 border-brand-300 bg-sky-50/30 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center mx-auto mb-2 font-black text-sm">2</div>
-          <div class="font-bold text-xs text-brand-900">Piso 2</div>
-          <div class="text-[10px] text-brand-700 font-semibold">🏥 Dispensario Central</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Atención / Pedir &rarr;</button>
+        <!-- Piso 2 (Dispensario Central) -->
+        <div onclick="abrirModalSolicitudPiso(2)" class="bg-white p-3.5 rounded-2xl border-2 border-brand-500 bg-sky-50/40 shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between relative overflow-hidden">
+          <span class="absolute -right-8 top-2 bg-emerald-500 text-white text-[8px] font-black uppercase px-8 py-0.5 rotate-45 shadow-xs">Sede</span>
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center mx-auto mb-2.5 font-black text-sm shadow-xs">2</div>
+            <div class="font-black text-xs text-brand-950">Piso 2</div>
+            <div class="text-[10px] text-brand-700 font-bold mt-0.5 leading-tight">🏥 Dispensario Central</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-brand-700 group-hover:underline flex items-center justify-center gap-0.5">
+            <span>Atención Directa</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
         <!-- Piso 3 -->
-        <div onclick="abrirModalSolicitudPiso(3)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">3</div>
-          <div class="font-bold text-xs text-slate-800">Piso 3</div>
-          <div class="text-[10px] text-slate-500">Operaciones • Cobranzas</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(3)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">3</div>
+            <div class="font-black text-xs text-slate-900">Piso 3</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Operaciones &bull; Cobranzas</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-brand-600 group-hover:text-brand-700 flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
         <!-- Piso 4 -->
-        <div onclick="abrirModalSolicitudPiso(4)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">4</div>
-          <div class="font-bold text-xs text-slate-800">Piso 4</div>
-          <div class="text-[10px] text-slate-500">Operaciones • Cobranzas</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(4)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">4</div>
+            <div class="font-black text-xs text-slate-900">Piso 4</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Operaciones &bull; Cobranzas</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-brand-600 group-hover:text-brand-700 flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
         <!-- Piso 5 -->
-        <div onclick="abrirModalSolicitudPiso(5)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">5</div>
-          <div class="font-bold text-xs text-slate-800">Piso 5</div>
-          <div class="text-[10px] text-slate-500">Auditoría de Cobranza</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(5)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">5</div>
+            <div class="font-black text-xs text-slate-900">Piso 5</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Auditoría de Cobranza</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-brand-600 group-hover:text-brand-700 flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
         <!-- Piso 6 -->
-        <div onclick="abrirModalSolicitudPiso(6)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">6</div>
-          <div class="font-bold text-xs text-slate-800">Piso 6</div>
-          <div class="text-[10px] text-slate-500">Sistemas / Aplicaciones / Contabilidad</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(6)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-purple-600 group-hover:text-white transition">6</div>
+            <div class="font-black text-xs text-slate-900">Piso 6</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Sistemas &bull; Contabilidad</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-purple-700 group-hover:underline flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
 
         <!-- Piso 7 -->
-        <div onclick="abrirModalSolicitudPiso(7)" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-500 hover:shadow-md cursor-pointer transition text-center group">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-brand-700 flex items-center justify-center mx-auto mb-2 font-black text-sm group-hover:bg-brand-600 group-hover:text-white transition">7</div>
-          <div class="font-bold text-xs text-slate-800">Piso 7</div>
-          <div class="text-[10px] text-slate-500">Gerencia / RRHH</div>
-          <button type="button" class="mt-2 text-[10px] font-bold text-brand-600 group-hover:underline">Pedir aquí &rarr;</button>
+        <div onclick="abrirModalSolicitudPiso(7)" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all duration-200 text-center group flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center mx-auto mb-2.5 font-black text-sm group-hover:bg-purple-600 group-hover:text-white transition">7</div>
+            <div class="font-black text-xs text-slate-900">Piso 7</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 leading-tight">Gerencia &bull; RRHH</div>
+          </div>
+          <button type="button" class="mt-3 text-[10px] font-bold text-purple-700 group-hover:underline flex items-center justify-center gap-0.5">
+            <span>Pedir aquí</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
         </div>
+
       </div>
     </section>
 
-    <!-- Occupational Health Advice Cards -->
-    <section class="bg-white border-y border-slate-200 py-12">
+    <!-- Occupational Health Cards Section with REAL IMAGES -->
+    <section class="bg-white border-y border-slate-200/80 py-16">
       <div class="max-w-6xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-10">
-          <span class="text-xs font-bold text-brand-600 uppercase tracking-wider bg-brand-50 px-3 py-1 rounded-full border border-brand-100">Prevención y Ergonomía</span>
-          <h2 id="lbl-landing-consejos-title" class="text-2xl font-black text-slate-900 mt-2">Guía de Salud Ocupacional para Operadores de Call Center</h2>
-          <p id="lbl-landing-consejos-sub" class="text-xs text-slate-500 mt-1 max-w-xl mx-auto">Consejos clínicos aprobados para prevenir afecciones frecuentes durante la jornada laboral frente a pantallas y llamadas continuas.</p>
+        
+        <div class="text-center mb-12">
+          <span class="text-xs font-bold text-brand-600 uppercase tracking-wider bg-brand-50 px-3.5 py-1 rounded-full border border-brand-100">Prevención y Ergonomía</span>
+          <h2 id="lbl-landing-consejos-title" class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">Guía de Salud Ocupacional para Operadores de Call Center</h2>
+          <p id="lbl-landing-consejos-sub" class="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl mx-auto leading-relaxed">
+            Protocolos clínicos aprobados por el departamento médico para mitigar afecciones frecuentes durante la jornada laboral en centros de contacto.
+          </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           <!-- Card 1: Salud Vocal & Hidratación -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/salud_vocal_hidratacion.jpg" alt="Salud Vocal e Hidratación" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-sky-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-sky-600/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <i data-lucide="mic" class="w-3 h-3"></i> Cuidados de la Voz
               </span>
             </div>
@@ -220,18 +332,18 @@
                 </p>
               </div>
               <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-sky-700 font-semibold">
-                <span class="flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i> Termo con agua en puesto</span>
+                <span class="flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i> Termo personal en puesto</span>
                 <span class="text-slate-400">Pausa vocal activa</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 2: Fatiga Visual y Pantallas -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <!-- Card 2: Fatiga Visual y Monitores -->
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/fatiga_visual_pantallas.jpg" alt="Fatiga Visual y Pantallas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-purple-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-purple-600/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <i data-lucide="eye" class="w-3 h-3"></i> Salud Visual
               </span>
             </div>
@@ -250,11 +362,11 @@
           </div>
 
           <!-- Card 3: Ergonomía, Silla & Lumbalgia -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/ergonomia_silla_postura.jpg" alt="Ergonomía y Postura" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-emerald-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-emerald-600/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <i data-lucide="activity" class="w-3 h-3"></i> Postura & Ergonomía
               </span>
             </div>
@@ -273,11 +385,11 @@
           </div>
 
           <!-- Card 4: Estrés y Descompresión 4-7-8 -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/manejo_estres_respiracion.jpg" alt="Manejo del Estrés" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-amber-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-amber-600/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <i data-lucide="heart-pulse" class="w-3 h-3"></i> Control de Estrés
               </span>
             </div>
@@ -296,11 +408,11 @@
           </div>
 
           <!-- Card 5: Primeros Auxilios Inmediatos -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/primeros_auxilios_emergencia.jpg" alt="Primeros Auxilios" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-rose-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-rose-600/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <i data-lucide="shield-alert" class="w-3 h-3"></i> Primeros Auxilios
               </span>
             </div>
@@ -319,12 +431,12 @@
           </div>
 
           <!-- Card 6: Dispensario Central Piso 2 -->
-          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group">
+          <div class="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
             <div class="relative h-52 w-full overflow-hidden bg-slate-100">
               <img src="/img/consultorio_dispensario_central.jpg" alt="Dispensario Central" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent"></div>
-              <span class="absolute bottom-3 left-3 bg-brand-700/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i> Consultorio Piso 2
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/20 to-transparent"></div>
+              <span class="absolute bottom-3 left-3 bg-brand-700/90 backdrop-blur-xs text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                <i data-lucide="stethoscope" class="w-3 h-3"></i> Consultorio Piso 2
               </span>
             </div>
             <div class="p-5 flex-1 flex flex-col justify-between">
@@ -345,21 +457,45 @@
       </div>
     </section>
 
+    <!-- Corporate Quality Standards Section -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-14">
+      <div class="bg-gradient-to-r from-brand-900 via-sky-950 to-slate-900 rounded-3xl p-8 sm:p-10 text-white border border-slate-800 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 max-w-2xl">
+          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-3 py-1 rounded-full border border-cyan-500/30 uppercase tracking-wider">Estándar de Calidad Sanitaria</span>
+          <h3 class="text-2xl sm:text-3xl font-black tracking-tight mt-3">Compromiso FYDI con el Bienestar del Trabajador</h3>
+          <p class="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+            Garantizamos medicamentos de laboratorios certificados, trazabilidad del 100% en farmacia e intervenciones preventivas continuas para asegurar un entorno de trabajo saludable y seguro en las 7 plantas operativas.
+          </p>
+          <div class="mt-6 flex flex-wrap items-center gap-3">
+            <button onclick="abrirModalSolicitudPiso()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-xl transition shadow-sm">
+              Pedir Asistencia Médica
+            </button>
+            <button onclick="abrirModalLogin()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+              Acceso Profesional Clínico
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Landing Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
       <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <span>Dispensario Médico FYDI &copy; 2026 &bull; Seguridad y Salud en el Trabajo</span>
-        <div class="flex items-center gap-4">
-          <button onclick="abrirModalSolicitudPiso()" class="text-brand-600 hover:underline font-semibold">Solicitar Asistencia</button>
-          <button onclick="abrirModalConsultarTicket()" class="text-slate-600 hover:underline">Consultar Ticket</button>
-          <button onclick="abrirModalLogin()" class="text-slate-600 hover:underline">Personal Médico</button>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-700">Dispensario Médico FYDI</span>
+          <span>&copy; 2026 &bull; Seguridad y Salud en el Trabajo</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+          <button onclick="abrirModalSolicitudPiso()" class="text-brand-600 hover:underline font-bold">Solicitar Asistencia</button>
+          <button onclick="abrirModalConsultarTicket()" class="text-slate-600 hover:underline font-medium">Consultar Ticket</button>
+          <button onclick="abrirModalLogin()" class="text-slate-600 hover:underline font-medium">Personal Médico</button>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- Top Header -->
-    <!-- ======================================================== -->
+  <!-- ======================================================== -->
   <!-- VISTA INTERNA: SISTEMA CLÍNICO Y BODEGA FYDI             -->
   <!-- ======================================================== -->
   <div id="app-clinica-interna" class="hidden flex-1 flex flex-col w-full">
@@ -1515,122 +1651,121 @@
 
   <!-- MODAL: LOGIN CORPORATIVO PROFESIONAL FYDI                -->
   <!-- ======================================================== -->
-  <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200/90 animate-fade-in relative my-auto">
+  <div id="modal-login" onclick="if(event.target===this)cerrarModalLogin()" class="hidden fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200/90 animate-fade-in relative my-auto max-h-[92vh] flex flex-col">
       
-      <!-- Top Corporate Bar: System Status & Language Switcher -->
-      <div class="px-6 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
-        <div class="flex items-center gap-2">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span class="font-bold text-slate-700 text-[11px] tracking-wide flex items-center gap-1.5">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-600"></i> Portal Clínico Seguro FYDI
-          </span>
-        </div>
+      <!-- Top Corporate Bar: Back button, Status indicator & Close X -->
+      <div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs shrink-0">
         
-        <!-- Multi-language pill -->
-        <div class="flex items-center bg-slate-200/70 rounded-xl p-0.5 border border-slate-200">
-          <button type="button" onclick="cambiarIdioma('es')" id="login-lang-es" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-700 hover:text-brand-700 transition">ES</button>
-          <button type="button" onclick="cambiarIdioma('en')" id="login-lang-en" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">EN</button>
-          <button type="button" onclick="cambiarIdioma('zh')" id="login-lang-zh" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">中文</button>
+        <!-- Back to Portal button -->
+        <button type="button" onclick="cerrarModalLogin()" class="inline-flex items-center gap-1.5 text-slate-600 hover:text-brand-700 font-bold text-xs py-1.5 px-3 rounded-xl hover:bg-slate-200/70 transition" title="Regresar al Portal Público de Salud">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>Volver al Portal</span>
+        </button>
+
+        <!-- Right: Languages + Close X -->
+        <div class="flex items-center gap-1.5">
+          <div class="flex items-center bg-slate-200/70 rounded-xl p-0.5 border border-slate-200">
+            <button type="button" onclick="cambiarIdioma('es')" id="login-lang-es" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-700 hover:text-brand-700 transition">ES</button>
+            <button type="button" onclick="cambiarIdioma('en')" id="login-lang-en" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">EN</button>
+            <button type="button" onclick="cambiarIdioma('zh')" id="login-lang-zh" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">中文</button>
+          </div>
+          <button type="button" onclick="cerrarModalLogin()" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-xl hover:bg-slate-200/70 transition" title="Cerrar ventana">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Header Hero -->
-      <div class="px-8 pt-6 pb-4 text-center">
-        <div class="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
-          <i data-lucide="cross" class="w-7 h-7"></i>
-        </div>
-        <h2 id="lbl-modal-login-title" class="text-xl font-black tracking-tight text-slate-900">Dispensario Médico FYDI</h2>
-        <p id="lbl-modal-login-sub" class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Control Clínico Ocupacional, Trazabilidad de Farmacia y Gestión de Bodega</p>
-      </div>
+      <!-- Scrollable Form Container -->
+      <div class="p-6 sm:p-7 space-y-4 overflow-y-auto flex-1 text-xs">
 
-      <div class="px-8 pb-8 space-y-5">
+        <!-- Header Hero -->
+        <div class="text-center pt-1 pb-2">
+          <div class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-2.5 shadow-xs">
+            <i data-lucide="cross" class="w-6 h-6"></i>
+          </div>
+          <h2 id="lbl-modal-login-title" class="text-lg font-black tracking-tight text-slate-900">Dispensario Médico FYDI</h2>
+          <p id="lbl-modal-login-sub" class="text-xs text-slate-500 mt-0.5 max-w-xs mx-auto">Control Clínico, Trazabilidad Farmacéutica y Gestión de Stock</p>
+        </div>
         
         <!-- Interactive Role Selector Cards -->
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
               <i data-lucide="users" class="w-3.5 h-3.5 text-brand-600"></i>
               Selecciona tu Puesto de Trabajo:
             </label>
-            <span class="text-[10px] text-brand-600 font-semibold">Clic para elegir</span>
+            <span class="text-[10px] text-brand-600 font-bold">Clic para elegir</span>
           </div>
 
-          <div class="grid grid-cols-3 gap-2.5">
+          <div class="grid grid-cols-3 gap-2">
             <!-- Role 1: Enfermería -->
-            <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="role-icon-box w-7 h-7 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-xs transition">
-                  <i data-lucide="stethoscope" class="w-4 h-4"></i>
+            <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1">
+                <span class="role-icon-box w-6 h-6 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
                 </span>
                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">Clínica</span>
               </div>
               <div class="role-title font-bold text-xs text-slate-800 group-hover:text-sky-700 transition">Enfermería</div>
-              <div class="text-[10px] text-slate-500 truncate">Atención y Recetas</div>
+              <div class="text-[9px] text-slate-500 truncate">Atención & Recetas</div>
             </div>
 
             <!-- Role 2: Administrador -->
-            <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="role-icon-box w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs transition">
-                  <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1">
+                <span class="role-icon-box w-6 h-6 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
                 </span>
                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">Jefatura</span>
               </div>
               <div class="role-title font-bold text-xs text-slate-800 group-hover:text-purple-700 transition">Administrador</div>
-              <div class="text-[10px] text-slate-500 truncate">Stock y Permisos</div>
+              <div class="text-[9px] text-slate-500 truncate">Stock & Permisos</div>
             </div>
 
             <!-- Role 3: Auditor -->
-            <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="role-icon-box w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs transition">
-                  <i data-lucide="file-check" class="w-4 h-4"></i>
+            <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1">
+                <span class="role-icon-box w-6 h-6 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
                 </span>
                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300">Auditor</span>
               </div>
               <div class="role-title font-bold text-xs text-slate-800 group-hover:text-slate-900 transition">Auditoría</div>
-              <div class="text-[10px] text-slate-500 truncate">Balances y Excel</div>
+              <div class="text-[9px] text-slate-500 truncate">Balances & Excel</div>
             </div>
           </div>
         </div>
 
         <!-- Credentials Form -->
-        <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs" autocomplete="on">
+        <form onsubmit="handleLoginSubmit(event)" class="space-y-3 text-xs" autocomplete="on">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+            <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
                 <i data-lucide="user" class="w-3.5 h-3.5 text-brand-600"></i>
                 <span id="lbl_usuario_title">Usuario Corporativo *</span>
               </span>
               <span id="role-quick-hint" class="text-[10px] text-brand-600 font-bold hidden"></span>
             </label>
-            <input type="text" name="username" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition">
+            <input type="text" name="username" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition">
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+            <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
                 <i data-lucide="lock" class="w-3.5 h-3.5 text-brand-600"></i>
                 <span id="lbl_password_title">Contraseña de Acceso *</span>
               </span>
               <span id="caps-warning" class="hidden text-[10px] text-amber-600 font-bold flex items-center gap-1">
-                <i data-lucide="alert-triangle" class="w-3 h-3"></i> Bloq Mayús activado
+                <i data-lucide="alert-triangle" class="w-3 h-3"></i> Bloq Mayús activo
               </span>
             </label>
             <div class="relative">
-              <input type="password" name="password" id="login-password" required placeholder="Ingresa tu clave institucional..." autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition font-mono">
-              <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition">
+              <input type="password" name="password" id="login-password" required placeholder="Ingresa tu clave institucional..." autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 pr-10 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition font-mono">
+              <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2 text-slate-400 hover:text-slate-600 transition">
                 <i data-lucide="eye" class="w-4 h-4"></i>
               </button>
             </div>
-            <p class="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
-              <i data-lucide="shield" class="w-3 h-3 text-brand-600"></i>
-              <span>Por seguridad, ingresa tu clave o utiliza las credenciales guardadas en tu navegador.</span>
-            </p>
           </div>
 
           <!-- Error Alert Container -->
@@ -1643,16 +1778,22 @@
           </div>
 
           <!-- Submit Button -->
-          <div class="pt-2">
-            <button type="submit" id="btn-login-submit" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
+          <div class="pt-1.5 space-y-2">
+            <button type="submit" id="btn-login-submit" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span id="btn-login-text">Verificar e Ingresar al Sistema</span>
+            </button>
+            
+            <!-- Explicit Cancel / Back Button for advisors who clicked by accident -->
+            <button type="button" onclick="cerrarModalLogin()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 border border-slate-200">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>Cancelar y Volver al Portal de Salud</span>
             </button>
           </div>
         </form>
 
         <!-- Footer Info -->
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
           <span class="flex items-center gap-1">
             <i data-lucide="database" class="w-3 h-3 text-emerald-600"></i> Turso SQLite Cloud Conectado
           </span>
