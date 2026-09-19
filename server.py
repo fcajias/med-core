@@ -1020,7 +1020,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             # 8. REGISTRO PÚBLICO DE SOLICITUD DE PISO (CALL CENTER)
             # ---------------------------------------------------------
             elif path == "/api/solicitudes":
-                piso = int(data.get("piso", 1))
+                piso = str(data.get("piso", "6")).strip()
                 area = data.get("area_campana", "").strip()
                 nombre = data.get("nombre_paciente", "").strip().upper()
                 cedula = data.get("cedula", "").strip()
@@ -1041,9 +1041,10 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 conn.commit()
                 sol_id = cur.lastrowid
 
+                piso_txt = piso if "piso" in piso.lower() or "mezzanine" in piso.lower() or "pb" in piso.lower() else f"Piso {piso}"
                 self.send_json({
                     "success": True,
-                    "mensaje": f"Solicitud #{sol_id} recibida. La enfermera ha sido alertada para el Piso {piso}.",
+                    "mensaje": f"Solicitud #{sol_id} recibida. La enfermera ha sido alertada para {piso_txt}.",
                     "solicitud_id": sol_id
                 }, 201)
 

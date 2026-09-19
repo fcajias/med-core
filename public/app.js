@@ -2067,7 +2067,7 @@ function mostrarAppClinica() {
 // ================================================================
 // SOLICITUDES DE ASISTENCIA A PISOS (1 AL 7) - FORMULARIO PÚBLICO
 // ================================================================
-function abrirModalSolicitudPiso(piso = 1) {
+function abrirModalSolicitudPiso(piso = '6') {
   const modal = document.getElementById("modal-solicitar-asistencia");
   const formBox = document.getElementById("form-solicitar-piso");
   const exitoBox = document.getElementById("sol-exito-box");
@@ -2100,8 +2100,9 @@ function actualizarCargosPorMacroArea() {
     "Jefe de Aplicaciones",
     "Contabilidad",
     "Recursos Humanos",
-    "Gerencia",
-    "Seguridad"
+    "Gerencia General / Jefatura",
+    "Seguridad (Recepción PB)",
+    "Minimarket / Tiendita (Mezzanine)"
   ];
 
   const lista = macro === "ADMINISTRATIVA" ? cargosAdmin : cargosOperativa;
@@ -2129,15 +2130,33 @@ function cerrarModalSolicitudPiso() {
 function seleccionarPisoSolicitud(piso) {
   const inputPiso = document.getElementById("sol-piso");
   const txtPiso = document.getElementById("sol-piso-seleccionado-txt");
-  if (inputPiso) inputPiso.value = piso;
-  if (txtPiso) txtPiso.textContent = `Piso Seleccionado: ${piso}`;
+  const pStr = String(piso);
+  if (inputPiso) inputPiso.value = pStr;
+
+  let desc = `Piso ${pStr}`;
+  if (pStr === "PB") desc = "Planta Baja (Recepción & Seguridad)";
+  else if (pStr === "Mezzanine") desc = "Mezzanine (Minimarket & Apoyo)";
+  else if (pStr === "1") desc = "Piso 1 (Cobranzas • Sistemas • RRHH)";
+  else if (pStr === "5") desc = "Piso 5 (Cobranzas • Gerencia)";
+  else if (pStr === "6") desc = "Piso 6 (🏥 Consultorio Central de Enfermería)";
+  else if (pStr === "7") desc = "Piso 7 (Call Center Cobranzas)";
+  else desc = `Piso ${pStr} (Call Center Cobranzas)`;
+
+  if (txtPiso) txtPiso.textContent = desc;
 
   const btns = document.querySelectorAll("#piso-selector-btns .piso-btn");
-  btns.forEach((btn, idx) => {
-    if (idx + 1 === parseInt(piso)) {
+  btns.forEach(btn => {
+    const val = btn.getAttribute("data-piso") || btn.textContent.trim();
+    if (val.toLowerCase() === pStr.toLowerCase() || (pStr === '6' && val.startsWith('6'))) {
       btn.classList.add("active-piso");
+      btn.className = "piso-btn py-1.5 rounded-xl font-bold text-xs border border-[#16325C] bg-[#16325C] text-white transition active-piso";
     } else {
       btn.classList.remove("active-piso");
+      if (val === 'Mezzanine' || val === 'Mezz') {
+        btn.className = "piso-btn py-1.5 rounded-xl font-bold text-xs border border-orange-200 text-[#E35205] bg-orange-50/50 hover:bg-orange-100 transition";
+      } else {
+        btn.className = "piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition";
+      }
     }
   });
 }
@@ -2145,7 +2164,7 @@ function seleccionarPisoSolicitud(piso) {
 async function enviarSolicitudPiso(e) {
   e.preventDefault();
   sincronizarAreaCampanaTexto();
-  const piso = parseInt(document.getElementById("sol-piso").value) || 1;
+  const piso = document.getElementById("sol-piso") ? document.getElementById("sol-piso").value.trim() : "6";
   const area_campana = document.getElementById("sol-area").value.trim();
   const nombre_paciente = document.getElementById("sol-nombre").value.trim().toUpperCase();
   const cedula = document.getElementById("sol-cedula").value.trim();
@@ -2421,7 +2440,7 @@ function renderSolicitudesPisos() {
     lista = lista.filter(s => s.estado === filtroEstadoSolicitud);
   }
   if (filtroPiso !== "TODOS") {
-    lista = lista.filter(s => s.piso === parseInt(filtroPiso));
+    lista = lista.filter(s => String(s.piso).toLowerCase() === String(filtroPiso).toLowerCase());
   }
 
   if (lista.length === 0) {
