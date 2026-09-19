@@ -176,7 +176,61 @@ const I18N = {
     login_remember: "Recordar sesión en este equipo",
 
     footer_text: "Dispensario Médico FYDI © 2026 • Control y Auditoría Sanitaria",
-    footer_sync: "Base de Datos Sincronizada con Bodega Física"
+    footer_sync: "Base de Datos Sincronizada con Bodega Física",
+
+    // --- PORTAL DE SALUD & BIENESTAR (CALL CENTER) ---
+    landing_nav_title: "Portal de Salud Ocupacional & Bienestar FYDI",
+    landing_btn_solicitar_nav: "🛎️ Solicitar Asistencia en Piso",
+    landing_btn_acceso_medico: "🩺 Acceso Personal Médico",
+    landing_btn_ver_portal: "🌐 Portal de Bienestar",
+    landing_btn_volver_clinica: "🩺 Volver al Sistema Clínico",
+    landing_hero_badge: "Call Center FYDI • 7 Pisos Conectados en Tiempo Real",
+    landing_hero_title: "Cuidamos tu salud en cada llamada y en cada jornada",
+    landing_hero_sub: "Medicina ocupacional y asistencia rápida para asesores telefónicos, supervisores y personal administrativo. Si no puedes bajar al consultorio, la enfermera acude a tu piso.",
+    landing_cta_solicitar: "🚨 Solicitar Asistencia de Enfermería a mi Piso",
+    landing_cta_consultar: "🔍 Consultar Estado de mi Solicitud",
+    landing_banner_urgencias: "Emergencias Inmediatas: Extensión interna 102 • Consultorio Central en Piso 2",
+    landing_sec_consejos_title: "Guía de Salud & Ergonomía para Operadores de Call Center",
+    landing_sec_consejos_sub: "Consejos clínicos aprobados para prevenir afecciones frecuentes durante la jornada laboral.",
+    landing_sec_pisos_title: "Cobertura Médica Inmediata en los 7 Pisos del Edificio",
+    landing_sec_pisos_sub: "Haz clic en tu piso para solicitar que la enfermera suba directamente a tu estación:",
+    
+    // Consejos de Salud Ocupacional
+    tip_voz_title: "Salud Vocal & Hidratación Continua",
+    tip_voz_desc: "Toma sorbos frecuentes de agua a temperatura ambiente. Evita carraspear con fuerza y modula la voz desde el diafragma para no fatigar las cuerdas vocales con la diadema.",
+    tip_vision_title: "Fatiga Visual y Regla 20-20-20",
+    tip_vision_desc: "Cada 20 minutos frente a los monitores, enfoca la vista a un punto distante (6 metros) durante 20 segundos. Parpadea con frecuencia para humectar la córnea y evitar migrañas.",
+    tip_ergo_title: "Ergonomía, Silla & Lumbalgia",
+    tip_ergo_desc: "Regula el respaldo de tu silla a 90°-100° con soporte lumbar firme. Mantén los codos al nivel de los apoyabrazos y realiza estiramientos de muñecas para prevenir el túnel carpiano.",
+    tip_estres_title: "Manejo de Estrés y Descompresión 4-7-8",
+    tip_estres_desc: "Tras una llamada conflictiva o de alta tensión, inhala en 4 segundos, retén el aire 7 segundos y exhala en 8 segundos. Esto estabiliza tu ritmo cardíaco y previene crisis de ansiedad.",
+    tip_primeros_aux_title: "Primeros Auxilios Rápidos",
+    tip_primeros_aux_desc: "Si sufres mareo, baja de presión o sudor frío, reclina el asiento, afloja corbatas o cuellos ajustados y solicita asistencia en piso inmediatamente a través de este portal.",
+    tip_botiquin_title: "Consultorio Central y Horarios",
+    tip_botiquin_desc: "Ubicado en el Piso 2. Atención de lunes a sábado de 07:00 a 19:00. Disponemos de tensiómetro, analgésicos, protectores gástricos y botiquín de emergencia normalizado.",
+
+    // Gestión de Solicitudes de Piso
+    tab_solicitudes: "🛎️ Solicitudes de Pisos",
+    modal_sol_title: "Solicitud de Asistencia Médica a Piso",
+    modal_sol_sub: "La enfermera recibirá una alerta en tiempo real en su panel para acudir a tu puesto o indicarte instrucciones.",
+    sol_lbl_piso: "¿En qué piso te encuentras? (Pisos 1 al 7) *",
+    sol_lbl_area: "Campaña / Área / Isla o Puesto *",
+    sol_lbl_nombre: "Nombre y Apellidos del Colaborador *",
+    sol_lbl_cedula: "Cédula o ID de Empleado (Opcional)",
+    sol_lbl_ext: "Extensión Interna / Celular de Contacto",
+    sol_lbl_prioridad: "Nivel de Prioridad *",
+    sol_lbl_motivo: "¿Qué síntomas o molestia presentas? *",
+    sol_btn_enviar: "Enviar Alerta a Enfermería",
+    sol_prio_normal: "Normal (Malestar leve, dolor de cabeza, consulta)",
+    sol_prio_urgente: "Urgente (Dolor agudo, mareo fuerte, náuseas)",
+    sol_prio_emergencia: "Emergencia (Desmayo, dolor de pecho, crisis)",
+    sol_tracker_title: "Consultar Estado de mi Solicitud",
+    sol_tracker_prompt: "Ingresa el número de ticket que recibiste al enviar tu solicitud:",
+    sol_tracker_btn: "Verificar Estado",
+    sol_estado_pendiente: "🟡 Pendiente de Revisión",
+    sol_estado_en_camino: "🏃‍♂️ Enfermera en Camino",
+    sol_estado_puede_acercarse: "🚶‍♀️ Puedes acercarte al Dispensario",
+    sol_estado_atendida: "✅ Atendida y Despachada"
   },
 
   en: {
@@ -353,7 +407,61 @@ const I18N = {
     login_remember: "Remember session on this device",
 
     footer_text: "FYDI Medical Dispensary © 2026 • Occupational Health & Medical Audit",
-    footer_sync: "Database 100% Synchronized with Physical Warehouse"
+    footer_sync: "Database 100% Synchronized with Physical Warehouse",
+
+    // --- OCCUPATIONAL HEALTH & WELLNESS PORTAL (CALL CENTER) ---
+    landing_nav_title: "FYDI Occupational Health & Wellness Portal",
+    landing_btn_solicitar_nav: "🛎️ Request Floor Assistance",
+    landing_btn_acceso_medico: "🩺 Medical Staff Login",
+    landing_btn_ver_portal: "🌐 Wellness Portal",
+    landing_btn_volver_clinica: "🩺 Back to Clinical System",
+    landing_hero_badge: "FYDI Call Center • 7 Connected Floors in Real Time",
+    landing_hero_title: "Taking care of your health on every call and every shift",
+    landing_hero_sub: "Occupational medicine and rapid on-floor nurse response for call center agents, team leads, and staff. If you cannot leave your desk to visit the clinic, request the nurse directly to your floor.",
+    landing_cta_solicitar: "🚨 Request Nurse Assistance to My Floor",
+    landing_cta_consultar: "🔍 Track My Request Status",
+    landing_banner_urgencias: "Immediate Emergencies: Internal extension 102 • Central Clinic on Floor 2",
+    landing_sec_consejos_title: "Health & Ergonomics Guide for Teleoperators",
+    landing_sec_consejos_sub: "Approved clinical advice to prevent common workplace fatigue and discomfort.",
+    landing_sec_pisos_title: "Immediate Medical Coverage Across All 7 Floors",
+    landing_sec_pisos_sub: "Select your floor to request a direct visit from the nurse:",
+    
+    // Health Tips
+    tip_voz_title: "Vocal Health & Continuous Hydration",
+    tip_voz_desc: "Keep a water bottle with room-temperature water at your desk. Sip frequently to lubricate vocal cords. Avoid harsh throat-clearing and speak from your diaphragm while using headsets.",
+    tip_vision_title: "Eye Strain & The 20-20-20 Rule",
+    tip_vision_desc: "Every 20 minutes of screen work, look at an object 20 feet (6 meters) away for 20 seconds. Blink frequently to rehydrate your eyes and prevent monitor-induced migraines.",
+    tip_ergo_title: "Ergonomics, Chair & Lower Back Care",
+    tip_ergo_desc: "Adjust your chair backrest to 90°-100° with proper lumbar support. Keep elbows level with armrests and perform quick wrist stretches to prevent carpal tunnel strain.",
+    tip_estres_title: "Stress Relief & 4-7-8 Breathing",
+    tip_estres_desc: "After a challenging or high-stress customer call, inhale for 4s, hold for 7s, and exhale for 8s. This stabilizes heart rate and calms acute anxiety before the next interaction.",
+    tip_primeros_aux_title: "Immediate First Aid",
+    tip_primeros_aux_desc: "If experiencing dizziness, blood pressure drops, or cold sweats, recline your seat, loosen tight collars, and immediately request floor assistance through this portal.",
+    tip_botiquin_title: "Central Clinic & Operating Hours",
+    tip_botiquin_desc: "Located on Floor 2. Open Monday through Saturday 07:00 to 19:00. Fully stocked with blood pressure monitors, analgesics, antacids, and standardized first aid kits.",
+
+    // Floor Request Management
+    tab_solicitudes: "🛎️ Floor Requests",
+    modal_sol_title: "Request Nurse Assistance to Floor",
+    modal_sol_sub: "The nurse will receive a real-time alert on her dashboard to visit your workstation or provide guidance.",
+    sol_lbl_piso: "Which floor are you on? (Floors 1 to 7) *",
+    sol_lbl_area: "Campaign / Department / Desk or Pod *",
+    sol_lbl_nombre: "Employee Full Name *",
+    sol_lbl_cedula: "National ID or Employee Code (Optional)",
+    sol_lbl_ext: "Internal Extension / Contact Phone",
+    sol_lbl_prioridad: "Priority Level *",
+    sol_lbl_motivo: "What symptoms or discomfort are you feeling? *",
+    sol_btn_enviar: "Send Nurse Alert",
+    sol_prio_normal: "Normal (Mild discomfort, headache, question)",
+    sol_prio_urgente: "Urgent (Sharp pain, severe dizziness, nausea)",
+    sol_prio_emergencia: "Emergency (Fainting, chest pain, acute crisis)",
+    sol_tracker_title: "Track Request Status",
+    sol_tracker_prompt: "Enter the ticket number you received upon submitting your request:",
+    sol_tracker_btn: "Check Status",
+    sol_estado_pendiente: "🟡 Pending Review",
+    sol_estado_en_camino: "🏃‍♂️ Nurse On The Way",
+    sol_estado_puede_acercarse: "🚶‍♀️ You May Walk to Clinic",
+    sol_estado_atendida: "✅ Completed & Dispensed"
   },
 
   zh: {
@@ -530,7 +638,61 @@ const I18N = {
     login_remember: "在此设备上记住登录状态",
 
     footer_text: "FYDI 医务室监管系统 © 2026 • 医疗卫生与劳动保护",
-    footer_sync: "数据与药房实物 100% 严密同步"
+    footer_sync: "数据与药房实物 100% 严密同步",
+
+    // --- 呼叫中心职业健康与员工关怀中心 ---
+    landing_nav_title: "FYDI 职业健康与员工关怀中心",
+    landing_btn_solicitar_nav: "🛎️ 呼叫护士到楼层",
+    landing_btn_acceso_medico: "🩺 医护人员登录",
+    landing_btn_ver_portal: "🌐 员工健康门户",
+    landing_btn_volver_clinica: "🩺 返回医务室系统",
+    landing_hero_badge: "FYDI 呼叫中心 • 1 至 7 楼全栋实时联网",
+    landing_hero_title: "守护每一次通话，关怀每一个工作日",
+    landing_hero_sub: "为话务客服、主管及行政人员提供职业健康防护与紧急医疗巡诊。若身体不适无法下楼，护士将直接前往您的工位。",
+    landing_cta_solicitar: "🚨 呼叫护士上楼救助",
+    landing_cta_consultar: "🔍 查询工单处理进度",
+    landing_banner_urgencias: "紧急求助热线: 分机 102 • 2楼中央医务室",
+    landing_sec_consejos_title: "话务客服职业健康与工效学防护指南",
+    landing_sec_consejos_sub: "经医务部门审核的日常保健指南，预防职业疲劳与慢性劳损。",
+    landing_sec_pisos_title: "全栋 7 个楼层即时医疗支持",
+    landing_sec_pisos_sub: "点击您的所在楼层即可快速呼叫医护人员前往您的工位：",
+    
+    // 健康小贴士
+    tip_voz_title: "嗓音保护与持续补水",
+    tip_voz_desc: "工位常备温水杯，少量多次饮用以湿润声带。避免用力清嗓，使用耳机时采用腹式呼吸发音，减轻喉部肌肉疲劳。",
+    tip_vision_title: "视力疲劳与 20-20-20 法则",
+    tip_vision_desc: "每注视屏幕20分钟，远眺6米外景物20秒。有意识地多眨眼以润滑角膜，适当调节显示器亮度以预防偏头痛。",
+    tip_ergo_title: "工效学坐姿与腰椎保护",
+    tip_ergo_desc: "调整工椅靠背在90°-100°之间，确保腰部有承托。手肘与扶手齐平，工作间隙做手腕拉伸以预防鼠标手与腱鞘炎。",
+    tip_estres_title: "压力舒缓与 4-7-8 呼吸法",
+    tip_estres_desc: "结束高压或争议通话后，吸气4秒、憋气7秒、慢呼气8秒。该方法可迅速平复心率，舒缓焦虑，为下一次通话调整状态。",
+    tip_primeros_aux_title: "常见紧急自救常识",
+    tip_primeros_aux_desc: "如突发头晕、低血糖或冒冷汗，请立即后倾座椅、松开领口并饮水，同时通过本系统一键呼叫护士上楼。",
+    tip_botiquin_title: "中央医务室与就诊指引",
+    tip_botiquin_desc: "医务室设在2楼。周一至周六 07:00 至 19:00 全天开放。配备血压计、应急解热镇痛药、胃药及各楼层标准化急救箱。",
+
+    // 楼层求助管理
+    tab_solicitudes: "🛎️ 楼层求助工单",
+    modal_sol_title: "申请护士到楼层救助",
+    modal_sol_sub: "护士工作站将实时收到呼叫提醒，并尽快赶往您的工位或提供就诊指引。",
+    sol_lbl_piso: "您当前在几楼？(1 至 7 楼) *",
+    sol_lbl_area: "业务部门 / 项目组 / 工位编号 *",
+    sol_lbl_nombre: "员工姓名 *",
+    sol_lbl_cedula: "身份证号 / 工号 (选填)",
+    sol_lbl_ext: "工位分机 / 手机号码",
+    sol_lbl_prioridad: "紧急程度 *",
+    sol_lbl_motivo: "身体不适或症状描述 *",
+    sol_btn_enviar: "立即发送救助呼叫",
+    sol_prio_normal: "普通 (轻微不适、头痛、咨询)",
+    sol_prio_urgente: "紧急 (剧烈疼痛、严重眩晕、恶心)",
+    sol_prio_emergencia: "特急 (晕厥、胸痛胸闷、严重哮喘)",
+    sol_tracker_title: "查询求助进度",
+    sol_tracker_prompt: "输入提交求助时生成的工单号：",
+    sol_tracker_btn: "查询状态",
+    sol_estado_pendiente: "🟡 等待护士接单",
+    sol_estado_en_camino: "🏃‍♂️ 护士已上楼",
+    sol_estado_puede_acercarse: "🚶‍♀️ 可直接前往医务室",
+    sol_estado_atendida: "✅ 已就诊并完成发药"
   }
 };
 

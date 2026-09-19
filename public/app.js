@@ -7,6 +7,11 @@ let renglonesReceta = [];
 let renglonIdCounter = 0;
 let atencionPendiente = null;
 let permisosCache = [];
+let solicitudesCache = [];
+let filtroEstadoSolicitud = 'TODAS';
+let currentSolicitudAtendiendoId = null;
+let pollingSolicitudesInterval = null;
+
 
 // Estado de sesión activa (Exige autenticación corporativa real)
 let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || null;
@@ -17,12 +22,17 @@ document.addEventListener("DOMContentLoaded", () => {
   initFechaHoy();
   sincronizarPermisos();
 
-  // Verificar si hay sesión activa; si no, abrir pantalla de login corporativo
+  // Verificar si hay sesión activa:
+  // Si NO hay sesión, el personal de operaciones ve la Landing Page de Bienestar & Salud
+  // Si HAY sesión clínica, se muestra el sistema hospitalario y se activa el polling de pisos
   if (!currentUser || !currentUser.usuario) {
-    abrirModalLogin();
+    mostrarPortalPublico();
   } else {
+    mostrarAppClinica();
     aplicarPermisosRol();
+    iniciarPollingSolicitudes();
   }
+  cargarSolicitudesPisos();
 
   cargarMedicamentos();
   cargarPacientes();
@@ -228,9 +238,13 @@ function togglePasswordVisibility(inputId, btn) {
 function cerrarSesion() {
   localStorage.removeItem("fydi_user");
   currentUser = null;
+  if (pollingSolicitudesInterval) {
+    clearInterval(pollingSolicitudesInterval);
+    pollingSolicitudesInterval = null;
+  }
   showToast("Sesión Finalizada", "Has salido del sistema de manera segura.", "warning");
   aplicarPermisosRol();
-  abrirModalLogin();
+  mostrarPortalPublico();
 }
 
 async function handleLoginSubmit(e) {
@@ -285,8 +299,11 @@ async function handleLoginSubmit(e) {
       localStorage.setItem("fydi_remembered_user", data.usuario);
 
       document.getElementById("modal-login").classList.add("hidden");
+      mostrarAppClinica();
       await sincronizarPermisos();
       aplicarPermisosRol();
+      iniciarPollingSolicitudes();
+      cargarSolicitudesPisos();
       renderInventarioTabla(medicamentosCache);
       cargarHistorial();
       cargarPacientes();
@@ -317,7 +334,9 @@ function cambiarTab(tabName) {
   if (targetPane) targetPane.classList.remove("hidden");
   if (targetBtn) targetBtn.classList.add("active-tab");
 
-  if (tabName === "inventario") {
+  if (tabName === "solicitudes") {
+    cargarSolicitudesPisos(true);
+  } else if (tabName === "inventario") {
     cargarMedicamentos();
   } else if (tabName === "pacientes") {
     cargarPacientes();
@@ -996,6 +1015,28 @@ async function ejecutarGuardadoAtencion() {
       showToast("Error en Despacho", data.error || "No se pudo registrar la atención.", "error");
     } else {
       showToast("¡Atención y Despacho Registrados!", `${data.mensaje} Paciente: ${data.paciente}.`, "success");
+      
+      // Si la atención provino de un ticket de piso, marcarlo automáticamente como ATENDIDO
+      if (currentSolicitudAtendiendoId) {
+        try {
+          await fetch("/api/solicitudes/responder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              solicitud_id: currentSolicitudAtendiendoId,
+              nuevo_estado: "ATENDIDA",
+              comentario: `Atención clínica y receta despachada en consultorio. Registro ID: #${data.atencion_id || ''}`,
+              user_role: currentUser.rol,
+              usuario_nombre: currentUser.nombre_completo
+            })
+          });
+          currentSolicitudAtendiendoId = null;
+          cargarSolicitudesPisos();
+        } catch (e) {
+          console.warn("No se pudo auto-finalizar solicitud:", e);
+        }
+      }
+
       cerrarModalConfirmacion();
       resetFormAtencion();
       cargarMedicamentos();
@@ -1950,5 +1991,630 @@ function aplicarTraducciones() {
   setText("lbl-modal-nuevo-pac-sub", t("modal_nuevo_pac_sub"));
   setText("lbl-modal-editar-pac-title", t("modal_editar_pac_title"));
   setText("lbl-modal-editar-pac-sub", t("modal_editar_pac_sub"));
+
+  // Landing Page y Portal de Bienestar (Call Center)
+  setText("lbl-landing-brand-title", t("app_title"));
+  setText("lbl-landing-brand-sub", t("landing_nav_title"));
+  setText("lbl-landing-btn-consultar", t("landing_cta_consultar"));
+  setText("lbl-landing-btn-login", t("landing_btn_acceso_medico"));
+  setText("lbl-btn-ver-portal", t("landing_btn_ver_portal"));
+  setText("lbl-landing-badge", t("landing_hero_badge"));
+  setText("lbl-landing-hero-title", t("landing_hero_title"));
+  setText("lbl-landing-hero-sub", t("landing_hero_sub"));
+  setText("lbl-landing-cta-solicitar", t("landing_cta_solicitar"));
+  setText("lbl-landing-cta-consultar", t("landing_cta_consultar"));
+  setText("lbl-landing-urgencias", t("landing_banner_urgencias"));
+  setText("lbl-landing-pisos-title", t("landing_sec_pisos_title"));
+  setText("lbl-landing-pisos-sub", t("landing_sec_pisos_sub"));
+  setText("lbl-landing-consejos-title", t("landing_sec_consejos_title"));
+  setText("lbl-landing-consejos-sub", t("landing_sec_consejos_sub"));
+
+  // Guía de Salud Ocupacional
+  setText("lbl-tip-voz-title", t("tip_voz_title"));
+  setText("lbl-tip-voz-desc", t("tip_voz_desc"));
+  setText("lbl-tip-vision-title", t("tip_vision_title"));
+  setText("lbl-tip-vision-desc", t("tip_vision_desc"));
+  setText("lbl-tip-ergo-title", t("tip_ergo_title"));
+  setText("lbl-tip-ergo-desc", t("tip_ergo_desc"));
+  setText("lbl-tip-estres-title", t("tip_estres_title"));
+  setText("lbl-tip-estres-desc", t("tip_estres_desc"));
+  setText("lbl-tip-primeros-aux-title", t("tip_primeros_aux_title"));
+  setText("lbl-tip-primeros-aux-desc", t("tip_primeros_aux_desc"));
+  setText("lbl-tip-botiquin-title", t("tip_botiquin_title"));
+  setText("lbl-tip-botiquin-desc", t("tip_botiquin_desc"));
+
+  // Tab y Modal de Solicitudes
+  setText("lbl-nav-solicitudes", t("tab_solicitudes"));
+  setText("lbl-modal-sol-title", t("modal_sol_title"));
+  setText("lbl-modal-sol-sub", t("modal_sol_sub"));
+  setText("lbl-sol-piso", t("sol_lbl_piso"));
+  setText("lbl-sol-area", t("sol_lbl_area"));
+  setText("lbl-sol-nombre", t("sol_lbl_nombre"));
+  setText("lbl-sol-cedula", t("sol_lbl_cedula"));
+  setText("lbl-sol-ext", t("sol_lbl_ext"));
+  setText("lbl-sol-prioridad", t("sol_lbl_prioridad"));
+  setText("lbl-sol-motivo", t("sol_lbl_motivo"));
+  setText("lbl-sol-btn-enviar", t("sol_btn_enviar"));
+  setText("lbl-sol-tracker-title", t("sol_tracker_title"));
 }
 
+
+
+// ================================================================
+// GESTIÓN DE VISTAS: PORTAL PÚBLICO (BIENESTAR) VS CLÍNICA INTERNA
+// ================================================================
+function mostrarPortalPublico() {
+  const landing = document.getElementById("landing-portal-salud");
+  const clinica = document.getElementById("app-clinica-interna");
+  if (landing) landing.classList.remove("hidden");
+  if (clinica) clinica.classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (window.lucide) lucide.createIcons();
+}
+
+function mostrarAppClinica() {
+  if (!currentUser || !currentUser.usuario) {
+    abrirModalLogin();
+    return;
+  }
+  const landing = document.getElementById("landing-portal-salud");
+  const clinica = document.getElementById("app-clinica-interna");
+  if (landing) landing.classList.add("hidden");
+  if (clinica) clinica.classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (window.lucide) lucide.createIcons();
+}
+
+// ================================================================
+// SOLICITUDES DE ASISTENCIA A PISOS (1 AL 7) - FORMULARIO PÚBLICO
+// ================================================================
+function abrirModalSolicitudPiso(piso = 1) {
+  const modal = document.getElementById("modal-solicitar-asistencia");
+  const formBox = document.getElementById("form-solicitar-piso");
+  const exitoBox = document.getElementById("sol-exito-box");
+
+  if (!modal) return;
+  modal.classList.remove("hidden");
+
+  if (formBox) formBox.classList.remove("hidden");
+  if (exitoBox) exitoBox.classList.add("hidden");
+
+  seleccionarPisoSolicitud(piso);
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalSolicitudPiso() {
+  const modal = document.getElementById("modal-solicitar-asistencia");
+  if (modal) modal.classList.add("hidden");
+}
+
+function seleccionarPisoSolicitud(piso) {
+  const inputPiso = document.getElementById("sol-piso");
+  const txtPiso = document.getElementById("sol-piso-seleccionado-txt");
+  if (inputPiso) inputPiso.value = piso;
+  if (txtPiso) txtPiso.textContent = `Piso Seleccionado: ${piso}`;
+
+  const btns = document.querySelectorAll("#piso-selector-btns .piso-btn");
+  btns.forEach((btn, idx) => {
+    if (idx + 1 === parseInt(piso)) {
+      btn.classList.add("active-piso");
+    } else {
+      btn.classList.remove("active-piso");
+    }
+  });
+}
+
+async function enviarSolicitudPiso(e) {
+  e.preventDefault();
+  const piso = parseInt(document.getElementById("sol-piso").value) || 1;
+  const area_campana = document.getElementById("sol-area").value.trim();
+  const nombre_paciente = document.getElementById("sol-nombre").value.trim().toUpperCase();
+  const cedula = document.getElementById("sol-cedula").value.trim();
+  const telefono_extension = document.getElementById("sol-extension").value.trim();
+  const prioridad = document.getElementById("sol-prioridad").value;
+  const motivo = document.getElementById("sol-motivo").value.trim();
+
+  const btnSubmit = document.getElementById("btn-submit-solicitud");
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch("/api/solicitudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        piso,
+        area_campana,
+        nombre_paciente,
+        cedula,
+        telefono_extension,
+        prioridad,
+        motivo
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || "No se pudo registrar la solicitud.");
+      return;
+    }
+
+    // Mostrar pantalla de éxito con Ticket ID
+    const formBox = document.getElementById("form-solicitar-piso");
+    const exitoBox = document.getElementById("sol-exito-box");
+    const ticketIdEl = document.getElementById("ticket-generado-id");
+    const ticketDetEl = document.getElementById("ticket-generado-detalles");
+
+    if (formBox) formBox.classList.add("hidden");
+    if (exitoBox) exitoBox.classList.remove("hidden");
+    if (ticketIdEl) ticketIdEl.textContent = `#${data.solicitud_id}`;
+    if (ticketDetEl) ticketDetEl.textContent = `Piso ${piso} • ${area_campana} • ${nombre_paciente}`;
+
+    // Resetear campos del formulario
+    document.getElementById("sol-area").value = "";
+    document.getElementById("sol-nombre").value = "";
+    document.getElementById("sol-cedula").value = "";
+    document.getElementById("sol-extension").value = "";
+    document.getElementById("sol-motivo").value = "";
+
+    // Actualizar badge si la sesión médica está activa
+    cargarSolicitudesPisos();
+
+  } catch (err) {
+    alert("Error de conexión al enviar solicitud: " + err.message);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> <span id="lbl-sol-btn-enviar">Enviar Alerta a Enfermería</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+// ================================================================
+// CONSULTA PÚBLICA DE ESTADO DE TICKET (ASISTENCIA EN PISO)
+// ================================================================
+function abrirModalConsultarTicket() {
+  const modal = document.getElementById("modal-consultar-ticket");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const input = document.getElementById("input-buscar-ticket");
+  if (input) {
+    input.value = "";
+    setTimeout(() => input.focus(), 50);
+  }
+  const resBox = document.getElementById("ticket-resultado-box");
+  if (resBox) resBox.classList.add("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalConsultarTicket() {
+  const modal = document.getElementById("modal-consultar-ticket");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function ejecutarConsultaTicket(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById("input-buscar-ticket");
+  const ticketId = input ? input.value.trim() : "";
+  const resBox = document.getElementById("ticket-resultado-box");
+
+  if (!ticketId) return;
+
+  resBox.classList.remove("hidden");
+  resBox.innerHTML = `<div class="text-center py-4 text-slate-500"><i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto text-brand-600 mb-1"></i> Buscando ticket #${ticketId}...</div>`;
+  if (window.lucide) lucide.createIcons();
+
+  try {
+    const res = await fetch(`/api/solicitudes/estado?id=${ticketId}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      resBox.innerHTML = `
+        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2">
+          <i data-lucide="alert-octagon" class="w-4 h-4 shrink-0 text-rose-600"></i>
+          <span>${data.error || "No se encontró ninguna solicitud con ese número de ticket."}</span>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    const estadoMap = {
+      PENDIENTE: { badge: "bg-amber-100 text-amber-800 border-amber-300", icon: "clock", txt: "En espera de asignación. La enfermera revisará tu alerta pronto." },
+      EN_CAMINO: { badge: "bg-sky-100 text-sky-800 border-sky-300", icon: "footprints", txt: "🏃‍♂️ ¡La enfermera va en camino a tu piso!" },
+      PUEDE_ACERCARSE: { badge: "bg-emerald-100 text-emerald-800 border-emerald-300", icon: "door-open", txt: "🚶‍♀️ Puedes acercarte al consultorio médico en el Piso 2." },
+      ATENDIDA: { badge: "bg-emerald-100 text-emerald-800 border-emerald-300", icon: "check-circle-2", txt: "✅ Solicitud atendida y registrada en el sistema." },
+      CANCELADA: { badge: "bg-slate-100 text-slate-600 border-slate-300", icon: "x-circle", txt: "Solicitud descartada o cancelada." }
+    };
+
+    const est = estadoMap[data.estado] || estadoMap.PENDIENTE;
+
+    resBox.innerHTML = `
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-slate-900 text-sm">Ticket #${data.id}</span>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${est.badge}">
+            ${data.estado}
+          </span>
+        </div>
+        <div class="text-xs text-slate-700">
+          <span class="font-bold">Ubicación:</span> Piso ${data.piso} &bull; ${data.area_campana}
+        </div>
+        <div class="text-xs text-slate-700">
+          <span class="font-bold">Colaborador:</span> ${data.nombre_paciente}
+        </div>
+        <div class="text-xs text-slate-600">
+          <span class="font-bold">Motivo:</span> ${data.motivo}
+        </div>
+        <div class="p-3 bg-white border border-slate-200 rounded-xl mt-2 text-xs">
+          <div class="font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+            <i data-lucide="${est.icon}" class="w-4 h-4 text-brand-600"></i>
+            Respuesta de Enfermería:
+          </div>
+          <p class="text-slate-600">${data.respuesta_enfermeria || est.txt}</p>
+          ${data.atendido_por ? `<span class="text-[10px] text-slate-400 block mt-1">Atendido por: ${data.atendido_por}</span>` : ''}
+        </div>
+        <span class="text-[10px] text-slate-400 block text-right">Registrado: ${data.creado_en}</span>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    resBox.innerHTML = `
+      <div class="text-rose-600 text-xs">Error al consultar ticket: ${err.message}</div>
+    `;
+  }
+}
+
+// ================================================================
+// PANEL DE GESTIÓN CLÍNICA DE SOLICITUDES DE PISOS (ENFERMERÍA)
+// ================================================================
+function iniciarPollingSolicitudes() {
+  if (pollingSolicitudesInterval) clearInterval(pollingSolicitudesInterval);
+  pollingSolicitudesInterval = setInterval(() => {
+    // Solo consultar si la pestaña del navegador está activa
+    if (!document.hidden) {
+      cargarSolicitudesPisos();
+    }
+  }, 15000);
+}
+
+async function cargarSolicitudesPisos(notify = false) {
+  const icon = document.getElementById("icon-refresh-solicitudes");
+  if (icon) icon.classList.add("animate-spin");
+
+  try {
+    const res = await fetch("/api/solicitudes?limit=100");
+    if (!res.ok) return;
+    solicitudesCache = await res.json();
+    renderSolicitudesPisos();
+    actualizarBadgesSolicitudes();
+
+    if (notify) {
+      showToast("Solicitudes Actualizadas", "Bandeja de pisos sincronizada en tiempo real.", "success");
+    }
+  } catch (e) {
+    console.warn("Error al cargar solicitudes de pisos:", e);
+  } finally {
+    if (icon) icon.classList.remove("animate-spin");
+  }
+}
+
+function actualizarBadgesSolicitudes() {
+  const pendientes = solicitudesCache.filter(s => s.estado === "PENDIENTE" || s.estado === "EN_CAMINO").length;
+  
+  const badgeNav = document.getElementById("badge-solicitudes-pendientes");
+  const badgeContador = document.getElementById("sol-contador-badge");
+
+  if (badgeNav) {
+    if (pendientes > 0) {
+      badgeNav.textContent = pendientes;
+      badgeNav.classList.remove("hidden");
+    } else {
+      badgeNav.classList.add("hidden");
+    }
+  }
+
+  if (badgeContador) {
+    badgeContador.textContent = `${pendientes} Activas (${solicitudesCache.length} Total)`;
+  }
+}
+
+function filtrarSolicitudesEstado(estado) {
+  filtroEstadoSolicitud = estado;
+  
+  const estados = ['TODAS', 'PENDIENTE', 'EN_CAMINO', 'PUEDE_ACERCARSE', 'ATENDIDA'];
+  estados.forEach(est => {
+    const btn = document.getElementById(`flt-sol-${est}`);
+    if (btn) {
+      if (est === estado) {
+        btn.className = "px-3 py-1.5 rounded-xl font-bold bg-brand-600 text-white shadow-xs transition";
+      } else {
+        btn.className = "px-3 py-1.5 rounded-xl font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition";
+      }
+    }
+  });
+
+  renderSolicitudesPisos();
+}
+
+function renderSolicitudesPisos() {
+  const contenedor = document.getElementById("contenedor-solicitudes-cards");
+  if (!contenedor) return;
+
+  // Actualizar contadores de los filtros
+  const cTodas = solicitudesCache.length;
+  const cPend = solicitudesCache.filter(s => s.estado === "PENDIENTE").length;
+  const cCamino = solicitudesCache.filter(s => s.estado === "EN_CAMINO").length;
+  const cAcer = solicitudesCache.filter(s => s.estado === "PUEDE_ACERCARSE").length;
+  const cAten = solicitudesCache.filter(s => s.estado === "ATENDIDA").length;
+
+  const setC = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setC("count-flt-todas", cTodas);
+  setC("count-flt-pendientes", cPend);
+  setC("count-flt-encamino", cCamino);
+  setC("count-flt-acercarse", cAcer);
+  setC("count-flt-atendidas", cAten);
+
+  const filtroPiso = document.getElementById("filtro-piso-solicitudes")?.value || "TODOS";
+
+  let lista = solicitudesCache;
+  if (filtroEstadoSolicitud !== "TODAS") {
+    lista = lista.filter(s => s.estado === filtroEstadoSolicitud);
+  }
+  if (filtroPiso !== "TODOS") {
+    lista = lista.filter(s => s.piso === parseInt(filtroPiso));
+  }
+
+  if (lista.length === 0) {
+    contenedor.innerHTML = `
+      <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+        <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+        <p class="font-medium">No hay solicitudes para los filtros seleccionados.</p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  contenedor.innerHTML = lista.map(item => {
+    const isEmergencia = item.prioridad === "EMERGENCIA";
+    const isUrgente = item.prioridad === "URGENTE";
+
+    let borderClass = "border-slate-200";
+    let badgePrio = `<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">NORMAL</span>`;
+
+    if (isEmergencia) {
+      borderClass = "border-rose-400 ring-2 ring-rose-400/30 bg-rose-50/20";
+      badgePrio = `<span class="px-2 py-0.5 rounded-md bg-rose-600 text-white border border-rose-700 text-[10px] font-black animate-pulse">🚨 EMERGENCIA</span>`;
+    } else if (isUrgente) {
+      borderClass = "border-amber-300 bg-amber-50/20";
+      badgePrio = `<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold">⚠️ URGENTE</span>`;
+    }
+
+    const estadoMap = {
+      PENDIENTE: { badge: "bg-amber-100 text-amber-900 border-amber-300", txt: "Pendiente" },
+      EN_CAMINO: { badge: "bg-sky-100 text-sky-900 border-sky-300", txt: "En Camino" },
+      PUEDE_ACERCARSE: { badge: "bg-emerald-100 text-emerald-900 border-emerald-300", txt: "Puede Acercarse" },
+      ATENDIDA: { badge: "bg-slate-100 text-slate-700 border-slate-300", txt: "Atendida" },
+      CANCELADA: { badge: "bg-slate-100 text-slate-500 border-slate-300", txt: "Cancelada" }
+    };
+    const est = estadoMap[item.estado] || estadoMap.PENDIENTE;
+
+    return `
+      <div class="bg-white rounded-2xl p-5 border ${borderClass} shadow-xs hover:shadow-md transition flex flex-col justify-between">
+        <div>
+          <!-- Header de Tarjeta -->
+          <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="font-black text-slate-800 text-sm">#${item.id}</span>
+              ${badgePrio}
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${est.badge}">
+              ${est.txt}
+            </span>
+          </div>
+
+          <!-- Ubicación Destacada (Piso y Área) -->
+          <div class="mb-3">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-brand-50 text-brand-900 border border-brand-200 text-xs font-bold">
+              <i data-lucide="building" class="w-3.5 h-3.5 text-brand-600"></i>
+              <span>PISO ${item.piso}</span>
+              <span class="text-brand-300">&bull;</span>
+              <span class="truncate max-w-[180px]">${escapeHtml(item.area_campana)}</span>
+            </div>
+          </div>
+
+          <!-- Paciente y Contacto -->
+          <div class="space-y-1 text-xs mb-3">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>${escapeHtml(item.nombre_paciente)}</span>
+            </div>
+            ${item.telefono_extension ? `
+              <div class="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                <span>Contacto: ${escapeHtml(item.telefono_extension)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Motivo / Síntomas -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 mb-3">
+            <span class="font-semibold text-slate-800 block text-[11px] mb-0.5">Motivo de Asistencia:</span>
+            <p class="italic">"${escapeHtml(item.motivo)}"</p>
+          </div>
+
+          <!-- Respuesta previa si existe -->
+          ${item.respuesta_enfermeria ? `
+            <div class="p-2.5 bg-sky-50 rounded-xl border border-sky-100 text-xs text-sky-900 mb-3">
+              <span class="font-bold block text-[10px] text-sky-800">Instrucción de Enfermería:</span>
+              <p class="text-[11px]">${escapeHtml(item.respuesta_enfermeria)}</p>
+              ${item.atendido_por ? `<span class="text-[9px] text-sky-600 block mt-0.5">Por: ${escapeHtml(item.atendido_por)}</span>` : ''}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Acciones Rápidas para Enfermería -->
+        <div class="pt-3 border-t border-slate-100 space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="responderRapidoSolicitud(${item.id}, 'EN_CAMINO')" class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-[11px] transition flex items-center justify-center gap-1">
+              <i data-lucide="footprints" class="w-3.5 h-3.5"></i>
+              Voy en camino
+            </button>
+            <button onclick="responderRapidoSolicitud(${item.id}, 'PUEDE_ACERCARSE')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center justify-center gap-1">
+              <i data-lucide="door-open" class="w-3.5 h-3.5"></i>
+              Bajar a Piso 2
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="atenderSolicitudEnFormulario(${item.id})" class="flex-1 px-3 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5" title="Cargar datos del paciente en Nueva Atención y recetar medicinas">
+              <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+              Atender y Recetar
+            </button>
+            <button onclick="abrirModalResponderSolicitud(${item.id})" class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition" title="Personalizar mensaje o cambiar estado">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function responderRapidoSolicitud(id, nuevoEstado) {
+  const req = solicitudesCache.find(s => s.id === id);
+  if (!req) return;
+
+  const comentarios = {
+    EN_CAMINO: `Voy subiendo en camino al Piso ${req.piso} con equipo médico básico. Llego en pocos minutos.`,
+    PUEDE_ACERCARSE: "El consultorio en el Piso 2 se encuentra despejado. Puedes acercarte para tu atención presencial."
+  };
+
+  try {
+    const res = await fetch("/api/solicitudes/responder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: id,
+        nuevo_estado: nuevoEstado,
+        comentario: comentarios[nuevoEstado] || "",
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        usuario_nombre: currentUser ? currentUser.nombre_completo : "Personal Médico"
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast("Solicitud Actualizada", `Ticket #${id} marcado como '${nuevoEstado}'.`, "success");
+      cargarSolicitudesPisos();
+    } else {
+      showToast("Error", data.error || "No se pudo actualizar.", "error");
+    }
+  } catch (e) {
+    showToast("Error de conexión", e.message, "error");
+  }
+}
+
+function abrirModalResponderSolicitud(id, estadoSugerido = null) {
+  const req = solicitudesCache.find(s => s.id === id);
+  if (!req) return;
+
+  document.getElementById("resp-sol-id").value = req.id;
+  document.getElementById("resp-sol-sub").textContent = `Ticket #${req.id} • Piso ${req.piso}`;
+  document.getElementById("resp-sol-paciente").textContent = `${req.nombre_paciente} ${req.cedula ? `(C.I: ${req.cedula})` : ''}`;
+  document.getElementById("resp-sol-ubicacion").textContent = `Piso ${req.piso} • ${req.area_campana} ${req.telefono_extension ? `• Ext/Tlf: ${req.telefono_extension}` : ''}`;
+  document.getElementById("resp-sol-motivo").textContent = `Motivo: "${req.motivo}"`;
+
+  const selEstado = document.getElementById("resp-sol-estado");
+  if (selEstado) {
+    selEstado.value = estadoSugerido || req.estado;
+  }
+
+  const txtComentario = document.getElementById("resp-sol-comentario");
+  if (txtComentario) {
+    txtComentario.value = req.respuesta_enfermeria || "";
+  }
+
+  document.getElementById("modal-responder-solicitud").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalResponderSolicitud() {
+  document.getElementById("modal-responder-solicitud").classList.add("hidden");
+}
+
+function setRespChip(txt) {
+  const input = document.getElementById("resp-sol-comentario");
+  if (input) {
+    input.value = txt;
+    input.focus();
+  }
+}
+
+async function guardarRespuestaSolicitud(e) {
+  e.preventDefault();
+  const id = document.getElementById("resp-sol-id").value;
+  const nuevo_estado = document.getElementById("resp-sol-estado").value;
+  const comentario = document.getElementById("resp-sol-comentario").value.trim();
+
+  try {
+    const res = await fetch("/api/solicitudes/responder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: id,
+        nuevo_estado,
+        comentario,
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        usuario_nombre: currentUser ? currentUser.nombre_completo : "Personal Médico"
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast("Solicitud Actualizada", `Ticket #${id} actualizado exitosamente.`, "success");
+      cerrarModalResponderSolicitud();
+      cargarSolicitudesPisos();
+    } else {
+      showToast("Error", data.error || "No se pudo actualizar la solicitud.", "error");
+    }
+  } catch (err) {
+    showToast("Error de conexión", err.message, "error");
+  }
+}
+
+function atenderSolicitudEnFormulario(solicitudId) {
+  const req = solicitudesCache.find(s => s.id === solicitudId);
+  if (!req) return;
+
+  currentSolicitudAtendiendoId = req.id;
+
+  // Cambiar a la pestaña de Nueva Atención
+  cambiarTab("atencion");
+
+  // Autocompletar datos del paciente en el formulario
+  const parts = req.nombre_paciente.split(" ");
+  let nom = parts[0] || "";
+  let ape = parts.slice(1).join(" ") || "";
+
+  document.getElementById("pac-nombres").value = nom;
+  document.getElementById("pac-apellidos").value = ape;
+  if (req.cedula) document.getElementById("pac-cedula").value = req.cedula;
+  if (req.telefono_extension) document.getElementById("pac-celular").value = req.telefono_extension;
+  document.getElementById("pac-piso").value = `Piso ${req.piso} - ${req.area_campana}`;
+  document.getElementById("atencion-diagnostico").value = `[Solicitud #${req.id}] ${req.motivo}`;
+
+  showToast(
+    "Paciente Cargado desde Solicitud",
+    `Datos de ${req.nombre_paciente} precargados. Al confirmar la receta se cerrará el Ticket #${req.id}.`,
+    "success"
+  );
+}

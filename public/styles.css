@@ -109,3 +109,28 @@ body {
   box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
 }
 
+/* Selector de Pisos (1 al 7) */
+.piso-btn {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.piso-btn:hover {
+  background-color: #f0f9ff;
+  border-color: #38bdf8;
+  color: #0369a1;
+}
+
+.piso-btn.active-piso {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3) !important;
+}
+
+

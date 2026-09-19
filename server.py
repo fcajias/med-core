@@ -389,6 +389,32 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     "atenciones_mensuales": mensual
                 })
 
+            elif path == "/api/solicitudes":
+                estado = params.get("estado", [None])[0]
+                lim = int(params.get("limit", [50])[0])
+                sql = "SELECT * FROM solicitudes_asistencia"
+                args = []
+                if estado:
+                    sql += " WHERE estado = ?"
+                    args.append(estado.upper())
+                sql += " ORDER BY id DESC LIMIT ?"
+                args.append(lim)
+                cur.execute(sql, args)
+                rows = [dict(r) for r in cur.fetchall()]
+                self.send_json(rows)
+
+            elif path == "/api/solicitudes/estado":
+                sid = params.get("id", [None])[0]
+                if not sid:
+                    self.send_json({"error": "Debe indicar el ID de la solicitud."}, 400)
+                    return
+                cur.execute("SELECT * FROM solicitudes_asistencia WHERE id = ?", (sid,))
+                row = cur.fetchone()
+                if not row:
+                    self.send_json({"error": "Solicitud no encontrada."}, 404)
+                    return
+                self.send_json(dict(row))
+
             else:
                 self.send_json({"error": "Ruta no encontrada"}, 404)
         finally:
@@ -990,6 +1016,71 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 conn.commit()
                 self.send_json({"success": True, "mensaje": "Matriz de permisos actualizada exitosamente."})
 
+            # ---------------------------------------------------------
+            # 8. REGISTRO PÚBLICO DE SOLICITUD DE PISO (CALL CENTER)
+            # ---------------------------------------------------------
+            elif path == "/api/solicitudes":
+                piso = int(data.get("piso", 1))
+                area = data.get("area_campana", "").strip()
+                nombre = data.get("nombre_paciente", "").strip().upper()
+                cedula = data.get("cedula", "").strip()
+                motivo = data.get("motivo", "").strip()
+                prioridad = data.get("prioridad", "NORMAL").strip().upper()
+                extension = data.get("telefono_extension", "").strip()
+
+                if not nombre or not motivo:
+                    self.send_json({"error": "Debe especificar su nombre y el motivo o síntoma de la solicitud."}, 400)
+                    return
+
+                cur.execute("""
+                    INSERT INTO solicitudes_asistencia (
+                        piso, area_campana, nombre_paciente, cedula, motivo, prioridad,
+                        estado, telefono_extension, creado_en, actualizado_en
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'PENDIENTE', ?, datetime('now'), datetime('now'))
+                """, (piso, area, nombre, cedula, motivo, prioridad, extension))
+                conn.commit()
+                sol_id = cur.lastrowid
+
+                self.send_json({
+                    "success": True,
+                    "mensaje": f"Solicitud #{sol_id} recibida. La enfermera ha sido alertada para el Piso {piso}.",
+                    "solicitud_id": sol_id
+                }, 201)
+
+            # ---------------------------------------------------------
+            # 9. GESTIÓN Y RESPUESTA DE ENFERMERÍA A SOLICITUDES DE PISO
+            # ---------------------------------------------------------
+            elif path == "/api/solicitudes/responder":
+                user_role = (data.get("user_role") or data.get("rol") or "").upper()
+                usuario_nombre = data.get("usuario_nombre") or "Personal Médico"
+                
+                if user_role == "AUDITOR":
+                    self.send_json({"error": "El rol Auditoría no gestiona solicitudes operativas de piso."}, 403)
+                    return
+
+                sid = data.get("solicitud_id")
+                nuevo_estado = data.get("nuevo_estado", "").strip().upper()
+                comentario = data.get("comentario", "").strip()
+
+                if not sid or not nuevo_estado:
+                    self.send_json({"error": "Parámetros inválidos para responder la solicitud."}, 400)
+                    return
+
+                cur.execute("""
+                    UPDATE solicitudes_asistencia SET
+                        estado = ?,
+                        respuesta_enfermeria = ?,
+                        atendido_por = ?,
+                        actualizado_en = datetime('now')
+                    WHERE id = ?
+                """, (nuevo_estado, comentario, f"{usuario_nombre} ({user_role})", sid))
+                conn.commit()
+
+                self.send_json({
+                    "success": True,
+                    "mensaje": f"Solicitud #{sid} actualizada a estado '{nuevo_estado}'."
+                })
+
             else:
                 self.send_json({"error": "Ruta no encontrada"}, 404)
 
@@ -1003,6 +1094,24 @@ def init_system_tables():
     conn = get_db()
     cur = conn.cursor()
     try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS solicitudes_asistencia (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                piso INTEGER NOT NULL,
+                area_campana TEXT NOT NULL,
+                nombre_paciente TEXT NOT NULL,
+                cedula TEXT,
+                motivo TEXT NOT NULL,
+                prioridad TEXT DEFAULT 'NORMAL',
+                estado TEXT DEFAULT 'PENDIENTE',
+                telefono_extension TEXT,
+                respuesta_enfermeria TEXT,
+                atendido_por TEXT,
+                atencion_id INTEGER,
+                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+                actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
