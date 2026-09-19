@@ -582,10 +582,10 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             # 3. ANULAR ATENCIÓN Y REVERTIR STOCK AUTOMÁTICAMENTE
             # ---------------------------------------------------------
             elif path == "/api/atenciones/anular":
-                user_role = data.get("user_role", "").upper()
-                usuario_nombre = data.get("usuario_nombre", "Administrador")
+                user_role = (data.get("user_role") or data.get("rol") or "").upper()
+                usuario_nombre = data.get("usuario_nombre") or data.get("usuario_anula") or "Usuario"
                 atencion_id = data.get("atencion_id")
-                motivo = data.get("motivo_anulacion", "").strip()
+                motivo = (data.get("motivo_anulacion") or data.get("motivo") or "").strip()
 
                 if not tiene_permiso(cur, user_role, "anular_atenciones"):
                     self.send_json({"error": f"El rol '{user_role}' no tiene autorización para anular atenciones o revertir stock. Contacte al Administrador."}, 403)
@@ -660,6 +660,100 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     "success": True,
                     "mensaje": f"Atención #{atencion_id} anulada con éxito. Las medicinas fueron devueltas a bodega y el Kardex fue actualizado.",
                     "revertidos": revertidos
+                })
+
+            # ---------------------------------------------------------
+            # 3.1 CREAR NUEVO PACIENTE (SIN CONSULTA NI MEDICINAS OBLIGATORIAS)
+            # ---------------------------------------------------------
+            elif path == "/api/pacientes":
+                user_role = (data.get("user_role") or data.get("rol") or "ENFERMERIA").upper()
+                if user_role == "AUDITOR":
+                    self.send_json({"error": "El rol AUDITOR no tiene permisos para crear pacientes."}, 403)
+                    return
+
+                cedula = (data.get("cedula") or "").strip()
+                nombres = (data.get("nombres") or "").strip().upper()
+                apellidos = (data.get("apellidos") or "").strip().upper()
+                edad = data.get("edad")
+                celular = (data.get("celular") or "").strip()
+                piso = (data.get("piso_area") or "").strip()
+
+                if not nombres:
+                    self.send_json({"error": "El nombre del paciente o trabajador es obligatorio."}, 400)
+                    return
+
+                if cedula:
+                    cur.execute("SELECT id, nombres, apellidos FROM pacientes WHERE cedula = ?", (cedula,))
+                    existente = cur.fetchone()
+                    if existente:
+                        self.send_json({"error": f"Ya existe un paciente registrado con la cédula {cedula} ({existente['nombres']} {existente['apellidos']})."}, 400)
+                        return
+
+                cur.execute("""
+                    INSERT INTO pacientes (cedula, nombres, apellidos, edad, celular, piso_area, creado_en)
+                    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                """, (cedula if cedula else None, nombres, apellidos, edad if edad else None, celular, piso))
+                conn.commit()
+                pid = cur.lastrowid
+
+                self.send_json({
+                    "success": True,
+                    "mensaje": f"Paciente '{nombres} {apellidos}' registrado exitosamente en el directorio clínico.",
+                    "paciente_id": pid
+                }, 201)
+
+            # ---------------------------------------------------------
+            # 3.2 EDITAR PACIENTE EXISTENTE (CORRECCIÓN DE DATOS)
+            # ---------------------------------------------------------
+            elif path == "/api/pacientes/editar":
+                user_role = (data.get("user_role") or data.get("rol") or "ENFERMERIA").upper()
+                if user_role == "AUDITOR":
+                    self.send_json({"error": "El rol AUDITOR no tiene permisos para editar pacientes."}, 403)
+                    return
+
+                pid = data.get("id")
+                cedula = (data.get("cedula") or "").strip()
+                nombres = (data.get("nombres") or "").strip().upper()
+                apellidos = (data.get("apellidos") or "").strip().upper()
+                edad = data.get("edad")
+                celular = (data.get("celular") or "").strip()
+                piso = (data.get("piso_area") or "").strip()
+
+                if not pid:
+                    self.send_json({"error": "Debe especificar el ID del paciente a editar."}, 400)
+                    return
+
+                if not nombres:
+                    self.send_json({"error": "El nombre del paciente es obligatorio."}, 400)
+                    return
+
+                cur.execute("SELECT id FROM pacientes WHERE id = ?", (pid,))
+                if not cur.fetchone():
+                    self.send_json({"error": f"Paciente #{pid} no encontrado."}, 404)
+                    return
+
+                if cedula:
+                    cur.execute("SELECT id, nombres, apellidos FROM pacientes WHERE cedula = ? AND id != ?", (cedula, pid))
+                    otro = cur.fetchone()
+                    if otro:
+                        self.send_json({"error": f"La cédula {cedula} ya está asignada a otro paciente ({otro['nombres']} {otro['apellidos']})."}, 400)
+                        return
+
+                cur.execute("""
+                    UPDATE pacientes SET
+                        cedula = ?,
+                        nombres = ?,
+                        apellidos = ?,
+                        edad = ?,
+                        celular = ?,
+                        piso_area = ?
+                    WHERE id = ?
+                """, (cedula if cedula else None, nombres, apellidos, edad if edad else None, celular, piso, pid))
+                conn.commit()
+
+                self.send_json({
+                    "success": True,
+                    "mensaje": f"Datos del paciente '{nombres} {apellidos}' actualizados correctamente."
                 })
 
             # ---------------------------------------------------------

@@ -1,6 +1,8 @@
 // Dispensario Médico FYDI - Frontend JavaScript con Control de Roles
 let medicamentosCache = [];
 let pacientesCache = [];
+let atencionesCache = [];
+let pacienteHistorialCache = [];
 let renglonesReceta = [];
 let renglonIdCounter = 0;
 let atencionPendiente = null;
@@ -13,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initIdioma();
   initReloj();
   initFechaHoy();
+  sincronizarPermisos();
 
   // Verificar si hay sesión activa; si no, abrir pantalla de login corporativo
   if (!currentUser || !currentUser.usuario) {
@@ -123,6 +126,23 @@ function aplicarPermisosRol() {
   }
 
   if (window.lucide) lucide.createIcons();
+}
+
+function tienePermiso(accion) {
+  if (!currentUser) return false;
+  if (currentUser.rol === "ADMINISTRADOR") return true;
+  const p = permisosCache.find(x => x.rol === currentUser.rol);
+  if (!p) return false;
+  return p[accion] === 1;
+}
+
+async function sincronizarPermisos() {
+  try {
+    const res = await fetch("/api/permisos");
+    permisosCache = await res.json();
+  } catch (e) {
+    console.warn("No se pudo precargar permisos:", e);
+  }
 }
 
 function abrirModalLogin() {
@@ -265,8 +285,11 @@ async function handleLoginSubmit(e) {
       localStorage.setItem("fydi_remembered_user", data.usuario);
 
       document.getElementById("modal-login").classList.add("hidden");
+      await sincronizarPermisos();
       aplicarPermisosRol();
       renderInventarioTabla(medicamentosCache);
+      cargarHistorial();
+      cargarPacientes();
       showToast("Acceso Autorizado", `Bienvenido(a), ${data.nombre_completo} (${data.rol})`, "success");
     }
   } catch (err) {
@@ -935,7 +958,9 @@ function prepararConfirmacionAtencion(e) {
     diagnostico,
     observaciones,
     medicamentos: medItems,
-    usuario_registro: currentUser.usuario
+    usuario_registro: currentUser.usuario,
+    user_role: currentUser.rol,
+    usuario_nombre: currentUser.nombre_completo
   };
 
   document.getElementById("confirm-paciente-nombre").textContent = `${nombres} ${apellidos}`;
@@ -988,16 +1013,42 @@ async function ejecutarGuardadoAtencion() {
 }
 
 // ANULACIÓN DE ATENCIÓN Y REVERSIÓN DE STOCK
-function abrirModalAnulacion(atencionId, pacienteNombre, medsSummary) {
+function abrirModalAnulacion(atencionId, pacienteNombreOpt, medsSummaryOpt) {
   if (currentUser.rol === "AUDITOR") {
     showToast("Acceso Denegado", "El rol de Auditoría no puede anular atenciones.", "error");
     return;
   }
 
+  const puede = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
+  if (!puede) {
+    showToast("Acceso Denegado", "Tu rol no tiene autorización para anular atenciones médicas. Solicítalo al Administrador.", "error");
+    return;
+  }
+
+  // Buscar en atencionesCache o pacienteHistorialCache
+  let at = atencionesCache.find(a => a.id === atencionId);
+  if (!at && pacienteHistorialCache) {
+    at = pacienteHistorialCache.find(a => a.id === atencionId);
+  }
+
+  let pacNombre = pacienteNombreOpt;
+  let medsHtml = medsSummaryOpt;
+
+  if (at) {
+    if (!pacNombre) pacNombre = `${at.nombres || ''} ${at.apellidos || ''}`.trim() || "Trabajador";
+    if (!medsHtml) {
+      if (at.medicamentos && at.medicamentos.length > 0) {
+        medsHtml = at.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>");
+      } else {
+        medsHtml = "Sin medicinas registradas";
+      }
+    }
+  }
+
   document.getElementById("anular-atencion-id").value = atencionId;
   document.getElementById("anular-info-id").textContent = `#${atencionId}`;
-  document.getElementById("anular-info-paciente").textContent = pacienteNombre;
-  document.getElementById("anular-info-meds").innerHTML = medsSummary;
+  document.getElementById("anular-info-paciente").textContent = pacNombre || `#${atencionId}`;
+  document.getElementById("anular-info-meds").innerHTML = medsHtml || "Sin medicinas";
   document.getElementById("anular-motivo").value = "";
 
   document.getElementById("modal-anular-atencion").classList.remove("hidden");
@@ -1028,8 +1079,11 @@ async function ejecutarAnulacionAtencion(e) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         atencion_id: atencionId,
+        motivo_anulacion: motivo,
         motivo: motivo,
+        usuario_nombre: currentUser.nombre_completo,
         usuario_anula: currentUser.usuario,
+        user_role: currentUser.rol,
         rol: currentUser.rol
       })
     });
@@ -1225,10 +1279,15 @@ function renderPacientesTabla(lista) {
         <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[11px]">${p.total_atenciones} visitas</span>
       </td>
       <td class="py-2.5 px-4 text-center font-mono text-slate-500">${p.ultima_visita || '-'}</td>
-      <td class="py-2.5 px-4 text-center">
-        <button onclick="abrirModalExpediente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1 rounded-lg transition">
-          <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_ver_expediente") : "Ver Historial"}
-        </button>
+      <td class="py-2.5 px-4 text-center whitespace-nowrap">
+        <div class="inline-flex items-center gap-1.5">
+          <button onclick="abrirModalExpediente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition" title="Ver Historial Clínico">
+            <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_ver_expediente") : "Historial"}
+          </button>
+          <button onclick="abrirModalEditarPaciente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition" title="Editar Datos del Paciente">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_editar_paciente") : "Editar"}
+          </button>
+        </div>
       </td>
     </tr>
   `).join("");
@@ -1254,6 +1313,7 @@ async function abrirModalExpediente(pid) {
   try {
     const res = await fetch(`/api/pacientes/${pid}/historial`);
     const pac = await res.json();
+    pacienteHistorialCache = pac.historial || [];
 
     document.getElementById("exp-pac-nombre").textContent = `${pac.nombres} ${pac.apellidos}`;
     document.getElementById("exp-pac-sub").textContent = `Expediente Clínico Ocupacional - Total Visitas: ${pac.historial.length}`;
@@ -1267,7 +1327,7 @@ async function abrirModalExpediente(pid) {
       return;
     }
 
-    const esAdmin = currentUser.rol === "ADMINISTRADOR";
+    const puedeAnular = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
 
     atListDiv.innerHTML = pac.historial.map(at => {
       const esAnulada = at.estado === "ANULADA";
@@ -1275,16 +1335,12 @@ async function abrirModalExpediente(pid) {
         ? at.medicamentos.map(m => `<span class="bg-white border ${esAnulada ? 'border-slate-200 text-slate-400 line-through' : 'border-slate-200 text-slate-700'} px-2 py-0.5 rounded text-[11px] font-medium">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
         : `<span class="text-slate-400 italic">Solo consulta / curación</span>`;
 
-      const medsSummaryEscaped = at.medicamentos && at.medicamentos.length > 0
-        ? at.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>")
-        : "Sin medicinas";
-
-      const pacNombre = `${pac.nombres} ${pac.apellidos}`.replace(/'/g, "\\'");
+      const pacNombre = `${pac.nombres} ${pac.apellidos}`;
 
       let anularBtnHtml = "";
-      if (!esAnulada && esAdmin) {
+      if (!esAnulada && puedeAnular) {
         anularBtnHtml = `
-          <button onclick="abrirModalAnulacion(${at.id}, '${pacNombre}', '${medsSummaryEscaped}')" class="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition">
+          <button onclick="abrirModalAnulacion(${at.id})" class="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
             Anular
           </button>
         `;
@@ -1327,6 +1383,163 @@ async function abrirModalExpediente(pid) {
 
 function cerrarModalExpediente() {
   document.getElementById("modal-expediente").classList.add("hidden");
+}
+
+// ----------------------------------------------------------------
+// GESTIÓN DE PACIENTES: ALTA INDEPENDIENTE Y EDICIÓN DE DATOS
+// ----------------------------------------------------------------
+function abrirModalNuevoPaciente() {
+  if (currentUser && currentUser.rol === "AUDITOR") {
+    showToast("Acceso Denegado", "El rol de Auditoría no puede registrar pacientes.", "error");
+    return;
+  }
+  document.getElementById("nuevo-pac-cedula").value = "";
+  document.getElementById("nuevo-pac-nombres").value = "";
+  document.getElementById("nuevo-pac-apellidos").value = "";
+  document.getElementById("nuevo-pac-edad").value = "";
+  document.getElementById("nuevo-pac-celular").value = "";
+  document.getElementById("nuevo-pac-piso").value = "";
+
+  document.getElementById("modal-nuevo-paciente").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalNuevoPaciente() {
+  document.getElementById("modal-nuevo-paciente").classList.add("hidden");
+}
+
+async function guardarNuevoPaciente(e) {
+  e.preventDefault();
+  const cedula = document.getElementById("nuevo-pac-cedula").value.trim();
+  const nombres = document.getElementById("nuevo-pac-nombres").value.trim().toUpperCase();
+  const apellidos = document.getElementById("nuevo-pac-apellidos").value.trim().toUpperCase();
+  const edad = document.getElementById("nuevo-pac-edad").value ? parseInt(document.getElementById("nuevo-pac-edad").value) : null;
+  const celular = document.getElementById("nuevo-pac-celular").value.trim();
+  const piso_area = document.getElementById("nuevo-pac-piso").value.trim();
+
+  if (!nombres || !apellidos) {
+    showToast("Datos Incompletos", "Los nombres y apellidos son obligatorios.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("btn-guardar-nuevo-pac");
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Guardando...`;
+
+  try {
+    const res = await fetch("/api/pacientes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cedula,
+        nombres,
+        apellidos,
+        edad,
+        celular,
+        piso_area,
+        user_role: currentUser.rol,
+        usuario_nombre: currentUser.nombre_completo
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Error", data.error || "No se pudo registrar al paciente.", "error");
+    } else {
+      showToast("¡Paciente Registrado!", data.mensaje, "success");
+      cerrarModalNuevoPaciente();
+      cargarPacientes();
+      cargarEstadisticas();
+    }
+  } catch (err) {
+    showToast("Error de Conexión", err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>Guardar Paciente</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function abrirModalEditarPaciente(pid) {
+  if (currentUser && currentUser.rol === "AUDITOR") {
+    showToast("Acceso Denegado", "El rol de Auditoría no puede editar pacientes.", "error");
+    return;
+  }
+
+  const pac = pacientesCache.find(p => p.id === pid);
+  if (!pac) {
+    showToast("No encontrado", "No se encontró la información del paciente.", "error");
+    return;
+  }
+
+  document.getElementById("edit-pac-id").value = pac.id;
+  document.getElementById("edit-pac-cedula").value = pac.cedula || "";
+  document.getElementById("edit-pac-nombres").value = pac.nombres || "";
+  document.getElementById("edit-pac-apellidos").value = pac.apellidos || "";
+  document.getElementById("edit-pac-edad").value = pac.edad || "";
+  document.getElementById("edit-pac-celular").value = pac.celular || "";
+  document.getElementById("edit-pac-piso").value = pac.piso_area || "";
+
+  document.getElementById("modal-editar-paciente").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalEditarPaciente() {
+  document.getElementById("modal-editar-paciente").classList.add("hidden");
+}
+
+async function guardarEdicionPaciente(e) {
+  e.preventDefault();
+  const pid = parseInt(document.getElementById("edit-pac-id").value);
+  const cedula = document.getElementById("edit-pac-cedula").value.trim();
+  const nombres = document.getElementById("edit-pac-nombres").value.trim().toUpperCase();
+  const apellidos = document.getElementById("edit-pac-apellidos").value.trim().toUpperCase();
+  const edad = document.getElementById("edit-pac-edad").value ? parseInt(document.getElementById("edit-pac-edad").value) : null;
+  const celular = document.getElementById("edit-pac-celular").value.trim();
+  const piso_area = document.getElementById("edit-pac-piso").value.trim();
+
+  if (!nombres || !apellidos) {
+    showToast("Datos Incompletos", "Los nombres y apellidos son obligatorios.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("btn-guardar-edit-pac");
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Actualizando...`;
+
+  try {
+    const res = await fetch("/api/pacientes/editar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: pid,
+        cedula,
+        nombres,
+        apellidos,
+        edad,
+        celular,
+        piso_area,
+        user_role: currentUser.rol,
+        usuario_nombre: currentUser.nombre_completo
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Error al Actualizar", data.error || "No se pudo actualizar el paciente.", "error");
+    } else {
+      showToast("Paciente Actualizado", data.mensaje, "success");
+      cerrarModalEditarPaciente();
+      cargarPacientes();
+      cargarHistorial();
+    }
+  } catch (err) {
+    showToast("Error de Conexión", err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>Actualizar Paciente</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
 }
 
 // ================================================================
@@ -1415,6 +1628,7 @@ async function cargarHistorial() {
   try {
     const res = await fetch("/api/atenciones?limit=60");
     const atenciones = await res.json();
+    atencionesCache = atenciones;
     const tbody = document.getElementById("tabla-historial-body");
     if (!tbody) return;
 
@@ -1423,7 +1637,7 @@ async function cargarHistorial() {
       return;
     }
 
-    const esAdmin = currentUser.rol === "ADMINISTRADOR";
+    const puedeAnular = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
 
     tbody.innerHTML = atenciones.map(a => {
       const esAnulada = a.estado === "ANULADA";
@@ -1438,10 +1652,6 @@ async function cargarHistorial() {
       } else {
         medList = `<span class="text-slate-400 italic">Procedimiento</span>`;
       }
-
-      const medsSummaryEscaped = a.medicamentos && a.medicamentos.length > 0
-        ? a.medicamentos.map(m => `&bull; ${m.nombre} (${m.presentacion || ''}) x${m.cantidad} unidades`).join("<br>")
-        : "Sin medicinas";
 
       const txtAnulada = typeof t === "function" ? t("badge_anulada") : "ANULADA";
       const txtActiva = typeof t === "function" ? t("badge_activa") : "ACTIVA";
@@ -1459,10 +1669,9 @@ async function cargarHistorial() {
       let accionesHtml = "";
       if (esAnulada) {
         accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">${txtReversada}</span>`;
-      } else if (esAdmin) {
-        const pacienteNombreCompleto = `${a.nombres} ${a.apellidos}`.replace(/'/g, "\\'");
+      } else if (puedeAnular) {
         accionesHtml = `
-          <button onclick="abrirModalAnulacion(${a.id}, '${pacienteNombreCompleto}', '${medsSummaryEscaped}')" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
+          <button onclick="abrirModalAnulacion(${a.id})" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
             <i data-lucide="rotate-ccw" class="w-3 h-3"></i> ${txtBtnAnular}
           </button>
         `;
@@ -1734,5 +1943,12 @@ function aplicarTraducciones() {
   setText("lbl_password_title", t("lbl_password") + " *");
   setText("btn-login-text", t("login_fast_btn"));
   setText("lbl-login-remember", t("login_remember"));
+
+  // Directorio y Modales de Pacientes
+  setText("lbl-btn-nuevo-pac", t("btn_nuevo_paciente"));
+  setText("lbl-modal-nuevo-pac-title", t("modal_nuevo_pac_title"));
+  setText("lbl-modal-nuevo-pac-sub", t("modal_nuevo_pac_sub"));
+  setText("lbl-modal-editar-pac-title", t("modal_editar_pac_title"));
+  setText("lbl-modal-editar-pac-sub", t("modal_editar_pac_sub"));
 }
 
