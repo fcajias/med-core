@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="styles.css?v=2.8">
+  <link rel="stylesheet" href="styles.css?v=3.0">
   <script>
     tailwind.config = {
       theme: {
@@ -873,167 +873,151 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: LOGIN CORPORATIVO HIGH-TECH / IA FYDI             -->
+  <!-- MODAL: LOGIN CORPORATIVO PROFESIONAL FYDI                -->
   <!-- ======================================================== -->
-  <div id="modal-login" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-700/70 animate-fade-in relative">
+  <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200/90 animate-fade-in relative my-auto">
       
-      <!-- Ambient Glow Orbs -->
-      <div class="absolute -top-20 -left-20 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-20 -right-20 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Top Micro-Bar: AI Status & Direct Language Switcher -->
-      <div class="px-6 pt-4 pb-2 flex items-center justify-between border-b border-slate-800/80 text-[11px] relative z-10">
+      <!-- Top Corporate Bar: System Status & Language Switcher -->
+      <div class="px-6 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
         <div class="flex items-center gap-2">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span class="font-mono text-emerald-400 font-semibold tracking-wider text-[10px] uppercase flex items-center gap-1">
-            <i data-lucide="cpu" class="w-3 h-3"></i> FYDI MedAI Guard v3.5
+          <span class="font-bold text-slate-700 text-[11px] tracking-wide flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-600"></i> Portal Clínico Seguro FYDI
           </span>
         </div>
         
-        <!-- Multi-language pill in login modal -->
-        <div class="flex items-center gap-1 bg-slate-800/90 rounded-xl p-1 border border-slate-700/60">
-          <button type="button" onclick="cambiarIdioma('es')" id="login-lang-es" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-700/60 transition">ES</button>
-          <button type="button" onclick="cambiarIdioma('en')" id="login-lang-en" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-700/60 transition">EN</button>
-          <button type="button" onclick="cambiarIdioma('zh')" id="login-lang-zh" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-700/60 transition">中文</button>
+        <!-- Multi-language pill -->
+        <div class="flex items-center bg-slate-200/70 rounded-xl p-0.5 border border-slate-200">
+          <button type="button" onclick="cambiarIdioma('es')" id="login-lang-es" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-700 hover:text-brand-700 transition">ES</button>
+          <button type="button" onclick="cambiarIdioma('en')" id="login-lang-en" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">EN</button>
+          <button type="button" onclick="cambiarIdioma('zh')" id="login-lang-zh" class="px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600 hover:text-brand-700 transition">中文</button>
         </div>
       </div>
 
       <!-- Header Hero -->
-      <div class="px-6 pt-5 pb-3 text-center relative z-10">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] mx-auto mb-3 shadow-lg shadow-cyan-500/20 pulse-subtle">
-          <div class="w-full h-full bg-slate-900 rounded-2xl flex items-center justify-center text-cyan-400">
-            <i data-lucide="shield-check" class="w-7 h-7"></i>
-          </div>
+      <div class="px-8 pt-6 pb-4 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
+          <i data-lucide="cross" class="w-7 h-7"></i>
         </div>
-        <h2 id="lbl-modal-login-title" class="text-lg font-black tracking-tight text-white">Dispensario Médico FYDI</h2>
-        <p id="lbl-modal-login-sub" class="text-xs text-slate-400 mt-0.5">Control Clínico, Trazabilidad Farmacéutica y Gestión de Stock</p>
+        <h2 id="lbl-modal-login-title" class="text-xl font-black tracking-tight text-slate-900">Dispensario Médico FYDI</h2>
+        <p id="lbl-modal-login-sub" class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Control Clínico Ocupacional, Trazabilidad de Farmacia y Gestión de Bodega</p>
       </div>
 
-      <div class="px-6 pb-6 relative z-10 space-y-4">
+      <div class="px-8 pb-8 space-y-5">
         
-        <!-- Smart Interactive Role Cards (Selects Identity / Username) -->
+        <!-- Interactive Role Selector Cards -->
         <div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-brand-600"></i>
               Selecciona tu Puesto de Trabajo:
-            </span>
-            <span class="text-[10px] text-cyan-400 font-medium">Elige tu rol para iniciar</span>
+            </label>
+            <span class="text-[10px] text-brand-600 font-semibold">Clic para elegir</span>
           </div>
 
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-3 gap-2.5">
             <!-- Role 1: Enfermería -->
-            <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-cyan-500/60 cursor-pointer transition-all group text-left">
-              <div class="flex items-center justify-between mb-1">
-                <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-xs">
-                  <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+            <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="role-icon-box w-7 h-7 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="stethoscope" class="w-4 h-4"></i>
                 </span>
-                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">Clínica</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">Clínica</span>
               </div>
-              <div class="font-bold text-xs text-white group-hover:text-cyan-300 transition">Enfermería</div>
-              <div class="text-[10px] text-slate-400 truncate">Atención & Recetas</div>
+              <div class="role-title font-bold text-xs text-slate-800 group-hover:text-sky-700 transition">Enfermería</div>
+              <div class="text-[10px] text-slate-500 truncate">Atención y Recetas</div>
             </div>
 
             <!-- Role 2: Administrador -->
-            <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-purple-500/60 cursor-pointer transition-all group text-left">
-              <div class="flex items-center justify-between mb-1">
-                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">
-                  <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+            <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="role-icon-box w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="shield-alert" class="w-4 h-4"></i>
                 </span>
-                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">Jefatura</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">Jefatura</span>
               </div>
-              <div class="font-bold text-xs text-white group-hover:text-purple-300 transition">Administrador</div>
-              <div class="text-[10px] text-slate-400 truncate">Stock & Permisos</div>
+              <div class="role-title font-bold text-xs text-slate-800 group-hover:text-purple-700 transition">Administrador</div>
+              <div class="text-[10px] text-slate-500 truncate">Stock y Permisos</div>
             </div>
 
             <!-- Role 3: Auditor -->
-            <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all group text-left">
-              <div class="flex items-center justify-between mb-1">
-                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
-                  <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+            <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-3 rounded-2xl border cursor-pointer group text-left">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="role-icon-box w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs transition">
+                  <i data-lucide="file-check" class="w-4 h-4"></i>
                 </span>
-                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auditor</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300">Auditor</span>
               </div>
-              <div class="font-bold text-xs text-white group-hover:text-emerald-300 transition">Auditoría</div>
-              <div class="text-[10px] text-slate-400 truncate">Balances & Excel</div>
+              <div class="role-title font-bold text-xs text-slate-800 group-hover:text-slate-900 transition">Auditoría</div>
+              <div class="text-[10px] text-slate-500 truncate">Balances y Excel</div>
             </div>
           </div>
         </div>
 
-        <!-- Credentials Form (Browser Native Password Manager Compliant) -->
-        <form onsubmit="handleLoginSubmit(event)" class="space-y-3.5 text-xs" autocomplete="on">
+        <!-- Credentials Form -->
+        <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs" autocomplete="on">
           <div>
-            <label class="block font-medium text-slate-300 mb-1 flex items-center justify-between">
+            <label class="block font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
-                <i data-lucide="user" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <i data-lucide="user" class="w-3.5 h-3.5 text-brand-600"></i>
                 <span id="lbl_usuario_title">Usuario Corporativo *</span>
               </span>
-              <span id="role-quick-hint" class="text-[10px] text-cyan-400 font-mono hidden"></span>
+              <span id="role-quick-hint" class="text-[10px] text-brand-600 font-bold hidden"></span>
             </label>
-            <input type="text" name="username" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition">
+            <input type="text" name="username" id="login-usuario" required placeholder="admin, enfermeria o auditor" autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition">
           </div>
 
           <div>
-            <label class="block font-medium text-slate-300 mb-1 flex items-center justify-between">
+            <label class="block font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
-                <i data-lucide="key-round" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-brand-600"></i>
                 <span id="lbl_password_title">Contraseña de Acceso *</span>
               </span>
-              <span id="caps-warning" class="hidden text-[10px] text-amber-400 font-bold flex items-center gap-1">
+              <span id="caps-warning" class="hidden text-[10px] text-amber-600 font-bold flex items-center gap-1">
                 <i data-lucide="alert-triangle" class="w-3 h-3"></i> Bloq Mayús activado
               </span>
             </label>
             <div class="relative">
-              <input type="password" name="password" id="login-password" required placeholder="Escribe tu contraseña secreta..." autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition font-mono">
-              <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-white transition">
+              <input type="password" name="password" id="login-password" required placeholder="Ingresa tu clave institucional..." autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition font-mono">
+              <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition">
                 <i data-lucide="eye" class="w-4 h-4"></i>
               </button>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-              <i data-lucide="shield" class="w-3 h-3 text-cyan-400"></i>
-              <span>Por seguridad, ingresa tu contraseña manualmente o usa las credenciales guardadas en tu navegador.</span>
+            <p class="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
+              <i data-lucide="shield" class="w-3 h-3 text-brand-600"></i>
+              <span>Por seguridad, ingresa tu clave o utiliza las credenciales guardadas en tu navegador.</span>
             </p>
           </div>
 
-          <!-- Security Status -->
-          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-            <span class="text-[10px] text-slate-400 flex items-center gap-1">
-              <i data-lucide="info" class="w-3 h-3 text-cyan-400"></i>
-              <span>Tu navegador te ofrecerá guardar la contraseña al ingresar.</span>
-            </span>
-            <span class="text-[10px] text-slate-500 flex items-center gap-1">
-              <i data-lucide="lock" class="w-3 h-3 text-cyan-400"></i> SHA-256
-          </div>
-
           <!-- Error Alert Container -->
-          <div id="login-error-msg" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
-            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5"></i>
+          <div id="login-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5"></i>
             <div>
-              <span id="login-error-text" class="font-medium">Credenciales incorrectas.</span>
-              <div class="mt-1 text-[10px] text-rose-300/80">Tip: Puedes hacer clic en cualquiera de las 3 tarjetas superiores para seleccionar tu rol de inmediato.</div>
+              <span id="login-error-text" class="font-semibold">Credenciales incorrectas.</span>
+              <div class="mt-0.5 text-[10px] text-rose-600">Haz clic en una de las 3 tarjetas de arriba para seleccionar tu rol y digita tu clave.</div>
             </div>
           </div>
 
           <!-- Submit Button -->
-          <div class="pt-1">
-            <button type="submit" id="btn-login-submit" class="w-full bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-xs transition-all shadow-lg shadow-cyan-600/30 flex items-center justify-center gap-2">
+          <div class="pt-2">
+            <button type="submit" id="btn-login-submit" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span id="btn-login-text">Verificar e Ingresar al Sistema</span>
             </button>
           </div>
         </form>
 
-        <!-- Footer Tech Info -->
-        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
+        <!-- Footer Info -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
           <span class="flex items-center gap-1">
-            <i data-lucide="database" class="w-3 h-3 text-emerald-400"></i> SQLite Cloud Sync
+            <i data-lucide="database" class="w-3 h-3 text-emerald-600"></i> Turso SQLite Cloud Conectado
           </span>
-          <span class="flex items-center gap-1 text-emerald-400 font-medium">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Servidor FYDI Online
+          <span class="flex items-center gap-1 text-emerald-700 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Servidor FYDI Operativo
           </span>
         </div>
 
@@ -1354,7 +1338,7 @@
     </div>
   </footer>
 
-  <script src="translations.js?v=2.9"></script>
-  <script src="app.js?v=2.9"></script>
+  <script src="translations.js?v=3.0"></script>
+  <script src="app.js?v=3.0"></script>
 </body>
 </html>
