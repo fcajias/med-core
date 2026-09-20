@@ -205,8 +205,10 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     args.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
                 sql += " ORDER BY categoria DESC, nombre ASC"
                 cur.execute(sql, args)
+                today = datetime.now().date()
                 rows = [dict(r) for r in cur.fetchall()]
                 for r in rows:
+                    # Estado de Stock
                     if r["stock_actual"] == 0:
                         r["estado"] = "AGOTADO"
                         r["alerta_clase"] = "danger"
@@ -216,6 +218,38 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     else:
                         r["estado"] = "DISPONIBLE"
                         r["alerta_clase"] = "success"
+
+                    # Estado de Caducidad / Vencimiento
+                    fv = r.get("fecha_vencimiento")
+                    if fv and str(fv).strip():
+                        try:
+                            fv_str = str(fv).strip()
+                            fv_date = datetime.strptime(fv_str[:10] if len(fv_str) >= 10 else fv_str + "-01", "%Y-%m-%d").date()
+                            dias = (fv_date - today).days
+                            r["dias_restantes"] = dias
+                            if dias < 0:
+                                r["estado_vencimiento"] = "VENCIDO"
+                                r["vencimiento_label"] = f"Vencido hace {abs(dias)} días"
+                                r["vencimiento_badge_class"] = "bg-rose-50 text-rose-700 border-rose-300"
+                            elif dias <= 90:
+                                r["estado_vencimiento"] = "POR_VENCER"
+                                r["vencimiento_label"] = f"Por vencer en {dias} días"
+                                r["vencimiento_badge_class"] = "bg-amber-50 text-amber-800 border-amber-300"
+                            else:
+                                r["estado_vencimiento"] = "VIGENTE"
+                                r["vencimiento_label"] = f"Vence en {dias} días"
+                                r["vencimiento_badge_class"] = "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        except Exception:
+                            r["dias_restantes"] = None
+                            r["estado_vencimiento"] = "SIN_FECHA"
+                            r["vencimiento_label"] = "Fecha no válida"
+                            r["vencimiento_badge_class"] = "bg-slate-100 text-slate-500 border-slate-200"
+                    else:
+                        r["dias_restantes"] = None
+                        r["estado_vencimiento"] = "SIN_FECHA"
+                        r["vencimiento_label"] = "Sin registrar"
+                        r["vencimiento_badge_class"] = "bg-slate-100 text-slate-500 border-slate-200"
+
                 self.send_json(rows)
 
             elif path == "/api/pacientes":
@@ -326,6 +360,32 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 cur.execute("SELECT count(*) FROM medicamentos WHERE stock_actual > 0 AND stock_actual <= stock_minimo AND activo=1")
                 bajos = cur.fetchone()[0]
 
+                # Métricas de Caducidad
+                cur.execute("SELECT fecha_vencimiento FROM medicamentos WHERE activo=1")
+                v_rows = cur.fetchall()
+                today_s = datetime.now().date()
+                tot_vencidos = 0
+                tot_por_vencer = 0
+                tot_vigentes = 0
+                tot_sin_fecha = 0
+                for vr in v_rows:
+                    f = vr[0]
+                    if not f or not str(f).strip():
+                        tot_sin_fecha += 1
+                    else:
+                        try:
+                            f_str = str(f).strip()
+                            f_date = datetime.strptime(f_str[:10] if len(f_str) >= 10 else f_str + "-01", "%Y-%m-%d").date()
+                            diff = (f_date - today_s).days
+                            if diff < 0:
+                                tot_vencidos += 1
+                            elif diff <= 90:
+                                tot_por_vencer += 1
+                            else:
+                                tot_vigentes += 1
+                        except Exception:
+                            tot_sin_fecha += 1
+
                 # Top 10 más consumidos (solo atenciones activas)
                 cur.execute("""
                     SELECT m.codigo, m.nombre, m.presentacion, sum(d.cantidad) as total_consumido
@@ -381,7 +441,11 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                         "atenciones": tot_atenc or 0,
                         "atenciones_anuladas": tot_anuladas or 0,
                         "agotados": agotados,
-                        "stock_bajo": bajos
+                        "stock_bajo": bajos,
+                        "vencidos": tot_vencidos,
+                        "por_vencer": tot_por_vencer,
+                        "vigentes": tot_vigentes,
+                        "sin_fecha": tot_sin_fecha
                     },
                     "mas_consumidos": top_mas,
                     "menos_consumidos": top_menos,
@@ -499,11 +563,12 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json({"error": "Debe incluir al menos un medicamento."}, 400)
                     return
 
-                # Validar stock primero
+                # Validar stock y caducidad primero
+                today_val = datetime.now().date()
                 for item in medicamentos:
                     mid = item.get("medicamento_id")
                     cant = int(item.get("cantidad", 1))
-                    cur.execute("SELECT nombre, stock_actual FROM medicamentos WHERE id = ?", (mid,))
+                    cur.execute("SELECT nombre, stock_actual, fecha_vencimiento FROM medicamentos WHERE id = ?", (mid,))
                     med_row = cur.fetchone()
                     if not med_row:
                         self.send_json({"error": f"Medicamento con ID {mid} no existe."}, 400)
@@ -513,6 +578,20 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                             "error": f"Stock insuficiente para '{med_row['nombre']}'. Solicitado: {cant}, Disponible en bodega: {med_row['stock_actual']}."
                         }, 400)
                         return
+
+                    # Bloqueo preventivo de medicamentos caducados
+                    fv_val = med_row["fecha_vencimiento"]
+                    if fv_val and str(fv_val).strip():
+                        try:
+                            f_str = str(fv_val).strip()
+                            f_date = datetime.strptime(f_str[:10] if len(f_str) >= 10 else f_str + "-01", "%Y-%m-%d").date()
+                            if f_date < today_val:
+                                self.send_json({
+                                    "error": f"El fármaco '{med_row['nombre']}' se encuentra caducado desde el {f_str}. Por seguridad del paciente y norma sanitaria no puede ser dispensado."
+                                }, 400)
+                                return
+                        except Exception:
+                            pass
 
                 pid = paciente_data.get("id")
                 if not pid:
@@ -798,6 +877,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 proveedor = data.get("proveedor", "Compra / Reposición").strip()
                 factura = data.get("factura", "").strip()
                 lote = data.get("lote", "").strip()
+                fecha_vencimiento = data.get("fecha_vencimiento", "").strip()
                 fecha = data.get("fecha") or datetime.now().strftime("%Y-%m-%d")
                 obs = data.get("observaciones", "").strip()
 
@@ -854,6 +934,8 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 categoria = data.get("categoria", "Medicamento").strip()
                 marcas = data.get("marcas_comerciales", "").strip()
                 stock_minimo = int(data.get("stock_minimo", 10))
+                lote = data.get("lote", "").strip()
+                fecha_vencimiento = data.get("fecha_vencimiento", "").strip()
 
                 if not nombre:
                     self.send_json({"error": "El nombre del medicamento es obligatorio."}, 400)
@@ -899,9 +981,11 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                             categoria = ?,
                             marcas_comerciales = ?,
                             stock_minimo = ?,
-                            stock_actual = ?
+                            stock_actual = ?,
+                            lote = ?,
+                            fecha_vencimiento = ?
                         WHERE id = ?
-                    """, (nombre, presentacion, concentracion, categoria, marcas, stock_minimo, nuevo_stock, mid))
+                    """, (nombre, presentacion, concentracion, categoria, marcas, stock_minimo, nuevo_stock, lote if lote else None, fecha_vencimiento if fecha_vencimiento else None, mid))
                     conn.commit()
 
                     if stock_cambiado:
@@ -919,9 +1003,9 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
                     stock_inicial = int(data.get("stock_actual", data.get("stock_inicial", 0)))
                     cur.execute("""
-                        INSERT INTO medicamentos (codigo, nombre, presentacion, concentracion, categoria, marcas_comerciales, stock_actual, stock_minimo)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (codigo, nombre, presentacion, concentracion, categoria, marcas, stock_inicial, stock_minimo))
+                        INSERT INTO medicamentos (codigo, nombre, presentacion, concentracion, categoria, marcas_comerciales, stock_actual, stock_minimo, lote, fecha_vencimiento)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (codigo, nombre, presentacion, concentracion, categoria, marcas, stock_inicial, stock_minimo, lote if lote else None, fecha_vencimiento if fecha_vencimiento else None))
                     new_id = cur.lastrowid
 
                     if stock_inicial > 0:
@@ -1095,6 +1179,15 @@ def init_system_tables():
     conn = get_db()
     cur = conn.cursor()
     try:
+        # Asegurar columnas de caducidad y lote en medicamentos
+        cur.execute("PRAGMA table_info(medicamentos)")
+        existing_cols = [r[1] for r in cur.fetchall()]
+        if existing_cols:
+            if "fecha_vencimiento" not in existing_cols:
+                cur.execute("ALTER TABLE medicamentos ADD COLUMN fecha_vencimiento TEXT")
+            if "lote" not in existing_cols:
+                cur.execute("ALTER TABLE medicamentos ADD COLUMN lote TEXT")
+
         cur.execute("""
             CREATE TABLE IF NOT EXISTS solicitudes_asistencia (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
