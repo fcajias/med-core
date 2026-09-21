@@ -124,15 +124,26 @@
  <span class="text-[#FDBA74]">para todo el equipo FYDI</span>
  </h1>
  
- <p id="lbl-landing-hero-sub" class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-normal">
- Atención clínica inmediata para asesores de cobranza, auditores, líderes y personal administrativo. La sede central del consultorio médico se encuentra en el <strong>Piso 6</strong>, con presencia de apoyo en el <strong>Minimarket del Mezzanine</strong> y desplazamiento a cualquier estación de trabajo.
- </p>
+ <!-- Live Nurse Location Indicator in Hero -->
+            <div id="landing-live-nurse-badge" class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white backdrop-blur-md mb-2 shadow-sm">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span class="text-slate-300 font-medium">Ubicación Actual de Enfermería:</span>
+              <strong id="landing-nurse-location-text" class="text-[#FDBA74] font-bold">Piso 6 - Consultorio Central</strong>
+              <span id="landing-nurse-status-pill" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/80 text-white uppercase">Disponible</span>
+            </div>
+
+            <p id="lbl-landing-hero-sub" class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-normal">
+              Atención médica presencial en el Consultorio del <strong>Piso 6</strong> y en el punto de encuentro en <strong>Mezzanine (Minimarket)</strong>. Solicita tu turno en línea, comunícate por chat directo y coordina tu atención de inmediato sin llamadas ni esperas.
+            </p>
 
  <!-- Main Call To Action Buttons -->
  <div class="pt-2 flex flex-wrap items-center gap-3.5">
  <button onclick="abrirModalSolicitudPiso('6')" class="px-6 py-3.5 bg-[#E35205] hover:bg-[#C84500] text-white font-black text-sm rounded-xl shadow-lg shadow-orange-950/40 transition transform hover:-translate-y-0.5 flex items-center gap-2.5 border border-orange-400/40">
  <i data-lucide="bell-ring" class="w-4 h-4 text-white"></i>
- <span id="lbl-landing-cta-solicitar">Solicitar Asistencia Médica a mi Puesto</span>
+ <span id="lbl-landing-cta-solicitar">Solicitar Turno y Consulta Médica</span>
  </button>
  
  <button onclick="abrirModalConsultarTicket()" class="px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl border border-white/20 backdrop-blur-md transition flex items-center gap-2">
@@ -153,7 +164,7 @@
  </div>
  <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
  <div class="text-xs font-black text-sky-300 flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5 inline"></i> &lt; 5 Minutos</div>
- <div class="text-[10px] text-slate-300">Respuesta en Puesto</div>
+ <div class="text-[10px] text-slate-300">Chat en Vivo y Triage</div>
  </div>
  </div>
 
@@ -219,27 +230,31 @@
  </section>
 
  <!-- Fast Inline Ticket Tracker Widget -->
- <section class="max-w-4xl mx-auto px-4 -mt-6 relative z-20 w-full">
- <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
- <div class="flex items-center gap-3 text-left">
- <div class="w-10 h-10 rounded-xl bg-[#FFF4ED] text-[#E35205] flex items-center justify-center shrink-0 border border-[#FDBA74]">
- <i data-lucide="clock" class="w-5 h-5"></i>
- </div>
- <div>
- <h4 class="font-bold text-xs text-slate-900">¿Ya solicitaste asistencia médica para tu estación o piso?</h4>
- <p class="text-[11px] text-slate-500">Digita el número de ticket asignado para verificar el estado de la enfermera:</p>
- </div>
- </div>
+  <section class="max-w-4xl mx-auto px-4 -mt-6 relative z-20 w-full">
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-left">
+        <div class="w-10 h-10 rounded-xl bg-[#FFF4ED] text-[#E35205] flex items-center justify-center shrink-0 border border-[#FDBA74]">
+          <i data-lucide="message-square" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-xs text-slate-900">¿Tienes un turno médico o consulta solicitada?</h4>
+          <p class="text-[11px] text-slate-500">Ingresa tu número de ticket para abrir el chat directo con la enfermera:</p>
+        </div>
+      </div>
 
- <div class="flex items-center gap-2 w-full sm:w-auto">
- <input type="text" id="quick-ticket-input" placeholder="Ej. 1" class="border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none w-full sm:w-28 font-bold text-center">
- <button onclick="consultarQuickTicket()" class="px-4 py-2 bg-[#16325C] hover:bg-[#0E254A] text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5">
- <i data-lucide="search" class="w-3.5 h-3.5"></i>
- <span>Ver Estado</span>
- </button>
- </div>
- </div>
- </section>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <input type="text" id="quick-ticket-input" placeholder="Ej. 1" class="border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none w-full sm:w-28 font-bold text-center">
+        <button onclick="abrirChatDesdeQuickInput()" class="px-4 py-2 bg-[#16325C] hover:bg-[#0E254A] text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          <span>Abrir Chat</span>
+        </button>
+        <button id="btn-resume-cached-ticket" onclick="abrirChatTicketCacheado()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5 animate-pulse" title="Continuar tu última conversación">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span id="txt-resume-cached-ticket">Mi Chat (#--)</span>
+        </button>
+      </div>
+    </div>
+  </section>
 
  <!-- Detailed Building Floors Section (Edificio FYDI - 9 Niveles) -->
  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-10 w-full">
@@ -309,7 +324,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 1</span>
+ <span>Solicitar Consulta (Piso 1)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -329,7 +344,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 2</span>
+ <span>Solicitar Consulta (Piso 2)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -349,7 +364,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 3</span>
+ <span>Solicitar Consulta (Piso 3)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -369,7 +384,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 4</span>
+ <span>Solicitar Consulta (Piso 4)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -388,7 +403,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 5</span>
+ <span>Solicitar Consulta (Piso 5)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -429,7 +444,7 @@
  </div>
  </div>
  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia al Piso 7</span>
+ <span>Solicitar Consulta (Piso 7)</span>
  <i data-lucide="chevron-right" class="w-4 h-4"></i>
  </div>
  </div>
@@ -947,7 +962,42 @@
  </div>
  </div>
 
- <!-- Filtros Rápidos -->
+ <!-- Barra de Presencia / Ubicación de la Enfermera en Vivo -->
+        <div class="mt-4 bg-linear-to-r from-[#16325C] to-[#0A192F] text-white p-4 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white border border-white/10 shrink-0">
+              <i data-lucide="map-pin" class="w-5 h-5 text-[#FDBA74]"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-300 font-medium">Mi Ubicación Actual (Visible para colaboradores):</span>
+                <span id="admin-nurse-live-badge" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500 text-white uppercase tracking-wider">Disponible</span>
+              </div>
+              <div id="admin-nurse-location-display" class="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+                <i data-lucide="stethoscope" class="w-4 h-4 text-[#FDBA74]"></i>
+                <span>Piso 6 - Consultorio Central</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="cambiarUbicacionEnfermera('Piso 6 - Consultorio Central')" id="btn-loc-piso6" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-white text-[#16325C] shadow-sm transition flex items-center gap-1.5">
+              <i data-lucide="building" class="w-3.5 h-3.5"></i>
+              <span>Piso 6 (Consultorio)</span>
+            </button>
+            <button type="button" onclick="cambiarUbicacionEnfermera('Mezzanine - Cafetería / Minimarket')" id="btn-loc-mezzanine" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1.5">
+              <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
+              <span>Mezzanine (Minimarket)</span>
+            </button>
+            <select id="select-disp-enfermera" onchange="cambiarDisponibilidadEnfermera(this.value)" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#FDBA74]">
+              <option value="DISPONIBLE" class="text-slate-800 font-bold">Disponible para recibir</option>
+              <option value="EN_CONSULTA" class="text-slate-800 font-bold">En Consulta (Ocupada)</option>
+              <option value="EN_PAUSA" class="text-slate-800 font-bold">En Pausa / Almuerzo</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtros Rápidos -->
  <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
  <!-- Filtro por Estado -->
  <div class="flex flex-wrap items-center gap-1.5" id="filtros-estado-solicitudes">
@@ -1604,8 +1654,8 @@
  <div class="flex items-center gap-2.5">
  <img src="/img/fydi_logo.png" alt="FYDI" class="h-6 w-auto">
  <div>
- <h3 class="text-sm font-black text-[#16325C]" id="lbl-sol-modal-title">Solicitar Asistencia Médica a mi Puesto</h3>
- <p class="text-[10px] text-slate-500">Edificio FYDI • Consultorio en Piso 6 & Apoyo en Mezzanine</p>
+ <h3 class="text-sm font-black text-[#16325C]" id="lbl-sol-modal-title">Solicitar Turno y Consulta Médica con Enfermería</h3>
+          <p class="text-[10px] text-slate-500">Atención presencial en Piso 6 (Consultorio) o Mezzanine (Minimarket)</p>
  </div>
  </div>
  <button type="button" onclick="cerrarModalSolicitudPiso()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-200/70 transition">
@@ -1682,21 +1732,26 @@
  </div>
  </div>
 
- <!-- Teléfono / Extensión y Prioridad -->
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Extensión o Celular *</label>
- <input type="text" id="sol-extension" placeholder="Ej. Ext 104 o 0991234567" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
- </div>
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Nivel de Urgencia *</label>
- <select id="sol-prioridad" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none font-medium">
- <option value="NORMAL">Normal (Atención de rutina)</option>
- <option value="URGENTE">Urgente (Dolor fuerte, mareo, migraña)</option>
- <option value="EMERGENCIA">[!] Emergencia (Desmayo, crisis, sangrado)</option>
- </select>
- </div>
- </div>
+ <!-- Nivel de Urgencia e Info de Chat Directo (Sin Teléfono) -->
+          <div class="space-y-2.5">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Nivel de Urgencia *</label>
+              <select id="sol-prioridad" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none font-semibold">
+                <option value="NORMAL">Normal (Atención de rutina)</option>
+                <option value="URGENTE">Urgente (Dolor fuerte, mareo, migraña)</option>
+                <option value="EMERGENCIA">[!] Emergencia (Desmayo, crisis, sangrado)</option>
+              </select>
+            </div>
+            
+            <div class="p-3 bg-sky-50 border border-sky-100 rounded-xl text-sky-900 text-xs flex items-start gap-2.5">
+              <i data-lucide="message-square" class="w-4 h-4 text-sky-600 shrink-0 mt-0.5"></i>
+              <div class="text-[11px] leading-relaxed">
+                <strong class="font-bold block">Canal Directo por Chat en Vivo:</strong>
+                No requieres dar tu teléfono. Al solicitar tu turno, el sistema abrirá tu ventana de chat con la enfermera para indicarte si puedes subir al Piso 6 o esperar unos minutos.
+              </div>
+            </div>
+            <input type="hidden" id="sol-extension" value="">
+          </div>
 
  <!-- Motivo o Síntomas -->
  <div>
@@ -1708,7 +1763,7 @@
  <div class="pt-2 flex items-center gap-2">
  <button type="submit" id="btn-submit-solicitud" class="flex-1 py-2.5 bg-[#E35205] hover:bg-[#C84500] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
  <i data-lucide="send" class="w-4 h-4"></i>
- <span id="lbl-sol-btn-enviar">Enviar Alerta a Enfermería</span>
+ <span id="lbl-sol-btn-enviar">Solicitar Turno y Abrir Chat</span>
  </button>
  <button type="button" onclick="cerrarModalSolicitudPiso()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
  Cancelar
@@ -1743,6 +1798,70 @@
  </div>
  </div>
  <!-- ======================================================== -->
+  <!-- MODAL PÚBLICO: CHAT EN VIVO DE CONSULTA Y TRIAJE (COLABORADOR) -->
+  <!-- ======================================================== -->
+  <div id="modal-chat-colaborador" class="hidden fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 my-auto animate-fade-in relative flex flex-col h-[88vh] max-h-[700px]">
+      
+      <!-- Top Chat Header -->
+      <div class="px-5 py-3.5 bg-[#16325C] text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-white/10 text-[#FDBA74] flex items-center justify-center border border-white/15">
+            <i data-lucide="stethoscope" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold text-white">Chat con Enfermería FYDI</h3>
+              <span id="chat-colab-ticket-badge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#E35205] text-white">#--</span>
+            </div>
+            <p id="chat-colab-paciente-desc" class="text-[10px] text-slate-300">Coordinación de atención médica</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <button type="button" onclick="cargarMensajesChatColaborador()" class="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition" title="Actualizar mensajes">
+            <i data-lucide="refresh-cw" class="w-4 h-4" id="chat-colab-spin-icon"></i>
+          </button>
+          <button type="button" onclick="cerrarChatColaborador()" class="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition" title="Cerrar ventana">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nurse Live Location Ribbon -->
+      <div class="px-4 py-2.5 bg-linear-to-r from-orange-50 to-amber-50 border-b border-orange-200 flex items-center justify-between text-xs shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-slate-600 text-[11px]">Ubicación de Enfermería:</span>
+          <strong id="chat-colab-nurse-location" class="text-[#16325C] font-bold text-[11px]">Piso 6 - Consultorio Central</strong>
+        </div>
+        <span id="chat-colab-nurse-status-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          Disponible
+        </span>
+      </div>
+
+      <!-- Live Messages Thread Container -->
+      <div id="chat-colab-messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/60 text-xs">
+        <div class="text-center py-6 text-slate-400">
+          <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto text-brand-600 mb-1"></i>
+          <span>Conectando con la enfermera...</span>
+        </div>
+      </div>
+
+      <!-- Chat Bottom Input Bar -->
+      <form id="form-chat-colaborador" onsubmit="enviarMensajeChatColaborador(event)" class="p-3 bg-white border-t border-slate-200 shrink-0 flex items-center gap-2">
+        <input type="text" id="input-chat-colaborador" required placeholder="Escribe un mensaje a la enfermera..." autocomplete="off" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
+        <button type="submit" id="btn-chat-colab-send" class="px-4 py-2.5 bg-[#E35205] hover:bg-[#C84500] text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Enviar</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
  <!-- MODAL PÚBLICO: CONSULTAR ESTADO DE TICKET -->
  <!-- ======================================================== -->
  <div id="modal-consultar-ticket" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -1773,6 +1892,90 @@
  </div>
 
  <!-- ======================================================== -->
+  <!-- MODAL CLÍNICO: CHAT Y TRIAJE DIRECTO DE ENFERMERÍA -->
+  <!-- ======================================================== -->
+  <div id="modal-chat-enfermeria" class="hidden fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-auto animate-fade-in relative flex flex-col h-[88vh] max-h-[720px]">
+      
+      <!-- Top Nurse Chat Header -->
+      <div class="px-6 py-4 bg-[#16325C] text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/10 text-[#FDBA74] flex items-center justify-center border border-white/15">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold text-white">Triaje Clínico & Chat con Paciente</h3>
+              <span id="nurse-chat-ticket-badge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#E35205] text-white">#--</span>
+            </div>
+            <p id="nurse-chat-patient-summary" class="text-[11px] text-slate-300 font-medium">Paciente -- • Piso --</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="atenderPacienteDesdeChat()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5" title="Abrir ficha médica y dispensar medicinas">
+            <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+            <span>Atender y Recetar</span>
+          </button>
+          <button type="button" onclick="cerrarChatEnfermeria()" class="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Chips for Nurse -->
+      <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center gap-1.5 text-xs shrink-0">
+        <span class="text-[11px] font-bold text-slate-600 mr-1 flex items-center gap-1">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-600"></i>
+          Respuestas 1-Clic:
+        </span>
+        <button type="button" onclick="enviarChipEnfermeria('Sube al Piso 6 (Consultorio Central) ahora mismo, te espero.', 'PUEDE_ACERCARSE')" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-semibold transition shadow-2xs">
+          Sube a Piso 6 ahora
+        </button>
+        <button type="button" onclick="enviarChipEnfermeria('Estoy con un paciente en este momento. Por favor espera 5 a 10 minutos en tu puesto y te aviso en cuanto puedas subir.', 'EN_ESPERA')" class="px-2.5 py-1 bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-[11px] font-semibold transition shadow-2xs">
+          Espera 5-10 min (Ocupada)
+        </button>
+        <button type="button" onclick="enviarChipEnfermeria('Nos encontramos en Mezzanine (Minimarket / Cafetería) en este momento.', 'PUEDE_ACERCARSE')" class="px-2.5 py-1 bg-white hover:bg-orange-50 text-orange-800 border border-orange-200 rounded-lg text-[11px] font-semibold transition shadow-2xs">
+          Nos vemos en Mezzanine
+        </button>
+        <button type="button" onclick="enviarChipEnfermeria('Toma un vaso de agua, reposa 2 minutos y sube al Piso 6 enseguida.', 'PUEDE_ACERCARSE')" class="px-2.5 py-1 bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 rounded-lg text-[11px] font-semibold transition shadow-2xs">
+          Toma agua y sube
+        </button>
+      </div>
+
+      <!-- Messages Thread Area -->
+      <div id="nurse-chat-messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/60 text-xs">
+        <!-- Live bubbles rendered by app.js -->
+      </div>
+
+      <!-- Bottom Reply & State Control -->
+      <div class="p-3 bg-white border-t border-slate-200 shrink-0 space-y-2">
+        <form id="form-chat-enfermeria" onsubmit="enviarMensajeChatEnfermeria(event)" class="flex items-center gap-2">
+          <input type="text" id="input-chat-enfermeria" required placeholder="Escribe tu indicación médica o mensaje al colaborador..." autocomplete="off" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
+          <button type="submit" class="px-4 py-2.5 bg-[#16325C] hover:bg-[#0E254A] text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Responder</span>
+          </button>
+        </form>
+        
+        <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+          <div class="flex items-center gap-1.5">
+            <span>Cambiar estado del ticket:</span>
+            <select id="select-ticket-status-chat" onchange="cambiarEstadoTicketDesdeChat(this.value)" class="border border-slate-300 rounded-lg px-2 py-0.5 text-xs font-bold text-slate-700 bg-white">
+              <option value="PENDIENTE">PENDIENTE</option>
+              <option value="PUEDE_ACERCARSE">PUEDE ACERCARSE (SUBIR AL PISO 6 / MEZZANINE)</option>
+              <option value="EN_ESPERA">EN ESPERA (PACIENTE ESPERANDO EN PUESTO)</option>
+              <option value="ATENDIDA">ATENDIDA (FINALIZADA)</option>
+              <option value="CANCELADA">CANCELADA</option>
+            </select>
+          </div>
+          <span class="text-[10px] text-slate-400">Sincronización en vivo cada 3 segundos</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
  <!-- MODAL CLÍNICO: RESPONDER / GESTIONAR SOLICITUD DE PISO -->
  <!-- ======================================================== -->
  <div id="modal-responder-solicitud" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">

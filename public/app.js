@@ -11,6 +11,14 @@ let solicitudesCache = [];
 let filtroEstadoSolicitud = 'TODAS';
 let currentSolicitudAtendiendoId = null;
 let pollingSolicitudesInterval = null;
+let currentChatTicketId = null;
+let pollingChatColaboradorInterval = null;
+let pollingChatEnfermeriaInterval = null;
+let estadoEnfermeraCache = {
+  ubicacion_actual: "Piso 6 - Consultorio Central",
+  disponibilidad: "DISPONIBLE",
+  mensaje_estado: "Atendiendo consultas en Consultorio Piso 6"
+};
 
 
 // Estado de sesión activa (Exige autenticación corporativa real)
@@ -35,9 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
  cargarSolicitudesPisos();
 
  cargarMedicamentos();
- cargarPacientes();
- cargarEstadisticas();
- cargarHistorial();
+  cargarPacientes();
+  cargarEstadisticas();
+  cargarHistorial();
+  cargarEstadoEnfermera();
+  checkTicketCacheado();
+  setInterval(cargarEstadoEnfermera, 20000);
  
  // Agregar primer renglón de medicina por defecto
  agregarRenglonReceta();
@@ -2301,28 +2312,23 @@ async function enviarSolicitudPiso(e) {
  return;
  }
 
- // Mostrar pantalla de éxito con Ticket ID
- const formBox = document.getElementById("form-solicitar-piso");
- const exitoBox = document.getElementById("sol-exito-box");
- const ticketIdEl = document.getElementById("ticket-generado-id");
- const ticketDetEl = document.getElementById("ticket-generado-detalles");
+ // Guardar ticket y abrir directamente el Chat en Vivo con Enfermería
+  localStorage.setItem("fydi_colab_ticket", data.solicitud_id);
+  checkTicketCacheado();
 
- if (formBox) formBox.classList.add("hidden");
- if (exitoBox) exitoBox.classList.remove("hidden");
- if (ticketIdEl) ticketIdEl.textContent = `#${data.solicitud_id}`;
- if (ticketDetEl) ticketDetEl.textContent = `Piso ${piso} • ${area_campana} • ${nombre_paciente}`;
+  // Resetear campos del formulario
+  const puestoEl = document.getElementById("sol-ubicacion-puesto");
+  if (puestoEl) puestoEl.value = "";
+  document.getElementById("sol-nombre").value = "";
+  document.getElementById("sol-cedula").value = "";
+  const extEl = document.getElementById("sol-extension");
+  if (extEl) extEl.value = "";
+  document.getElementById("sol-motivo").value = "";
+  sincronizarAreaCampanaTexto();
 
- // Resetear campos del formulario
- const puestoEl = document.getElementById("sol-ubicacion-puesto");
- if (puestoEl) puestoEl.value = "";
- document.getElementById("sol-nombre").value = "";
- document.getElementById("sol-cedula").value = "";
- document.getElementById("sol-extension").value = "";
- document.getElementById("sol-motivo").value = "";
- sincronizarAreaCampanaTexto();
-
- // Actualizar badge si la sesión médica está activa
- cargarSolicitudesPisos();
+  cerrarModalSolicitudPiso();
+  abrirChatColaborador(data.solicitud_id);
+  cargarSolicitudesPisos();
 
  } catch (err) {
  alert("Error de conexión al enviar solicitud: " + err.message);
@@ -2633,31 +2639,34 @@ function renderSolicitudesPisos() {
  ` : ''}
  </div>
 
- <!-- Acciones Rápidas para Enfermería -->
- <div class="pt-3 border-t border-slate-100 space-y-2">
- <div class="grid grid-cols-2 gap-2">
- <button onclick="responderRapidoSolicitud(${item.id}, 'EN_CAMINO')" class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-[11px] transition flex items-center justify-center gap-1">
- <i data-lucide="footprints" class="w-3.5 h-3.5"></i>
- Voy en camino
- </button>
- <button onclick="responderRapidoSolicitud(${item.id}, 'PUEDE_ACERCARSE')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center justify-center gap-1">
- <i data-lucide="door-open" class="w-3.5 h-3.5"></i>
- Bajar a Piso 2
- </button>
- </div>
+ <!-- Acciones Rápidas de Triage y Chat -->
+  <div class="pt-3 border-t border-slate-100 space-y-2">
+    <div class="flex items-center gap-2">
+      <button onclick="abrirChatEnfermeria(${item.id})" class="flex-1 px-3 py-2 bg-[#16325C] hover:bg-[#0E254A] text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5" title="Abrir chat en vivo con el colaborador">
+        <i data-lucide="message-square" class="w-3.5 h-3.5 text-[#FDBA74]"></i>
+        Abrir Chat en Vivo
+      </button>
+      <button onclick="atenderSolicitudEnFormulario(${item.id})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5" title="Cargar datos del paciente en Consulta Médica y recetar">
+        <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+        Atender
+      </button>
+    </div>
 
- <div class="flex items-center gap-2">
- <button onclick="atenderSolicitudEnFormulario(${item.id})" class="flex-1 px-3 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5" title="Cargar datos del paciente en Nueva Atención y recetar medicinas">
- <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
- Atender y Recetar
- </button>
- <button onclick="abrirModalResponderSolicitud(${item.id})" class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition" title="Personalizar mensaje o cambiar estado">
- <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
- </button>
- </div>
- </div>
- </div>
- `;
+    <!-- Micro-chips de respuesta 1-clic -->
+    <div class="flex items-center justify-between gap-1 pt-1">
+      <button onclick="enviarChipDesdeTarjeta(${item.id}, 'Sube al Piso 6 (Consultorio Central) ahora mismo, te espero.', 'PUEDE_ACERCARSE')" class="flex-1 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[10px] transition text-center" title="Indicar al paciente que suba al consultorio">
+        Sube a Piso 6
+      </button>
+      <button onclick="enviarChipDesdeTarjeta(${item.id}, 'Estoy con un paciente en este momento. Por favor espera 5 a 10 minutos en tu puesto y te aviso.', 'EN_ESPERA')" class="flex-1 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px] transition text-center" title="Pedir al paciente que espere unos minutos en su puesto">
+        Espera 5 min
+      </button>
+      <button onclick="enviarChipDesdeTarjeta(${item.id}, 'Nos encontramos en Mezzanine (Minimarket / Cafetería) ahora mismo.', 'PUEDE_ACERCARSE')" class="flex-1 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 font-bold text-[10px] transition text-center" title="Coordinar en Mezzanine">
+        Mezzanine
+      </button>
+    </div>
+  </div>
+</div>
+`;
  }).join("");
 
  if (window.lucide) lucide.createIcons();
@@ -2803,3 +2812,632 @@ document.addEventListener("keydown", (e) => {
  }
 });
 
+
+
+// ================================================================
+// GESTIÓN DE UBICACIÓN Y DISPONIBILIDAD EN TIEMPO REAL DE ENFERMERÍA
+// ================================================================
+async function cargarEstadoEnfermera() {
+  try {
+    const res = await fetch("/api/enfermera/estado");
+    if (!res.ok) return;
+    const data = await res.json();
+    estadoEnfermeraCache = data;
+    renderEstadoEnfermeraUI(data);
+  } catch (e) {
+    console.warn("No se pudo cargar el estado de enfermería:", e);
+  }
+}
+
+function renderEstadoEnfermeraUI(data) {
+  const ub = data.ubicacion_actual || "Piso 6 - Consultorio Central";
+  const disp = data.disponibilidad || "DISPONIBLE";
+
+  // 1. Banner en el Hero de la Landing Page
+  const landLoc = document.getElementById("landing-nurse-location-text");
+  const landPill = document.getElementById("landing-nurse-status-pill");
+  if (landLoc) landLoc.textContent = ub;
+  if (landPill) {
+    if (disp === "EN_CONSULTA") {
+      landPill.textContent = "En Consulta (Ocupada)";
+      landPill.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-white uppercase";
+    } else if (disp === "EN_PAUSA") {
+      landPill.textContent = "En Pausa";
+      landPill.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-500 text-white uppercase";
+    } else {
+      landPill.textContent = "Disponible";
+      landPill.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500 text-white uppercase";
+    }
+  }
+
+  // 2. Banner dentro del Chat del Colaborador
+  const chatLoc = document.getElementById("chat-colab-nurse-location");
+  const chatStatus = document.getElementById("chat-colab-nurse-status-badge");
+  if (chatLoc) chatLoc.textContent = ub;
+  if (chatStatus) {
+    if (disp === "EN_CONSULTA") {
+      chatStatus.textContent = "En Consulta con Paciente";
+      chatStatus.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300";
+    } else if (disp === "EN_PAUSA") {
+      chatStatus.textContent = "En Receso Temporal";
+      chatStatus.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300";
+    } else {
+      chatStatus.textContent = "Disponible para Recibir";
+      chatStatus.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+    }
+  }
+
+  // 3. Panel de Control de Enfermería (#tab-solicitudes)
+  const adminLoc = document.getElementById("admin-nurse-location-display");
+  const adminBadge = document.getElementById("admin-nurse-live-badge");
+  const adminSel = document.getElementById("select-disp-enfermera");
+  const btnPiso6 = document.getElementById("btn-loc-piso6");
+  const btnMezz = document.getElementById("btn-loc-mezzanine");
+
+  if (adminLoc) adminLoc.innerHTML = `<i data-lucide="stethoscope" class="w-4 h-4 text-[#FDBA74]"></i> <span>${ub}</span>`;
+  if (adminBadge) {
+    if (disp === "EN_CONSULTA") {
+      adminBadge.textContent = "En Consulta";
+      adminBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-white uppercase tracking-wider";
+    } else if (disp === "EN_PAUSA") {
+      adminBadge.textContent = "En Pausa";
+      adminBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-500 text-white uppercase tracking-wider";
+    } else {
+      adminBadge.textContent = "Disponible";
+      adminBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500 text-white uppercase tracking-wider";
+    }
+  }
+  if (adminSel) adminSel.value = disp;
+
+  if (btnPiso6 && btnMezz) {
+    if (ub.includes("Mezzanine")) {
+      btnMezz.className = "px-3 py-1.5 rounded-xl font-bold text-xs bg-white text-[#16325C] shadow-sm transition flex items-center gap-1.5";
+      btnPiso6.className = "px-3 py-1.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1.5";
+    } else {
+      btnPiso6.className = "px-3 py-1.5 rounded-xl font-bold text-xs bg-white text-[#16325C] shadow-sm transition flex items-center gap-1.5";
+      btnMezz.className = "px-3 py-1.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1.5";
+    }
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function cambiarUbicacionEnfermera(nuevaUbicacion) {
+  try {
+    const res = await fetch("/api/enfermera/estado", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ubicacion_actual: nuevaUbicacion,
+        disponibilidad: estadoEnfermeraCache.disponibilidad || "DISPONIBLE",
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA"
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast("Ubicación Actualizada", `Ahora estás en: ${nuevaUbicacion}`, "success");
+      cargarEstadoEnfermera();
+    } else {
+      showToast("Error", data.error || "No se pudo actualizar la ubicación.", "error");
+    }
+  } catch (e) {
+    showToast("Error de Red", e.message, "error");
+  }
+}
+
+async function cambiarDisponibilidadEnfermera(nuevaDisp) {
+  try {
+    const res = await fetch("/api/enfermera/estado", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ubicacion_actual: estadoEnfermeraCache.ubicacion_actual || "Piso 6 - Consultorio Central",
+        disponibilidad: nuevaDisp,
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA"
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const labels = {
+        DISPONIBLE: "Disponible para recibir pacientes.",
+        EN_CONSULTA: "Marcada como Ocupada con paciente.",
+        EN_PAUSA: "Marcada en Pausa / Almuerzo."
+      };
+      showToast("Estado Actualizado", labels[nuevaDisp] || nuevaDisp, "success");
+      cargarEstadoEnfermera();
+    } else {
+      showToast("Error", data.error || "No se pudo actualizar la disponibilidad.", "error");
+    }
+  } catch (e) {
+    showToast("Error de Red", e.message, "error");
+  }
+}
+
+// ================================================================
+// SISTEMA DE CHAT EN VIVO DE CONSULTA Y TRIAJE (COLABORADOR & ENFERMERÍA)
+// ================================================================
+
+function checkTicketCacheado() {
+  const cached = localStorage.getItem("fydi_colab_ticket");
+  const btn = document.getElementById("btn-resume-cached-ticket");
+  const txt = document.getElementById("txt-resume-cached-ticket");
+  if (cached && btn) {
+    btn.classList.remove("hidden");
+    if (txt) txt.textContent = `Mi Chat (#${cached})`;
+  } else if (btn) {
+    btn.classList.add("hidden");
+  }
+}
+
+function abrirChatDesdeQuickInput() {
+  const inp = document.getElementById("quick-ticket-input");
+  const val = inp ? inp.value.trim() : "";
+  if (!val) {
+    alert("Por favor ingresa tu número de ticket.");
+    if (inp) inp.focus();
+    return;
+  }
+  abrirChatColaborador(val);
+}
+
+function abrirChatTicketCacheado() {
+  const cached = localStorage.getItem("fydi_colab_ticket");
+  if (cached) {
+    abrirChatColaborador(cached);
+  }
+}
+
+function abrirChatColaborador(ticketId) {
+  cerrarModalSolicitudPiso();
+  cerrarModalConsultarTicket();
+
+  currentChatTicketId = parseInt(ticketId);
+  localStorage.setItem("fydi_colab_ticket", currentChatTicketId);
+  checkTicketCacheado();
+
+  const modal = document.getElementById("modal-chat-colaborador");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+
+  const badge = document.getElementById("chat-colab-ticket-badge");
+  if (badge) badge.textContent = `#${currentChatTicketId}`;
+
+  cargarEstadoEnfermera();
+  cargarMensajesChatColaborador();
+
+  if (pollingChatColaboradorInterval) clearInterval(pollingChatColaboradorInterval);
+  pollingChatColaboradorInterval = setInterval(() => {
+    if (!document.getElementById("modal-chat-colaborador")?.classList.contains("hidden")) {
+      cargarMensajesChatColaborador(false);
+    }
+  }, 3500);
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarChatColaborador() {
+  if (pollingChatColaboradorInterval) {
+    clearInterval(pollingChatColaboradorInterval);
+    pollingChatColaboradorInterval = null;
+  }
+  const modal = document.getElementById("modal-chat-colaborador");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function cargarMensajesChatColaborador(showSpin = true) {
+  if (!currentChatTicketId) return;
+
+  const spin = document.getElementById("chat-colab-spin-icon");
+  if (showSpin && spin) spin.classList.add("animate-spin");
+
+  try {
+    const [resMsgs, resTicket] = await Promise.all([
+      fetch(`/api/chat/mensajes?solicitud_id=${currentChatTicketId}`),
+      fetch(`/api/solicitudes/estado?id=${currentChatTicketId}`)
+    ]);
+
+    if (!resTicket.ok) {
+      const err = await resTicket.json();
+      document.getElementById("chat-colab-messages-container").innerHTML = `
+        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-center">
+          <p class="font-bold">No se encontró el ticket #${currentChatTicketId}.</p>
+          <p class="text-xs text-rose-600 mt-1">${err.error || ''}</p>
+        </div>
+      `;
+      return;
+    }
+
+    const ticket = await resTicket.json();
+    const msgs = await resMsgs.json();
+
+    const sub = document.getElementById("chat-colab-paciente-desc");
+    if (sub) {
+      sub.textContent = `${ticket.nombre_paciente} • Piso ${ticket.piso} • Estado: ${ticket.estado}`;
+    }
+
+    renderMensajesColaboradorUI(msgs, ticket);
+
+  } catch (e) {
+    console.warn("Error al cargar chat colaborador:", e);
+  } finally {
+    if (spin) spin.classList.remove("animate-spin");
+  }
+}
+
+function renderMensajesColaboradorUI(msgs, ticket) {
+  const container = document.getElementById("chat-colab-messages-container");
+  if (!container) return;
+
+  if (!msgs || msgs.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 text-slate-400">
+        <i data-lucide="message-square" class="w-8 h-8 mx-auto text-slate-300 mb-1"></i>
+        <p>Aún no hay mensajes en este chat.</p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  const previousCount = container.querySelectorAll(".chat-bubble-item").length;
+
+  container.innerHTML = msgs.map(m => {
+    const isPaciente = m.remitente_tipo === "PACIENTE";
+    const isSistema = m.remitente_tipo === "SISTEMA";
+
+    if (isSistema) {
+      return `
+        <div class="chat-bubble-item flex justify-center my-2">
+          <div class="px-3 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-sky-900 text-[11px] font-medium text-center max-w-sm flex items-center gap-1.5">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-sky-600 shrink-0"></i>
+            <span>${escapeHtml(m.mensaje)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (isPaciente) {
+      return `
+        <div class="chat-bubble-item flex justify-end">
+          <div class="max-w-[80%] sm:max-w-[70%] bg-[#16325C] text-white rounded-2xl rounded-tr-xs p-3 shadow-xs">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="font-bold text-[11px] text-[#FDBA74]">${escapeHtml(m.remitente_nombre || 'Tú')}</span>
+              <span class="text-[9px] text-slate-300">${formatHoraChat(m.creado_en)}</span>
+            </div>
+            <p class="text-xs leading-relaxed whitespace-pre-wrap">${escapeHtml(m.mensaje)}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Enfermería
+    const ubBadge = m.ubicacion_enfermera ? `<span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-semibold ml-1">${escapeHtml(m.ubicacion_enfermera)}</span>` : '';
+    return `
+      <div class="chat-bubble-item flex justify-start">
+        <div class="max-w-[85%] sm:max-w-[75%] bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-3 shadow-xs">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <div class="flex items-center gap-1">
+              <span class="font-bold text-[11px] text-emerald-700 flex items-center gap-1">
+                <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+                ${escapeHtml(m.remitente_nombre || 'Lic. Enfermería')}
+              </span>
+              ${ubBadge}
+            </div>
+            <span class="text-[9px] text-slate-400">${formatHoraChat(m.creado_en)}</span>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">${escapeHtml(m.mensaje)}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+
+  if (msgs.length > previousCount) {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+async function enviarMensajeChatColaborador(e) {
+  if (e) e.preventDefault();
+  if (!currentChatTicketId) return;
+
+  const input = document.getElementById("input-chat-colaborador");
+  const msg = input ? input.value.trim() : "";
+  if (!msg) return;
+
+  const btn = document.getElementById("btn-chat-colab-send");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/chat/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: currentChatTicketId,
+        remitente_tipo: "PACIENTE",
+        mensaje: msg
+      })
+    });
+
+    if (res.ok) {
+      if (input) input.value = "";
+      cargarMensajesChatColaborador(false);
+    } else {
+      const data = await res.json();
+      alert("Error al enviar mensaje: " + (data.error || ""));
+    }
+  } catch (err) {
+    alert("Error de conexión: " + err.message);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (input) input.focus();
+  }
+}
+
+// ----------------------------------------------------------------
+// CHAT ENFERMERÍA (PANEL CLÍNICO)
+// ----------------------------------------------------------------
+
+function abrirChatEnfermeria(ticketId) {
+  currentChatTicketId = parseInt(ticketId);
+
+  const modal = document.getElementById("modal-chat-enfermeria");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+
+  const badge = document.getElementById("nurse-chat-ticket-badge");
+  if (badge) badge.textContent = `#${currentChatTicketId}`;
+
+  const selStatus = document.getElementById("select-ticket-status-chat");
+  const ticket = solicitudesCache.find(s => s.id === currentChatTicketId);
+  if (ticket && selStatus) {
+    selStatus.value = ticket.estado;
+  }
+
+  cargarMensajesChatEnfermeria();
+
+  if (pollingChatEnfermeriaInterval) clearInterval(pollingChatEnfermeriaInterval);
+  pollingChatEnfermeriaInterval = setInterval(() => {
+    if (!document.getElementById("modal-chat-enfermeria")?.classList.contains("hidden")) {
+      cargarMensajesChatEnfermeria(false);
+    }
+  }, 3500);
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarChatEnfermeria() {
+  if (pollingChatEnfermeriaInterval) {
+    clearInterval(pollingChatEnfermeriaInterval);
+    pollingChatEnfermeriaInterval = null;
+  }
+  const modal = document.getElementById("modal-chat-enfermeria");
+  if (modal) modal.classList.add("hidden");
+  cargarSolicitudesPisos();
+}
+
+async function cargarMensajesChatEnfermeria(showSpin = true) {
+  if (!currentChatTicketId) return;
+
+  try {
+    const [resMsgs, resTicket] = await Promise.all([
+      fetch(`/api/chat/mensajes?solicitud_id=${currentChatTicketId}`),
+      fetch(`/api/solicitudes/estado?id=${currentChatTicketId}`)
+    ]);
+
+    if (!resTicket.ok) return;
+
+    const ticket = await resTicket.json();
+    const msgs = await resMsgs.json();
+
+    const sum = document.getElementById("nurse-chat-patient-summary");
+    if (sum) {
+      sum.textContent = `${ticket.nombre_paciente} • Piso ${ticket.piso} (${ticket.area_campana || ''}) • Motivo: "${ticket.motivo}"`;
+    }
+
+    const selStatus = document.getElementById("select-ticket-status-chat");
+    if (selStatus && document.activeElement !== selStatus) {
+      selStatus.value = ticket.estado;
+    }
+
+    renderMensajesEnfermeriaUI(msgs, ticket);
+
+  } catch (e) {
+    console.warn("Error cargando mensajes de enfermería:", e);
+  }
+}
+
+function renderMensajesEnfermeriaUI(msgs, ticket) {
+  const container = document.getElementById("nurse-chat-messages-container");
+  if (!container) return;
+
+  const previousCount = container.querySelectorAll(".nurse-chat-item").length;
+
+  container.innerHTML = msgs.map(m => {
+    const isEnfermera = m.remitente_tipo === "ENFERMERIA";
+    const isSistema = m.remitente_tipo === "SISTEMA";
+
+    if (isSistema) {
+      return `
+        <div class="nurse-chat-item flex justify-center my-2">
+          <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-medium flex items-center gap-1.5">
+            <i data-lucide="info" class="w-3 h-3 text-slate-500"></i>
+            ${escapeHtml(m.mensaje)}
+          </span>
+        </div>
+      `;
+    }
+
+    if (isEnfermera) {
+      return `
+        <div class="nurse-chat-item flex justify-end">
+          <div class="max-w-[80%] bg-[#16325C] text-white rounded-2xl rounded-tr-xs p-3 shadow-xs">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="font-bold text-[11px] text-[#FDBA74] flex items-center gap-1">
+                <i data-lucide="stethoscope" class="w-3 h-3"></i>
+                ${escapeHtml(m.remitente_nombre || 'Tú (Enfermería)')}
+              </span>
+              <span class="text-[9px] text-slate-300">${formatHoraChat(m.creado_en)}</span>
+            </div>
+            <p class="text-xs leading-relaxed whitespace-pre-wrap">${escapeHtml(m.mensaje)}</p>
+            ${m.ubicacion_enfermera ? `<span class="text-[9px] text-orange-200/90 block mt-1">Ubicación indicada: ${escapeHtml(m.ubicacion_enfermera)}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Mensaje del Colaborador / Paciente
+    return `
+      <div class="nurse-chat-item flex justify-start">
+        <div class="max-w-[80%] bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-3 shadow-xs">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="font-bold text-[11px] text-brand-700 flex items-center gap-1">
+              <i data-lucide="user" class="w-3 h-3"></i>
+              ${escapeHtml(m.remitente_nombre || 'Colaborador')}
+            </span>
+            <span class="text-[9px] text-slate-400">${formatHoraChat(m.creado_en)}</span>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">${escapeHtml(m.mensaje)}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+
+  if (msgs.length > previousCount) {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+async function enviarMensajeChatEnfermeria(e) {
+  if (e) e.preventDefault();
+  if (!currentChatTicketId) return;
+
+  const input = document.getElementById("input-chat-enfermeria");
+  const msg = input ? input.value.trim() : "";
+  if (!msg) return;
+
+  try {
+    const res = await fetch("/api/chat/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: currentChatTicketId,
+        remitente_tipo: "ENFERMERIA",
+        remitente_nombre: currentUser ? currentUser.nombre_completo : "Lic. Enfermería",
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        mensaje: msg
+      })
+    });
+
+    if (res.ok) {
+      if (input) input.value = "";
+      cargarMensajesChatEnfermeria(false);
+      cargarSolicitudesPisos();
+    } else {
+      const data = await res.json();
+      showToast("Error", data.error || "No se pudo enviar.", "error");
+    }
+  } catch (err) {
+    showToast("Error de conexión", err.message, "error");
+  }
+}
+
+async function enviarChipEnfermeria(texto, nuevoEstado) {
+  if (!currentChatTicketId) return;
+
+  try {
+    const res = await fetch("/api/chat/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: currentChatTicketId,
+        remitente_tipo: "ENFERMERIA",
+        remitente_nombre: currentUser ? currentUser.nombre_completo : "Lic. Enfermería",
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        mensaje: texto,
+        nuevo_estado: nuevoEstado
+      })
+    });
+
+    if (res.ok) {
+      showToast("Respuesta Enviada", `Mensaje y estado '${nuevoEstado}' aplicados.`, "success");
+      cargarMensajesChatEnfermeria(false);
+      cargarSolicitudesPisos();
+    }
+  } catch (err) {
+    showToast("Error", err.message, "error");
+  }
+}
+
+async function enviarChipDesdeTarjeta(ticketId, texto, nuevoEstado) {
+  try {
+    const res = await fetch("/api/chat/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: ticketId,
+        remitente_tipo: "ENFERMERIA",
+        remitente_nombre: currentUser ? currentUser.nombre_completo : "Lic. Enfermería",
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        mensaje: texto,
+        nuevo_estado: nuevoEstado
+      })
+    });
+    if (res.ok) {
+      showToast("Instrucción Enviada", `Se envió respuesta al Ticket #${ticketId}.`, "success");
+      cargarSolicitudesPisos();
+    }
+  } catch (e) {
+    showToast("Error", e.message, "error");
+  }
+}
+
+async function cambiarEstadoTicketDesdeChat(nuevoEstado) {
+  if (!currentChatTicketId || !nuevoEstado) return;
+
+  try {
+    const res = await fetch("/api/solicitudes/responder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        solicitud_id: currentChatTicketId,
+        nuevo_estado: nuevoEstado,
+        comentario: `Estado actualizado a '${nuevoEstado}' por Enfermería.`,
+        user_role: currentUser ? currentUser.rol : "ENFERMERIA",
+        usuario_nombre: currentUser ? currentUser.nombre_completo : "Lic. Enfermería"
+      })
+    });
+
+    if (res.ok) {
+      showToast("Estado Actualizado", `Ticket #${currentChatTicketId} marcado como '${nuevoEstado}'.`, "success");
+      cargarMensajesChatEnfermeria(false);
+      cargarSolicitudesPisos();
+    }
+  } catch (err) {
+    showToast("Error", err.message, "error");
+  }
+}
+
+function atenderPacienteDesdeChat() {
+  if (!currentChatTicketId) return;
+  const sid = currentChatTicketId;
+  cerrarChatEnfermeria();
+  atenderSolicitudEnFormulario(sid);
+}
+
+function formatHoraChat(fechaStr) {
+  if (!fechaStr) return "";
+  try {
+    const d = new Date(fechaStr);
+    if (isNaN(d.getTime())) {
+      const parts = fechaStr.split(" ");
+      return parts[1] ? parts[1].substring(0, 5) : fechaStr;
+    }
+    return d.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch (e) {
+    return fechaStr;
+  }
+}

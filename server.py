@@ -479,6 +479,34 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     return
                 self.send_json(dict(row))
 
+            elif path == "/api/enfermera/estado":
+                cur.execute("SELECT * FROM estado_enfermera WHERE id = 1")
+                row = cur.fetchone()
+                if not row:
+                    self.send_json({
+                        "id": 1,
+                        "ubicacion_actual": "Piso 6 - Consultorio Central",
+                        "disponibilidad": "DISPONIBLE",
+                        "mensaje_estado": "Atendiendo consultas en Consultorio Piso 6",
+                        "actualizado_en": datetime.now().isoformat()
+                    })
+                else:
+                    self.send_json(dict(row))
+
+            elif path == "/api/chat/mensajes":
+                sid = params.get("solicitud_id", [None])[0]
+                if not sid:
+                    self.send_json({"error": "Debe indicar solicitud_id"}, 400)
+                    return
+                cur.execute("""
+                    SELECT id, solicitud_id, remitente_tipo, remitente_nombre, mensaje, ubicacion_enfermera, creado_en
+                    FROM solicitud_mensajes
+                    WHERE solicitud_id = ?
+                    ORDER BY id ASC
+                """, (sid,))
+                rows = [dict(r) for r in cur.fetchall()]
+                self.send_json(rows)
+
             else:
                 self.send_json({"error": "Ruta no encontrada"}, 404)
         finally:
@@ -1101,7 +1129,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json({"success": True, "mensaje": "Matriz de permisos actualizada exitosamente."})
 
             # ---------------------------------------------------------
-            # 8. REGISTRO PÚBLICO DE SOLICITUD DE PISO (CALL CENTER)
+            # 8. REGISTRO PÚBLICO DE SOLICITUD DE TURNO / TRIAJE
             # ---------------------------------------------------------
             elif path == "/api/solicitudes":
                 piso = str(data.get("piso", "6")).strip()
@@ -1113,7 +1141,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 extension = data.get("telefono_extension", "").strip()
 
                 if not nombre or not motivo:
-                    self.send_json({"error": "Debe especificar su nombre y el motivo o síntoma de la solicitud."}, 400)
+                    self.send_json({"error": "Debe especificar su nombre y el motivo o síntoma de la consulta."}, 400)
                     return
 
                 cur.execute("""
@@ -1122,25 +1150,54 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                         estado, telefono_extension, creado_en, actualizado_en
                     ) VALUES (?, ?, ?, ?, ?, ?, 'PENDIENTE', ?, datetime('now'), datetime('now'))
                 """, (piso, area, nombre, cedula, motivo, prioridad, extension))
-                conn.commit()
                 sol_id = cur.lastrowid
 
-                piso_txt = piso if "piso" in piso.lower() or "mezzanine" in piso.lower() or "pb" in piso.lower() else f"Piso {piso}"
+                # Obtener estado actual de la enfermera
+                cur.execute("SELECT ubicacion_actual, disponibilidad, mensaje_estado FROM estado_enfermera WHERE id = 1")
+                row_enf = cur.fetchone()
+                ub_enf = row_enf["ubicacion_actual"] if row_enf else "Piso 6 - Consultorio Central"
+                disp_enf = row_enf["disponibilidad"] if row_enf else "DISPONIBLE"
+
+                # Registrar mensaje inicial del paciente en el chat en vivo
+                cur.execute("""
+                    INSERT INTO solicitud_mensajes (
+                        solicitud_id, remitente_tipo, remitente_nombre, mensaje, creado_en
+                    ) VALUES (?, 'PACIENTE', ?, ?, datetime('now'))
+                """, (sol_id, nombre, motivo))
+
+                # Mensaje automático del sistema con la ubicación en vivo de la enfermera
+                if disp_enf == "EN_CONSULTA":
+                    msg_auto = f"Turno #{sol_id} registrado. La Lic. de Enfermería se encuentra actualmente en: {ub_enf} (ocupada con un paciente). Por favor mantente atento a este chat; te avisará en cuanto puedas acercarte."
+                elif disp_enf == "EN_PAUSA":
+                    msg_auto = f"Turno #{sol_id} registrado. La enfermera se encuentra en receso temporal. Te responderá por este chat en cuanto retome atenciones."
+                else:
+                    msg_auto = f"Turno #{sol_id} registrado. La enfermera se encuentra en: {ub_enf}. En breve te confirmará por este chat si puedes subir/acercarte de inmediato."
+
+                cur.execute("""
+                    INSERT INTO solicitud_mensajes (
+                        solicitud_id, remitente_tipo, remitente_nombre, mensaje, ubicacion_enfermera, creado_en
+                    ) VALUES (?, 'SISTEMA', 'Sistema FYDI', ?, ?, datetime('now'))
+                """, (sol_id, msg_auto, ub_enf))
+
+                conn.commit()
+
                 self.send_json({
                     "success": True,
-                    "mensaje": f"Solicitud #{sol_id} recibida. La enfermera ha sido alertada para {piso_txt}.",
-                    "solicitud_id": sol_id
+                    "mensaje": f"Solicitud #{sol_id} generada con éxito.",
+                    "solicitud_id": sol_id,
+                    "ubicacion_enfermera": ub_enf,
+                    "disponibilidad": disp_enf
                 }, 201)
 
             # ---------------------------------------------------------
-            # 9. GESTIÓN Y RESPUESTA DE ENFERMERÍA A SOLICITUDES DE PISO
+            # 9. GESTIÓN Y RESPUESTA DE ENFERMERÍA A SOLICITUDES
             # ---------------------------------------------------------
             elif path == "/api/solicitudes/responder":
                 user_role = (data.get("user_role") or data.get("rol") or "").upper()
-                usuario_nombre = data.get("usuario_nombre") or "Personal Médico"
+                usuario_nombre = data.get("usuario_nombre") or "Lic. Enfermería"
                 
                 if user_role == "AUDITOR":
-                    self.send_json({"error": "El rol Auditoría no gestiona solicitudes operativas de piso."}, 403)
+                    self.send_json({"error": "El rol Auditoría no gestiona solicitudes operativas."}, 403)
                     return
 
                 sid = data.get("solicitud_id")
@@ -1151,6 +1208,11 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json({"error": "Parámetros inválidos para responder la solicitud."}, 400)
                     return
 
+                # Obtener ubicación actual de enfermera
+                cur.execute("SELECT ubicacion_actual FROM estado_enfermera WHERE id = 1")
+                row_enf = cur.fetchone()
+                ub_enf = row_enf["ubicacion_actual"] if row_enf else "Piso 6 - Consultorio Central"
+
                 cur.execute("""
                     UPDATE solicitudes_asistencia SET
                         estado = ?,
@@ -1159,11 +1221,129 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                         actualizado_en = datetime('now')
                     WHERE id = ?
                 """, (nuevo_estado, comentario, f"{usuario_nombre} ({user_role})", sid))
+
+                # Consolidar mensaje en el hilo del chat
+                if comentario:
+                    cur.execute("""
+                        INSERT INTO solicitud_mensajes (
+                            solicitud_id, remitente_tipo, remitente_nombre, mensaje, ubicacion_enfermera, creado_en
+                        ) VALUES (?, 'ENFERMERIA', ?, ?, ?, datetime('now'))
+                    """, (sid, usuario_nombre, comentario, ub_enf))
+
                 conn.commit()
 
                 self.send_json({
                     "success": True,
                     "mensaje": f"Solicitud #{sid} actualizada a estado '{nuevo_estado}'."
+                })
+
+            # ---------------------------------------------------------
+            # 10. CHAT EN VIVO: ENVIAR MENSAJE (PACIENTE O ENFERMERÍA)
+            # ---------------------------------------------------------
+            elif path == "/api/chat/enviar":
+                sid = data.get("solicitud_id")
+                remitente_tipo = (data.get("remitente_tipo") or "").strip().upper() # 'PACIENTE' o 'ENFERMERIA'
+                remitente_nombre = data.get("remitente_nombre", "").strip()
+                mensaje = data.get("mensaje", "").strip()
+                nuevo_estado = (data.get("nuevo_estado") or "").strip().upper()
+
+                if not sid or not mensaje:
+                    self.send_json({"error": "Debe proporcionar solicitud_id y mensaje."}, 400)
+                    return
+
+                if not remitente_tipo:
+                    remitente_tipo = "ENFERMERIA" if (data.get("user_role") or "").upper() in ["ADMINISTRADOR", "ENFERMERIA"] else "PACIENTE"
+
+                ubicacion = None
+                if remitente_tipo == "ENFERMERIA":
+                    cur.execute("SELECT ubicacion_actual FROM estado_enfermera WHERE id = 1")
+                    renf = cur.fetchone()
+                    if renf:
+                        ubicacion = renf["ubicacion_actual"]
+                    if not remitente_nombre:
+                        remitente_nombre = "Lic. Enfermería"
+                else:
+                    if not remitente_nombre:
+                        cur.execute("SELECT nombre_paciente FROM solicitudes_asistencia WHERE id = ?", (sid,))
+                        row_p = cur.fetchone()
+                        remitente_nombre = row_p["nombre_paciente"] if row_p else "Colaborador"
+
+                cur.execute("""
+                    INSERT INTO solicitud_mensajes (
+                        solicitud_id, remitente_tipo, remitente_nombre, mensaje, ubicacion_enfermera, creado_en
+                    ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+                """, (sid, remitente_tipo, remitente_nombre, mensaje, ubicacion))
+                msg_id = cur.lastrowid
+
+                # Si se especifica nuevo_estado o es mensaje de enfermera, actualizar solicitudes_asistencia
+                if nuevo_estado:
+                    cur.execute("""
+                        UPDATE solicitudes_asistencia SET
+                            estado = ?,
+                            respuesta_enfermeria = ?,
+                            atendido_por = ?,
+                            actualizado_en = datetime('now')
+                        WHERE id = ?
+                    """, (nuevo_estado, mensaje, remitente_nombre, sid))
+                elif remitente_tipo == "ENFERMERIA":
+                    cur.execute("""
+                        UPDATE solicitudes_asistencia SET
+                            respuesta_enfermeria = ?,
+                            atendido_por = ?,
+                            actualizado_en = datetime('now')
+                        WHERE id = ?
+                    """, (mensaje, remitente_nombre, sid))
+
+                conn.commit()
+
+                self.send_json({
+                    "success": True,
+                    "mensaje_id": msg_id,
+                    "solicitud_id": sid,
+                    "remitente_tipo": remitente_tipo,
+                    "remitente_nombre": remitente_nombre,
+                    "mensaje": mensaje,
+                    "ubicacion_enfermera": ubicacion,
+                    "creado_en": datetime.now().isoformat()
+                })
+
+            # ---------------------------------------------------------
+            # 11. UBICACIÓN Y DISPONIBILIDAD EN TIEMPO REAL DE ENFERMERÍA
+            # ---------------------------------------------------------
+            elif path == "/api/enfermera/estado":
+                user_role = (data.get("user_role") or data.get("rol") or "").upper()
+                if user_role == "AUDITOR":
+                    self.send_json({"error": "Auditoría no puede modificar la disponibilidad operativa."}, 403)
+                    return
+
+                ubicacion = data.get("ubicacion_actual", "Piso 6 - Consultorio Central").strip()
+                disponibilidad = data.get("disponibilidad", "DISPONIBLE").strip().upper()
+                mensaje = data.get("mensaje_estado", "").strip()
+
+                cur.execute("SELECT id FROM estado_enfermera WHERE id = 1")
+                if not cur.fetchone():
+                    cur.execute("""
+                        INSERT INTO estado_enfermera (id, ubicacion_actual, disponibilidad, mensaje_estado, actualizado_en)
+                        VALUES (1, ?, ?, ?, datetime('now'))
+                    """, (ubicacion, disponibilidad, mensaje))
+                else:
+                    cur.execute("""
+                        UPDATE estado_enfermera SET
+                            ubicacion_actual = ?,
+                            disponibilidad = ?,
+                            mensaje_estado = ?,
+                            actualizado_en = datetime('now')
+                        WHERE id = 1
+                    """, (ubicacion, disponibilidad, mensaje))
+
+                conn.commit()
+
+                self.send_json({
+                    "success": True,
+                    "mensaje": "Estado de enfermería actualizado.",
+                    "ubicacion_actual": ubicacion,
+                    "disponibilidad": disponibilidad,
+                    "mensaje_estado": mensaje
                 })
 
             else:
@@ -1206,6 +1386,34 @@ def init_system_tables():
                 actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS solicitud_mensajes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                solicitud_id INTEGER NOT NULL,
+                remitente_tipo TEXT NOT NULL,
+                remitente_nombre TEXT NOT NULL,
+                mensaje TEXT NOT NULL,
+                ubicacion_enfermera TEXT,
+                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS estado_enfermera (
+                id INTEGER PRIMARY KEY,
+                ubicacion_actual TEXT DEFAULT 'Piso 6 - Consultorio Central',
+                disponibilidad TEXT DEFAULT 'DISPONIBLE',
+                mensaje_estado TEXT DEFAULT 'Atendiendo consultas en Consultorio Piso 6',
+                actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cur.execute("SELECT id FROM estado_enfermera WHERE id = 1")
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO estado_enfermera (id, ubicacion_actual, disponibilidad, mensaje_estado, actualizado_en)
+                VALUES (1, 'Piso 6 - Consultorio Central', 'DISPONIBLE', 'Atendiendo consultas presenciales en Consultorio Piso 6', datetime('now'))
+            """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
