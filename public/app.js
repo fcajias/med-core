@@ -1,4 +1,14 @@
 // Dispensario Médico FYDI - Frontend JavaScript con Control de Roles
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 let medicamentosCache = [];
 let pacientesCache = [];
 let atencionesCache = [];
@@ -2180,19 +2190,28 @@ function mostrarAppClinica() {
 // SOLICITUDES DE ASISTENCIA A PISOS (1 AL 7) - FORMULARIO PÚBLICO
 // ================================================================
 function abrirModalSolicitudPiso(piso = '6') {
- const modal = document.getElementById("modal-solicitar-asistencia");
- const formBox = document.getElementById("form-solicitar-piso");
- const exitoBox = document.getElementById("sol-exito-box");
+  const modal = document.getElementById("modal-solicitar-asistencia");
+  const formBox = document.getElementById("form-solicitar-piso");
 
- if (!modal) return;
- modal.classList.remove("hidden");
+  if (!modal) return;
+  modal.classList.remove("hidden");
 
- if (formBox) formBox.classList.remove("hidden");
- if (exitoBox) exitoBox.classList.add("hidden");
+  if (formBox) formBox.classList.remove("hidden");
 
- seleccionarPisoSolicitud(piso);
- actualizarCargosPorMacroArea();
- if (window.lucide) lucide.createIcons();
+  // Resetear estado de búsqueda por cédula
+  const cedulaInput = document.getElementById("sol-cedula");
+  if (cedulaInput) {
+    cedulaInput.value = "";
+    buscarColaboradorPorCedula("");
+    setTimeout(() => cedulaInput.focus(), 100);
+  }
+
+  const motivoInput = document.getElementById("sol-motivo");
+  if (motivoInput) motivoInput.value = "";
+
+  seleccionarPisoSolicitud(piso);
+  actualizarCargosPorMacroArea();
+  if (window.lucide) lucide.createIcons();
 }
 
 function actualizarCargosPorMacroArea() {
@@ -3439,5 +3458,95 @@ function formatHoraChat(fechaStr) {
     return d.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false });
   } catch (e) {
     return fechaStr;
+  }
+}
+
+
+// ================================================================
+// RECONOCIMIENTO AUTOMÁTICO DE COLABORADOR POR CÉDULA (ZERO DUPLICADOS)
+// ================================================================
+let pacienteIdentificadoCache = null;
+
+async function buscarColaboradorPorCedula(cedula, explicitClick = false) {
+  const val = (cedula || "").trim();
+  const statusEl = document.getElementById("cedula-search-status");
+  const boxReconocido = document.getElementById("box-paciente-reconocido");
+  const boxNuevo = document.getElementById("box-paciente-nuevo");
+  const nombreInput = document.getElementById("sol-nombre");
+
+  if (!statusEl) return;
+
+  if (val.length < 10 && !explicitClick) {
+    statusEl.textContent = `${val.length}/10 dígitos`;
+    if (boxReconocido) boxReconocido.classList.add("hidden");
+    if (boxNuevo) boxNuevo.classList.remove("hidden");
+    if (nombreInput) {
+      nombreInput.readOnly = false;
+      nombreInput.required = true;
+    }
+    pacienteIdentificadoCache = null;
+    return;
+  }
+
+  statusEl.textContent = "Verificando...";
+
+  try {
+    const res = await fetch(`/api/pacientes?q=${encodeURIComponent(val)}`);
+    const list = await res.json();
+
+    const match = list.find(p => p.cedula && p.cedula.trim() === val) || list[0];
+
+    if (match && (match.cedula === val || (explicitClick && list.length === 1))) {
+      pacienteIdentificadoCache = match;
+      statusEl.textContent = "Colaborador encontrado";
+
+      const nomCompleto = `${match.nombres} ${match.apellidos}`.trim().toUpperCase();
+      if (nombreInput) {
+        nombreInput.value = nomCompleto;
+        nombreInput.readOnly = true;
+        nombreInput.required = false;
+      }
+
+      const pNom = document.getElementById("pac-reconocido-nombre");
+      const pSub = document.getElementById("pac-reconocido-sub");
+      const pVis = document.getElementById("pac-reconocido-visitas");
+
+      if (pNom) pNom.textContent = nomCompleto;
+      if (pSub) pSub.textContent = `C.I: ${match.cedula} • ${match.piso_area || 'Área general'}`;
+      if (pVis) pVis.textContent = `${match.total_atenciones || 0} visitas previas`;
+
+      if (boxReconocido) boxReconocido.classList.remove("hidden");
+      if (boxNuevo) boxNuevo.classList.add("hidden");
+
+      // Auto-seleccionar piso si está en el registro del paciente
+      if (match.piso_area) {
+        for (const p of ['PB', 'Mezzanine', '1', '2', '3', '4', '5', '6', '7']) {
+          if (match.piso_area.includes(`Piso ${p}`) || match.piso_area.includes(p)) {
+            seleccionarPisoSolicitud(p);
+            break;
+          }
+        }
+      }
+    } else {
+      pacienteIdentificadoCache = null;
+      statusEl.textContent = val.length === 10 ? "Nuevo registro (sin visitas previas)" : "No registrado";
+      if (boxReconocido) boxReconocido.classList.add("hidden");
+      if (boxNuevo) boxNuevo.classList.remove("hidden");
+      if (nombreInput) {
+        nombreInput.readOnly = false;
+        nombreInput.required = true;
+        nombreInput.focus();
+      }
+    }
+  } catch (err) {
+    statusEl.textContent = "Búsqueda local";
+  }
+}
+
+function setMotivoChip(texto) {
+  const txtArea = document.getElementById("sol-motivo");
+  if (txtArea) {
+    txtArea.value = texto;
+    txtArea.focus();
   }
 }

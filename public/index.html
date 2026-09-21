@@ -68,17 +68,13 @@
 
  <!-- Right Quick Actions -->
  <div class="flex items-center space-x-2 sm:space-x-3">
- <!-- Urgent Phone Pill -->
- <div class="hidden md:flex items-center gap-2 bg-slate-50 text-slate-700 border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-2xs">
- <span class="relative flex h-2 w-2">
- <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E35205] opacity-75"></span>
- <span class="relative inline-flex rounded-full h-2 w-2 bg-[#E35205]"></span>
- </span>
- <i data-lucide="phone" class="w-3.5 h-3.5 text-[#E35205]"></i>
- <span class="font-bold text-slate-900">+593-99 151 2499</span>
- <span class="text-slate-400">|</span>
- <span>Ext. 106 • Piso 6</span>
- </div>
+ <!-- Corporate Location Hub Pill -->
+        <div class="hidden md:flex items-center gap-2 bg-slate-50 text-slate-700 border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-2xs">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#E35205]"></i>
+          <span class="font-bold text-slate-900">Consultorio: Piso 6</span>
+          <span class="text-slate-400">|</span>
+          <span class="text-slate-600">Mezzanine (Minimarket)</span>
+        </div>
 
  <!-- Language Selector -->
  <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-xs">
@@ -571,7 +567,7 @@
  <div>
  <h3 class="font-bold text-sm text-slate-900 mb-1.5" id="lbl-tip-primeros-aux-title">Primeros Auxilios & Botiquín Móvil</h3>
  <p class="text-xs text-slate-600 leading-relaxed" id="lbl-tip-primeros-aux-desc">
- Si sientes mareo repentino, bajón de presión o malestar severo, no intentes bajar solo. Genera tu solicitud en el portal y la enfermera subirá a tu puesto con el tensiómetro y botiquín.
+ Si sientes mareo repentino, bajón de presión o malestar severo, genera tu turno prioritario en el portal y acércate al consultorio con asistencia. y la enfermera subirá a tu puesto con el tensiómetro y botiquín.
  </p>
  </div>
  <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-rose-700 font-semibold">
@@ -1644,160 +1640,155 @@
  </div>
 
  <!-- ======================================================== -->
- <!-- MODAL PÚBLICO: SOLICITAR ASISTENCIA EN PISO (EDIFICIO FYDI) -->
- <!-- ======================================================== -->
- <div id="modal-solicitar-asistencia" onclick="if(event.target===this)cerrarModalSolicitudPiso()" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
- <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 my-auto animate-fade-in relative max-h-[92vh] flex flex-col">
- 
- <!-- Top Modal Header -->
- <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
- <div class="flex items-center gap-2.5">
- <img src="/img/fydi_logo.png" alt="FYDI" class="h-6 w-auto">
- <div>
- <h3 class="text-sm font-black text-[#16325C]" id="lbl-sol-modal-title">Solicitar Turno y Consulta Médica con Enfermería</h3>
-          <p class="text-[10px] text-slate-500">Atención presencial en Piso 6 (Consultorio) o Mezzanine (Minimarket)</p>
- </div>
- </div>
- <button type="button" onclick="cerrarModalSolicitudPiso()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-200/70 transition">
- <i data-lucide="x" class="w-4 h-4"></i>
- </button>
- </div>
+  <!-- MODAL PÚBLICO: TOMAR TURNO Y TRIAJE VIRTUAL (SMART CÉDULA) -->
+  <!-- ======================================================== -->
+  <div id="modal-solicitar-asistencia" onclick="if(event.target===this)cerrarModalSolicitudPiso()" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 my-auto animate-fade-in relative max-h-[92vh] flex flex-col">
+      
+      <!-- Top Modal Header -->
+      <div class="px-5 py-3.5 bg-[#16325C] text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#FDBA74] border border-white/10">
+            <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white" id="lbl-sol-modal-title">Tomar Turno Médico & Triage</h3>
+            <p class="text-[10px] text-slate-300">Consultorio Central: Piso 6 • Atención Presencial</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalSolicitudPiso()" class="text-slate-300 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
 
- <!-- Scrollable Form Container -->
- <div class="p-5 sm:p-6 overflow-y-auto flex-1 text-xs">
- 
- <!-- Form Content -->
- <form id="form-solicitar-piso" onsubmit="enviarSolicitudPiso(event)" class="space-y-3.5">
- 
- <!-- Floor Selector (PB, Mezzanine, 1 al 7) -->
- <div>
- <label class="block font-bold text-slate-700 mb-1 flex items-center justify-between text-[11px]">
- <span class="flex items-center gap-1.5">
- <i data-lucide="building" class="w-3.5 h-3.5 text-[#E35205]"></i>
- <span>Selecciona tu Nivel o Piso *</span>
- </span>
- <span id="sol-piso-seleccionado-txt" class="text-[10px] text-[#16325C] font-bold">Piso 6 (Consultorio Central de Enfermería)</span>
- </label>
- <input type="hidden" id="sol-piso" value="6">
- 
- <div id="piso-selector-btns" class="grid grid-cols-5 gap-1.5">
- <button type="button" onclick="seleccionarPisoSolicitud('PB')" data-piso="PB" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">PB</button>
- <button type="button" onclick="seleccionarPisoSolicitud('Mezzanine')" data-piso="Mezzanine" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-orange-200 text-[#E35205] bg-orange-50/50 hover:bg-orange-100 transition">Mezz</button>
- <button type="button" onclick="seleccionarPisoSolicitud('1')" data-piso="1" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">1</button>
- <button type="button" onclick="seleccionarPisoSolicitud('2')" data-piso="2" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">2</button>
- <button type="button" onclick="seleccionarPisoSolicitud('3')" data-piso="3" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">3</button>
- <button type="button" onclick="seleccionarPisoSolicitud('4')" data-piso="4" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">4</button>
- <button type="button" onclick="seleccionarPisoSolicitud('5')" data-piso="5" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">5</button>
- <button type="button" onclick="seleccionarPisoSolicitud('6')" data-piso="6" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-[#16325C] bg-[#16325C] text-white transition active-piso">6 (Sede)</button>
- <button type="button" onclick="seleccionarPisoSolicitud('7')" data-piso="7" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">7</button>
- </div>
- </div>
-
- <!-- Macro-Área y Cargo Selector -->
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Área de la Empresa *</label>
- <select id="sol-macro-area" onchange="actualizarCargosPorMacroArea()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
- <option value="OPERATIVA">Área Operativa (Call Center Cobranzas)</option>
- <option value="ADMINISTRATIVA">Área Administrativa / Servicios</option>
- </select>
- </div>
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Cargo / Puesto *</label>
- <select id="sol-cargo" onchange="sincronizarAreaCampanaTexto()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
- <option value="Asesor de Cobranza">Asesor de Cobranza</option>
- <option value="Auditor de Cobranza">Auditor de Cobranza</option>
- <option value="Líder de Cobranza">Líder de Cobranza</option>
- <option value="Gerente de Cobranza">Gerente de Cobranza</option>
- </select>
- </div>
- </div>
-
- <!-- Ubicación Exacta / Isla / Puesto -->
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Ubicación exacta de tu puesto o estación *</label>
- <input type="text" id="sol-ubicacion-puesto" onkeyup="sincronizarAreaCampanaTexto()" required placeholder="Ej. Isla 3 - Puesto 14, Despacho Gerencia, Oficina RRHH..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
- <input type="hidden" id="sol-area" value="[Operativa - Asesor de Cobranza]">
- </div>
-
- <!-- Nombre y Cédula -->
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Nombre y Apellido *</label>
- <input type="text" id="sol-nombre" required placeholder="Tu nombre completo" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none uppercase">
- </div>
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Cédula (Opcional)</label>
- <input type="text" id="sol-cedula" placeholder="10 dígitos" maxlength="10" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none font-mono">
- </div>
- </div>
-
- <!-- Nivel de Urgencia e Info de Chat Directo (Sin Teléfono) -->
-          <div class="space-y-2.5">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Nivel de Urgencia *</label>
-              <select id="sol-prioridad" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none font-semibold">
-                <option value="NORMAL">Normal (Atención de rutina)</option>
-                <option value="URGENTE">Urgente (Dolor fuerte, mareo, migraña)</option>
-                <option value="EMERGENCIA">[!] Emergencia (Desmayo, crisis, sangrado)</option>
-              </select>
+      <!-- Form Container -->
+      <div class="p-5 sm:p-6 overflow-y-auto flex-1 text-xs">
+        <form id="form-solicitar-piso" onsubmit="enviarSolicitudPiso(event)" class="space-y-4">
+          
+          <!-- STEP 1: Identification by Cédula -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+            <label class="block font-bold text-slate-800 text-xs flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="id-card" class="w-4 h-4 text-[#16325C]"></i>
+                <span>Identificación del Colaborador (Cédula) *</span>
+              </span>
+              <span id="cedula-search-status" class="text-[10px] text-slate-400 font-normal">Digita tus 10 dígitos</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="sol-cedula" required maxlength="10" placeholder="Ej. 1723456789" oninput="buscarColaboradorPorCedula(this.value)" class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-[#16325C] focus:outline-none tracking-wider">
+              <button type="button" onclick="buscarColaboradorPorCedula(document.getElementById('sol-cedula').value, true)" class="px-3.5 py-2.5 bg-[#16325C] hover:bg-[#0E254A] text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                <span>Buscar</span>
+              </button>
             </div>
-            
-            <div class="p-3 bg-sky-50 border border-sky-100 rounded-xl text-sky-900 text-xs flex items-start gap-2.5">
-              <i data-lucide="message-square" class="w-4 h-4 text-sky-600 shrink-0 mt-0.5"></i>
-              <div class="text-[11px] leading-relaxed">
-                <strong class="font-bold block">Canal Directo por Chat en Vivo:</strong>
-                No requieres dar tu teléfono. Al solicitar tu turno, el sistema abrirá tu ventana de chat con la enfermera para indicarte si puedes subir al Piso 6 o esperar unos minutos.
+
+            <!-- Identified Patient Card (Single Source of Truth) -->
+            <div id="box-paciente-reconocido" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs space-y-1 animate-fade-in">
+              <div class="flex items-center justify-between">
+                <span class="font-bold flex items-center gap-1 text-emerald-800 text-[11px]">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  Colaborador Registrado
+                </span>
+                <span id="pac-reconocido-visitas" class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded font-mono">-- visitas previas</span>
+              </div>
+              <div id="pac-reconocido-nombre" class="font-black text-slate-900 text-sm">--</div>
+              <div id="pac-reconocido-sub" class="text-[11px] text-slate-600">--</div>
+            </div>
+
+            <!-- New Patient Fields (Only if not recognized) -->
+            <div id="box-paciente-nuevo" class="space-y-2.5 pt-1">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Nombres y Apellidos Completos *</label>
+                <input type="text" id="sol-nombre" required placeholder="Tus dos nombres y dos apellidos" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs uppercase focus:ring-2 focus:ring-[#16325C] focus:outline-none">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Área *</label>
+                  <select id="sol-macro-area" onchange="actualizarCargosPorMacroArea()" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
+                    <option value="OPERATIVA">Operativa (Cobranzas)</option>
+                    <option value="ADMINISTRATIVA">Administrativa</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Cargo *</label>
+                  <select id="sol-cargo" onchange="sincronizarAreaCampanaTexto()" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none">
+                    <option value="Asesor de Cobranza">Asesor de Cobranza</option>
+                    <option value="Auditor de Cobranza">Auditor de Cobranza</option>
+                    <option value="Líder de Cobranza">Líder de Cobranza</option>
+                    <option value="Gerente de Cobranza">Gerente de Cobranza</option>
+                  </select>
+                </div>
               </div>
             </div>
+            <input type="hidden" id="sol-area" value="[Operativa - Asesor de Cobranza]">
+          </div>
+
+          <!-- STEP 2: Current Location / Floor -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1 flex items-center justify-between text-[11px]">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="building" class="w-3.5 h-3.5 text-[#E35205]"></i>
+                <span>¿En qué piso te encuentras ahora? *</span>
+              </span>
+              <span id="sol-piso-seleccionado-txt" class="text-[10px] text-[#16325C] font-bold">Piso 6 (Consultorio)</span>
+            </label>
+            <input type="hidden" id="sol-piso" value="6">
+            
+            <div id="piso-selector-btns" class="grid grid-cols-5 gap-1.5">
+              <button type="button" onclick="seleccionarPisoSolicitud('PB')" data-piso="PB" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">PB</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('Mezzanine')" data-piso="Mezzanine" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-orange-200 text-[#E35205] bg-orange-50/50 hover:bg-orange-100 transition">Mezz</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('1')" data-piso="1" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">1</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('2')" data-piso="2" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">2</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('3')" data-piso="3" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">3</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('4')" data-piso="4" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">4</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('5')" data-piso="5" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">5</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('6')" data-piso="6" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-[#16325C] bg-[#16325C] text-white transition active-piso">6 (Sede)</button>
+              <button type="button" onclick="seleccionarPisoSolicitud('7')" data-piso="7" class="piso-btn py-1.5 rounded-xl font-bold text-xs border border-slate-200 hover:border-[#16325C] text-slate-700 bg-white transition">7</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Motivo Rápido con Chips -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1 text-[11px] flex items-center justify-between">
+              <span>Motivo o Síntoma Principal *</span>
+              <span class="text-[10px] text-slate-400">Selecciona o escribe</span>
+            </label>
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button type="button" onclick="setMotivoChip('Dolor de cabeza / migraña intensa')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition">Dolor de cabeza</button>
+              <button type="button" onclick="setMotivoChip('Gripe / congestión nasal / tos')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition">Gripe / Congestión</button>
+              <button type="button" onclick="setMotivoChip('Dolor estomacal / náuseas / acidez')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition">Dolor estomacal</button>
+              <button type="button" onclick="setMotivoChip('Mareo / baja de presión arterial')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition">Mareo / Presión</button>
+              <button type="button" onclick="setMotivoChip('Dolor muscular / fatiga postural')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition">Dolor muscular</button>
+            </div>
+            <textarea id="sol-motivo" required rows="2" placeholder="Describe brevemente lo que sientes..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none"></textarea>
+          </div>
+
+          <div class="hidden">
+            <select id="sol-prioridad">
+              <option value="NORMAL" selected>NORMAL</option>
+            </select>
+            <input type="hidden" id="sol-ubicacion-puesto" value="">
             <input type="hidden" id="sol-extension" value="">
           </div>
 
- <!-- Motivo o Síntomas -->
- <div>
- <label class="block font-semibold text-slate-700 mb-1 text-[11px]">Describe lo que sientes o el motivo de la asistencia *</label>
- <textarea id="sol-motivo" required rows="2" placeholder="Ej. Siento dolor de cabeza intenso y mareo desde hace 20 minutos..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none"></textarea>
- </div>
+          <!-- Submit Buttons -->
+          <div class="pt-2 flex items-center gap-2">
+            <button type="submit" id="btn-submit-solicitud" class="flex-1 py-3 bg-[#E35205] hover:bg-[#C84500] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
+              <i data-lucide="ticket" class="w-4 h-4"></i>
+              <span id="lbl-sol-btn-enviar">Confirmar Turno y Abrir Chat</span>
+            </button>
+            <button type="button" onclick="cerrarModalSolicitudPiso()" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
 
- <!-- Submit Buttons -->
- <div class="pt-2 flex items-center gap-2">
- <button type="submit" id="btn-submit-solicitud" class="flex-1 py-2.5 bg-[#E35205] hover:bg-[#C84500] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
- <i data-lucide="send" class="w-4 h-4"></i>
- <span id="lbl-sol-btn-enviar">Solicitar Turno y Abrir Chat</span>
- </button>
- <button type="button" onclick="cerrarModalSolicitudPiso()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
- Cancelar
- </button>
- </div>
- </form>
+    </div>
+  </div>
 
- <!-- Success Box with Ticket -->
- <div id="sol-exito-box" class="hidden text-center py-6 space-y-4">
- <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
- <i data-lucide="check-circle" class="w-8 h-8"></i>
- </div>
- <div>
- <h4 class="font-black text-slate-900 text-base">¡Alerta Médica Enviada!</h4>
- <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">La enfermera ha recibido tu notificación en su panel clínico y acudirá a tu estación de trabajo.</p>
- </div>
- 
- <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl max-w-xs mx-auto">
- <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tu Número de Ticket:</span>
- <div id="ticket-generado-id" class="text-3xl font-black text-[#16325C] my-1">#--</div>
- <div id="ticket-generado-detalles" class="text-xs text-slate-600 font-medium">--</div>
- </div>
-
- <p class="text-[11px] text-slate-500">Puedes consultar el estado de tu ticket en el portal principal.</p>
-
- <button type="button" onclick="cerrarModalSolicitudPiso()" class="px-6 py-2 bg-[#16325C] hover:bg-[#0E254A] text-white font-bold text-xs rounded-xl transition">
- Entendido y Volver al Portal
- </button>
- </div>
-
- </div>
- </div>
- </div>
- <!-- ======================================================== -->
+  <!-- ======================================================== -->
+  <!-- MODAL PÚBLICO: CHAT EN VIVO<!-- ======================================================== -->
   <!-- MODAL PÚBLICO: CHAT EN VIVO DE CONSULTA Y TRIAJE (COLABORADOR) -->
   <!-- ======================================================== -->
   <div id="modal-chat-colaborador" class="hidden fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
