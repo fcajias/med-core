@@ -52,23 +52,87 @@ class TursoRow:
     def __repr__(self):
         return f"<TursoRow {self._dict}>"
 
-class TursoCursor:
-    """Cursor compatible con la API de sqlite3 para Turso Cloud"""
-    def __init__(self, client):
-        self.client = client
+_TURSO_CLIENT = None
+
+def get_turso_client():
+    """Mantiene un cliente singleton reutilizable para evitar abrir/cerrar sockets en cada petición"""
+    global _TURSO_CLIENT
+    if not (HAS_LIBSQL and TURSO_DATABASE_URL and TURSO_AUTH_TOKEN):
+        return None
+    if _TURSO_CLIENT is not None:
+        return _TURSO_CLIENT
+    try:
+        url = TURSO_DATABASE_URL
+        if url.startswith("libsql://"):
+            url = "https://" + url[len("libsql://"):]
+        _TURSO_CLIENT = libsql_client.create_client_sync(url, auth_token=TURSO_AUTH_TOKEN)
+        print("[TURSO CLOUD] Conexión persistente establecida exitosamente.")
+        return _TURSO_CLIENT
+    except Exception as e:
+        print(f"[TURSO CLOUD ERROR] Error al inicializar cliente: {e}")
+        _TURSO_CLIENT = None
+        return None
+
+class DualCursor:
+    """Cursor unificado que asegura Dual-Write (Turso Cloud + SQLite Local) y lectura resiliente"""
+    def __init__(self, turso_client, sqlite_conn):
+        self.turso_client = turso_client
+        self.sqlite_conn = sqlite_conn
+        self.sqlite_cur = sqlite_conn.cursor()
         self._iter = None
         self.lastrowid = None
         self.rowcount = 0
 
     def execute(self, sql, params=()):
+        global _TURSO_CLIENT
         args = list(params) if params else []
-        res = self.client.execute(sql, args)
-        self.lastrowid = res.last_insert_rowid
-        self.rowcount = res.rows_affected
-        cols = res.columns
-        rows = [TursoRow(cols, r) for r in res.rows]
-        self._iter = iter(rows)
-        return self
+        sql_stripped = sql.strip().upper()
+        is_write = any(sql_stripped.startswith(v) for v in ("INSERT", "UPDATE", "DELETE", "ALTER", "CREATE", "DROP", "REPLACE"))
+
+        if not is_write:
+            # Consultas de lectura: priorizar Turso Cloud para datos en tiempo real
+            if self.turso_client:
+                try:
+                    res = self.turso_client.execute(sql, args)
+                    cols = res.columns
+                    rows = [TursoRow(cols, r) for r in res.rows]
+                    self._iter = iter(rows)
+                    self.rowcount = len(rows)
+                    return self
+                except Exception as e:
+                    print(f"[TURSO READ ERROR] Fallback a SQLite local: {e}")
+                    _TURSO_CLIENT = None
+
+            # Fallback a SQLite local
+            self.sqlite_cur.execute(sql, args)
+            rows = self.sqlite_cur.fetchall()
+            self._iter = iter(rows)
+            self.rowcount = len(rows)
+            return self
+
+        else:
+            # Consultas de escritura: Dual-Write (Turso Cloud permanente + SQLite local)
+            turso_ok = False
+            if self.turso_client:
+                try:
+                    res_t = self.turso_client.execute(sql, args)
+                    self.lastrowid = res_t.last_insert_rowid
+                    self.rowcount = res_t.rows_affected
+                    turso_ok = True
+                except Exception as e:
+                    print(f"[TURSO WRITE ERROR] {e}. Guardando en SQLite local de respaldo.")
+                    _TURSO_CLIENT = None
+
+            try:
+                self.sqlite_cur.execute(sql, args)
+                if not turso_ok or self.lastrowid is None:
+                    self.lastrowid = self.sqlite_cur.lastrowid
+                    self.rowcount = self.sqlite_cur.rowcount
+            except Exception as e:
+                print(f"[SQLITE WRITE ERROR] {e}")
+
+            self._iter = iter([])
+            return self
 
     def fetchone(self):
         return next(self._iter, None) if self._iter is not None else None
@@ -76,37 +140,38 @@ class TursoCursor:
     def fetchall(self):
         return list(self._iter) if self._iter is not None else []
 
-class TursoConnection:
-    """Conexión persistente a Turso Cloud SQLite"""
-    def __init__(self, url, token):
-        if url.startswith("libsql://"):
-            url = "https://" + url[len("libsql://"):]
-        self.client = libsql_client.create_client_sync(url, auth_token=token)
+class DualConnection:
+    """Conexión unificada con Dual-Write automático a la nube de Turso y archivo local"""
+    def __init__(self, turso_client, sqlite_conn):
+        self.turso_client = turso_client
+        self.sqlite_conn = sqlite_conn
 
     def cursor(self):
-        return TursoCursor(self.client)
+        return DualCursor(self.turso_client, self.sqlite_conn)
 
     def commit(self):
-        pass
+        try:
+            self.sqlite_conn.commit()
+        except Exception:
+            pass
 
     def rollback(self):
-        pass
+        try:
+            self.sqlite_conn.rollback()
+        except Exception:
+            pass
 
     def close(self):
         try:
-            self.client.close()
+            self.sqlite_conn.close()
         except Exception:
             pass
 
 def get_db():
-    if HAS_LIBSQL and TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
-        try:
-            return TursoConnection(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN)
-        except Exception as e:
-            print(f"[TURSO ERROR] Fallback a SQLite local: {e}")
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    turso = get_turso_client()
+    local_conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    local_conn.row_factory = sqlite3.Row
+    return DualConnection(turso, local_conn)
 
 def hash_pw(pw):
     return hashlib.sha256(pw.encode('utf-8')).hexdigest()
@@ -1466,9 +1531,77 @@ def init_system_tables():
     finally:
         conn.close()
 
+def sync_databases_on_startup():
+    try:
+        turso = get_turso_client()
+        if not turso:
+            return
+        local_conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        local_conn.row_factory = sqlite3.Row
+        lcur = local_conn.cursor()
+
+        # Obtener pacientes de Turso
+        res_turso = turso.execute("SELECT cedula, nombres, apellidos, edad, celular, piso_area, creado_en FROM pacientes")
+        turso_pacs = res_turso.rows
+        turso_ceds = {r[0] for r in turso_pacs if r[0]}
+        turso_names = {(r[1].strip().upper() if r[1] else "", r[2].strip().upper() if r[2] else "") for r in turso_pacs}
+
+        # Obtener pacientes de SQLite local
+        lcur.execute("SELECT cedula, nombres, apellidos, edad, celular, piso_area, creado_en FROM pacientes")
+        local_pacs = lcur.fetchall()
+        local_ceds = {r["cedula"] for r in local_pacs if r["cedula"]}
+        local_names = {(r["nombres"].strip().upper() if r["nombres"] else "", r["apellidos"].strip().upper() if r["apellidos"] else "") for r in local_pacs}
+
+        # Sincronizar hacia Turso solo pacientes inexistentes
+        for p in local_pacs:
+            ced = p["cedula"]
+            nom = p["nombres"].strip().upper() if p["nombres"] else ""
+            ape = p["apellidos"].strip().upper() if p["apellidos"] else ""
+            if ced and ced in turso_ceds:
+                continue
+            if not ced and (nom, ape) in turso_names:
+                continue
+            try:
+                turso.execute("""
+                    INSERT INTO pacientes (cedula, nombres, apellidos, edad, celular, piso_area, creado_en)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, [ced if ced else None, nom, ape, p["edad"], p["celular"], p["piso_area"], p["creado_en"]])
+                if ced:
+                    turso_ceds.add(ced)
+                turso_names.add((nom, ape))
+            except Exception as ex:
+                print(f"[SYNC TURSO WARNING] {ex}")
+
+        # Sincronizar hacia SQLite local solo pacientes inexistentes
+        for tp in turso_pacs:
+            ced = tp[0]
+            nom = tp[1].strip().upper() if tp[1] else ""
+            ape = tp[2].strip().upper() if tp[2] else ""
+            if ced and ced in local_ceds:
+                continue
+            if not ced and (nom, ape) in local_names:
+                continue
+            try:
+                lcur.execute("""
+                    INSERT INTO pacientes (cedula, nombres, apellidos, edad, celular, piso_area, creado_en)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, [ced if ced else None, nom, ape, tp[3], tp[4], tp[5], tp[6]])
+                if ced:
+                    local_ceds.add(ced)
+                local_names.add((nom, ape))
+            except Exception as ex:
+                print(f"[SYNC SQLITE WARNING] {ex}")
+
+        local_conn.commit()
+        local_conn.close()
+        print("[DATABASE SYNC] Sincronización entre Turso Cloud y SQLite local verificada con éxito.")
+    except Exception as e:
+        print(f"[DATABASE SYNC WARNING] {e}")
+
 def run_server():
     os.makedirs(PUBLIC_DIR, exist_ok=True)
     init_system_tables()
+    sync_databases_on_startup()
     server_address = ('', PORT)
     httpd = socketserver.TCPServer(server_address, DispensarioHandler)
     print(f"Dispensario FYDI Server running on http://localhost:{PORT}")
