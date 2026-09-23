@@ -2187,6 +2187,90 @@ function mostrarAppClinica() {
 }
 
 // ================================================================
+// ================================================================
+// MODAL DE PÁNICO Y EMERGENCIAS CRÍTICAS (LLAMADA + WHATSAPP DIRECTO)
+// ================================================================
+const NUMERO_ENFERMERA_OFICIAL = "593995983685";
+const NUMERO_ENFERMERA_FORMATO = "099 598 3685";
+
+function abrirModalPanico() {
+  const modal = document.getElementById("modal-panico-emergencia");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  
+  // Vibración táctil de alerta en móviles si está soportado
+  if (navigator.vibrate) {
+    try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+  }
+  
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalPanico() {
+  const modal = document.getElementById("modal-panico-emergencia");
+  if (modal) modal.classList.add("hidden");
+}
+
+function seleccionarPisoPanico(piso) {
+  const hiddenInput = document.getElementById("panico-piso-seleccionado");
+  if (hiddenInput) hiddenInput.value = piso;
+
+  document.querySelectorAll(".btn-panico-piso").forEach(btn => {
+    if (btn.getAttribute("data-piso") === piso) {
+      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border-2 border-rose-600 bg-rose-50 text-rose-800 transition";
+    } else {
+      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition text-slate-700";
+    }
+  });
+}
+
+function seleccionarSituacionPanico(situacion) {
+  const hiddenInput = document.getElementById("panico-situacion-seleccionada");
+  if (hiddenInput) hiddenInput.value = situacion;
+
+  document.querySelectorAll(".btn-panico-sit").forEach(btn => {
+    const spanText = btn.querySelector("span")?.textContent || "";
+    if (situacion.toLowerCase().includes(spanText.toLowerCase().slice(0, 5))) {
+      btn.className = "btn-panico-sit p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold text-left transition flex items-center gap-2";
+    } else {
+      btn.className = "btn-panico-sit p-2.5 rounded-xl border border-slate-200 hover:border-rose-400 font-semibold text-slate-700 text-left transition flex items-center gap-2";
+    }
+  });
+}
+
+async function dispararAlertaPanicoWhatsApp() {
+  const piso = document.getElementById("panico-piso-seleccionado")?.value || "Piso 6";
+  const situacion = document.getElementById("panico-situacion-seleccionada")?.value || "Emergencia Médica Aguda";
+  const detalle = document.getElementById("panico-detalle-input")?.value.trim() || "";
+
+  // Registrar en el backend como ticket de emergencia crítica para la consola de la enfermera (sin bloquear)
+  try {
+    fetch("/api/solicitudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        colaborador_nombre: detalle ? `ALERTA PÁNICO (${detalle})` : "ALERTA PÁNICO URGENTE",
+        cedula: "9999999999",
+        piso: piso,
+        area: "EMERGENCIA CRÍTICA / PÁNICO",
+        motivo: `[EMERGENCIA CRÍTICA] ${situacion}${detalle ? ' - ' + detalle : ''}`,
+        prioridad: "EMERGENCIA_CRITICA"
+      })
+    }).catch(err => console.warn("Log de pánico en API:", err));
+  } catch(e) {}
+
+  // Construir mensaje de WhatsApp
+  let msg = `*[URGENTE - ALERTA MEDICA FYDI]*\n*EMERGENCIA EN PISO: ${piso.toUpperCase()}*\n`;
+  msg += `*Situación:* ${situacion}\n`;
+  if (detalle) msg += `*Detalle/Paciente:* ${detalle}\n`;
+  msg += `*Hora:* ${new Date().toLocaleTimeString('es-EC')}\n`;
+  msg += `¡Se solicita asistencia médica urgente en este momento!`;
+
+  const url = `https://wa.me/${NUMERO_ENFERMERA_OFICIAL}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
+  cerrarModalPanico();
+}
+
 // SOLICITUDES DE ASISTENCIA A PISOS (1 AL 7) - FORMULARIO PÚBLICO
 // ================================================================
 function abrirModalSolicitudPiso(piso = '6') {
