@@ -48,734 +48,748 @@
  <!-- VISTA PÚBLICA: PORTAL DE SALUD & BIENESTAR FYDI -->
  <!-- (Para personal de operaciones de los 7 pisos + PB + Mezzanine) -->
  <!-- ======================================================== -->
- <div id="landing-portal-salud" class="flex-1 flex flex-col w-full bg-slate-50 font-sans">
- 
- <!-- Top Corporate Navigation Header -->
- <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs transition-all">
- <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
- 
- <!-- Official FYDI Logo & Corporate Title -->
- <div class="flex items-center space-x-3.5 cursor-pointer" onclick="mostrarPortalPublico()">
- <img src="/img/fydi_logo.png" alt="FYDI Global" class="h-10 sm:h-11 w-auto object-contain">
- <div class="border-l border-slate-200 pl-3 hidden sm:block">
- <div class="flex items-center gap-2">
- <span class="text-sm font-black text-[#16325C] tracking-tight" id="lbl-landing-brand-title">Dispensario Médico</span>
- <span class="text-[10px] bg-[#FFF4ED] text-[#E35205] font-bold px-2 py-0.5 rounded-full border border-[#FDBA74]">Salud Ocupacional</span>
- </div>
- <p class="text-[11px] text-slate-500 font-medium" id="lbl-landing-brand-sub">BPO & Contact Center • Quito, Ecuador</p>
- </div>
- </div>
-
- <!-- Right Quick Actions -->
- <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- BOTÓN DE PÁNICO EN CABECERA -->
-        <button onclick="abrirModalPanico()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm border border-rose-500 animate-pulse" title="Presionar en caso de convulsiones o emergencias agudas">
-          <i data-lucide="alert-octagon" class="w-4 h-4 text-white"></i>
-          <span>BOTÓN DE PÁNICO</span>
-        </button>
-
-        <!-- WhatsApp Directo -->
-        <a href="https://wa.me/593995983685?text=Hola%20Lic.%20Enfermer%C3%ADa%20FYDI,%20solicito%20asistencia%20m%C3%A9dica%20desde%20mi%20piso" target="_blank" class="hidden sm:flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition" title="Escribir por WhatsApp a Enfermería">
-          <i data-lucide="message-circle" class="w-3.5 h-3.5 text-white"></i>
-          <span class="hidden md:inline">WhatsApp:</span> <span>099 598 3685</span>
-        </a>
-
-        <!-- Llamada Directa -->
-        <a href="tel:+593995983685" class="hidden lg:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 transition" title="Llamar directamente a Enfermería">
-          <i data-lucide="phone-call" class="w-3.5 h-3.5 text-[#E35205]"></i>
-          <span>Llamar</span>
-        </a>
-
-        <!-- Language Selector -->
- <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-xs">
- <button onclick="cambiarIdioma('es')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-bold text-[11px] transition text-[#16325C] bg-white shadow-2xs">ES</button>
- <button onclick="cambiarIdioma('en')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-[#16325C]">EN</button>
- <button onclick="cambiarIdioma('zh')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-500 hover:text-[#16325C]">中文</button>
- </div>
-
- <!-- Personal Médico Login Button -->
- <button onclick="abrirModalLogin()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-[#16325C] hover:bg-[#0E254A] text-white font-bold rounded-xl text-xs flex items-center gap-2 transition shadow-sm border border-[#0E254A]">
- <i data-lucide="stethoscope" class="w-4 h-4 text-[#FDBA74]"></i>
- <span class="hidden sm:inline" id="lbl-landing-btn-login">Acceso Personal Médico</span>
- <span class="sm:hidden">Ingreso</span>
- </button>
- </div>
- </div>
- </header>
-
- <!-- Hero Section (Corporate Executive FYDI Navy & Orange Accent) -->
- <section class="relative bg-[#0E254A] text-white pt-12 pb-16 px-4 sm:px-6 overflow-hidden border-b border-slate-800">
- 
- <!-- Subtle Corporate Background Geometric Shapes -->
- <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]"></div>
- 
- <div class="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
- 
- <!-- Left Column: Corporate Pitch & Action -->
- <div class="lg:col-span-7 text-left space-y-5">
-          <!-- Corporate Tag -->
-          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-orange-200 text-xs font-bold">
-            <span class="w-2 h-2 rounded-full bg-[#E35205]"></span>
-            <span>FYDI GLOBAL • SALUD OCUPACIONAL &amp; PREVENCIÓN INTEGRAL</span>
+ <div id="landing-portal-salud" class="flex-1 flex flex-col w-full bg-[#0B132B] font-sans antialiased text-slate-100">
+  
+  <!-- ======================================================== -->
+  <!-- TOP ENTERPRISE NAVIGATION BAR -->
+  <!-- ======================================================== -->
+  <header class="bg-[#0B132B]/95 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Identity -->
+      <div class="flex items-center space-x-3.5 cursor-pointer" onclick="mostrarPortalPublico()">
+        <img src="/img/fydi_logo.png" alt="FYDI Global" class="h-10 sm:h-11 w-auto object-contain">
+        <div class="border-l border-slate-700/80 pl-3.5 hidden sm:block">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-black text-white tracking-tight">Centro Médico &amp; Salud Laboral</span>
+            <span class="text-[10px] bg-emerald-500/15 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">En Línea</span>
           </div>
-
-          <h1 id="lbl-landing-hero-title" class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
-            Portal de Salud, Prevención <br>
-            <span class="text-[#FDBA74]">&amp; Asistencia Médica FYDI</span>
-          </h1>
-          
-          <!-- Live Nurse Location & Quick Contact Indicator -->
-          <div class="flex flex-wrap items-center gap-2">
-            <div id="landing-live-nurse-badge" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white backdrop-blur-md shadow-xs">
-              <span class="relative flex h-2.5 w-2.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span class="text-slate-300 font-medium">Ubicación de Enfermería:</span>
-              <strong id="landing-nurse-location-text" class="text-[#FDBA74] font-bold">Piso 6 - Consultorio Central</strong>
-              <span id="landing-nurse-status-pill" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/80 text-white uppercase">Disponible</span>
-            </div>
-
-            <a href="https://wa.me/593995983685?text=Hola%20Licenciada%20Enfermera%20FYDI%2C%20necesito%20asistencia%20m%C3%A9dica." target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-xs text-emerald-200 font-bold transition">
-              <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>WhatsApp: 099 598 3685</span>
-            </a>
-          </div>
-
-          <p id="lbl-landing-hero-sub" class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-normal">
-            Atención médica presencial en el Consultorio del <strong>Piso 6</strong> y punto de apoyo en <strong>Mezzanine (Minimarket)</strong>. Para asistencia inmediata, comunícate directamente por WhatsApp, llamada oficial o activa el botón de pánico de respuesta a emergencias críticas.
-          </p>
-
-          <!-- Main Call To Action Buttons with Panic Button -->
-          <div class="pt-2 flex flex-wrap items-center gap-3">
-            <!-- Botón de Pánico Primario -->
-            <button onclick="abrirModalPanico()" class="px-5 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-950/50 transition transform hover:-translate-y-0.5 flex items-center gap-2.5 border border-rose-400/50 animate-pulse">
-              <i data-lucide="alert-octagon" class="w-5 h-5 text-white"></i>
-              <span>BOTÓN DE PÁNICO (EMERGENCIA)</span>
-            </button>
-
-            <!-- WhatsApp Directo -->
-            <a href="https://wa.me/593995983685?text=Hola%20Licenciada%20Enfermera%20FYDI%2C%20requiero%20asistencia%20m%C3%A9dica." target="_blank" rel="noopener noreferrer" class="px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-2 border border-emerald-400/30">
-              <i data-lucide="message-circle" class="w-4 h-4 text-white"></i>
-              <span>Chat WhatsApp Directo</span>
-            </a>
-
-            <!-- Llamar Teléfono -->
-            <a href="tel:+593995983685" class="px-4 py-3.5 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl border border-white/20 backdrop-blur-md transition flex items-center gap-2">
-              <i data-lucide="phone-call" class="w-4 h-4 text-[#FDBA74]"></i>
-              <span>099 598 3685</span>
-            </a>
-          </div>
-
-          <!-- Quick Fast Track Key Indicators -->
-          <div class="grid grid-cols-3 gap-3 pt-2 max-w-lg text-left">
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-              <div class="text-xs font-black text-[#FDBA74] flex items-center gap-1"><i data-lucide="cross" class="w-3.5 h-3.5 inline"></i> Piso 6</div>
-              <div class="text-[10px] text-slate-300">Consultorio Central</div>
-            </div>
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-              <div class="text-xs font-black text-emerald-300 flex items-center gap-1"><i data-lucide="shopping-bag" class="w-3.5 h-3.5 inline"></i> Mezzanine</div>
-              <div class="text-[10px] text-slate-300">Minimarket / Apoyo</div>
-            </div>
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-              <div class="text-xs font-black text-rose-300 flex items-center gap-1"><i data-lucide="shield-alert" class="w-3.5 h-3.5 inline"></i> Emergencias</div>
-              <div class="text-[10px] text-slate-300">Llamada / Pánico 24/7</div>
-            </div>
-          </div>
-        </div>
-        <!-- Right Column: Direct Contact & Location Hub Card -->
-        <div class="lg:col-span-5 relative">
-          <div class="bg-white text-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-100 relative overflow-hidden">
-            <!-- Gradient Top Accent Bar -->
-            <div class="h-1.5 w-full bg-gradient-to-r from-rose-600 via-[#E35205] to-[#16325C] absolute top-0 left-0 right-0"></div>
-            
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 flex items-center gap-1">
-                  <i data-lucide="radio" class="w-3 h-3 text-rose-600"></i> Contacto Oficial de Enfermería
-                </span>
-                <h3 class="text-base font-black text-[#16325C]">Línea Directa y Asistencia</h3>
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Disponible
-              </span>
-            </div>
-
-            <!-- Main Direct Phone Display Card -->
-            <div class="my-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-[#0E254A] text-white border border-slate-700 shadow-inner">
-              <div class="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i> Celular / WhatsApp de Enfermería
-              </div>
-              <div class="text-2xl font-black text-white tracking-wide flex items-center justify-between">
-                <span>099 598 3685</span>
-                <span class="text-[10px] font-normal px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Oficial</span>
-              </div>
-              <div class="text-[11px] text-slate-300 mt-1">
-                Formato internacional: <strong>+593 99 598 3685</strong>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10">
-                <a href="https://wa.me/593995983685?text=Hola%20Licenciada%20Enfermera%20FYDI%2C%20necesito%20asistencia%20m%C3%A9dica." target="_blank" rel="noopener noreferrer" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm">
-                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                  <span>Enviar WhatsApp</span>
-                </a>
-                <a href="tel:+593995983685" class="py-2.5 px-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition">
-                  <i data-lucide="phone-call" class="w-3.5 h-3.5 text-[#FDBA74]"></i>
-                  <span>Llamar Ahora</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Locations summary -->
-            <div class="space-y-2 text-xs">
-              <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <div class="w-7 h-7 rounded-lg bg-[#16325C] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  6
-                </div>
-                <div>
-                  <div class="font-bold text-slate-900">Piso 6: Consultorio Central de Enfermería</div>
-                  <div class="text-[11px] text-slate-500">Atención médica presencial, signos vitales, medicación y reposo clínico.</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-orange-50/50 border border-orange-100">
-                <div class="w-7 h-7 rounded-lg bg-[#E35205] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  M
-                </div>
-                <div>
-                  <div class="font-bold text-slate-900">Mezzanine: Minimarket &amp; Punto de Encuentro</div>
-                  <div class="text-[11px] text-slate-600">Punto de colaboración donde también puedes ubicar a la enfermera.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Panic Action in Card -->
-            <button onclick="abrirModalPanico()" class="w-full mt-3.5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 shadow-sm border border-rose-500">
-              <i data-lucide="alert-octagon" class="w-4 h-4 text-white"></i>
-              <span>Activar Alerta de Emergencia / Pánico</span>
-            </button>
-          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Edificio Corporativo FYDI • 7 Plantas</p>
         </div>
       </div>
+
+      <!-- Live Campus Beacon & Direct Contact -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        
+        <!-- Live Nurse Location Pill -->
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/70 text-xs text-slate-300">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-slate-400">Enfermería:</span>
+          <strong class="text-white font-bold" id="top-nurse-location-text">Piso 6 (Consultorio)</strong>
+        </div>
+
+        <!-- Botón de Pánico Rápido Superior -->
+        <button onclick="abrirModalPanico()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 transition shadow-lg shadow-rose-950/60 border border-rose-500/70 animate-pulse">
+          <i data-lucide="alert-octagon" class="w-4 h-4 text-white"></i>
+          <span class="tracking-wide">CÓDIGO ROJO</span>
+        </button>
+
+        <!-- Teléfono de Emergencia Directo -->
+        <a href="tel:+593995983685" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition" title="Llamada telefónica directa a Enfermería">
+          <i data-lucide="phone-call" class="w-3.5 h-3.5 text-[#FDBA74]"></i>
+          <span>099 598 3685</span>
+        </a>
+
+        <!-- Selector de Idioma -->
+        <div class="flex items-center bg-slate-900 rounded-xl p-0.5 border border-slate-800 text-xs">
+          <button onclick="cambiarIdioma('es')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-bold text-[11px] transition text-white bg-slate-800 shadow-2xs">ES</button>
+          <button onclick="cambiarIdioma('en')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-400 hover:text-white">EN</button>
+          <button onclick="cambiarIdioma('zh')" class="landing-lang-btn px-2.5 py-1 rounded-lg font-medium text-[11px] transition text-slate-400 hover:text-white">中文</button>
+        </div>
+
+        <!-- Acceso Personal Médico -->
+        <button onclick="abrirModalLogin()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition border border-white/20">
+          <i data-lucide="stethoscope" class="w-4 h-4 text-[#FDBA74]"></i>
+          <span class="hidden sm:inline">Personal Médico</span>
+          <span class="sm:hidden">Ingreso</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- HERO EXECUTIVE COMMAND CENTER (DUAL PILLARS) -->
+  <!-- ======================================================== -->
+  <section class="relative pt-10 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden border-b border-slate-800">
+    <!-- Subtle Ambient Glow -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      
+      <!-- Left Column: Core Actions (Code Red & Regular Triage) -->
+      <div class="lg:col-span-7 flex flex-col justify-between space-y-6 text-left">
+        
+        <!-- Header Tagline -->
+        <div>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-semibold mb-4">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>CENTRO DE RESPUESTA MÉDICA &amp; SALUD OCUPACIONAL FYDI</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+            Asistencia Médica Inmediata <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FDBA74] to-orange-400">&amp; Prevención en el Trabajo</span>
+          </h1>
+
+          <p class="text-sm sm:text-base text-slate-300 mt-3 max-w-xl leading-relaxed">
+            Plataforma digital de despacho y triaje para los 7 pisos del edificio corporativo. Reporta una emergencia crítica en tu puesto o solicita un turno médico presencial en 1 solo paso, sin aplicaciones externas ni demoras.
+          </p>
+        </div>
+
+        <!-- DUAL ENTERPRISE ACTION CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          
+          <!-- CARD 1: CÓDIGO ROJO (EMERGENCIA CRÍTICA EN PUESTO) -->
+          <div class="bg-gradient-to-b from-rose-950/70 to-slate-900 border-2 border-rose-500/70 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-rose-400 transition-all">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-rose-600/10 rounded-full blur-xl pointer-events-none"></div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md">
+                  <i data-lucide="alert-octagon" class="w-5 h-5 text-white animate-bounce"></i>
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                  Respuesta Inmediata
+                </span>
+              </div>
+              <h3 class="text-base font-black text-white">Código Rojo: Emergencia</h3>
+              <p class="text-xs text-rose-100/80 mt-1 leading-relaxed">
+                Convulsiones, desmayos, pérdida de conocimiento, dolor torácico severo o caídas.
+              </p>
+            </div>
+
+            <div class="mt-5">
+              <button onclick="abrirModalPanico()" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-lg shadow-rose-950/70 transition flex items-center justify-center gap-2 border border-rose-400/50">
+                <i data-lucide="bell-ring" class="w-4 h-4 text-white"></i>
+                <span>ACTIVAR CÓDIGO ROJO</span>
+              </button>
+              <div class="text-[10px] text-rose-300/70 text-center mt-2 flex items-center justify-center gap-1">
+                <i data-lucide="volume-2" class="w-3 h-3 text-rose-400"></i>
+                <span>Suena alarma sonora en enfermería</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: SOLICITUD DE TURNO MÉDICO / TRIAJE REGULAR -->
+          <div class="bg-gradient-to-b from-slate-800/90 to-slate-900 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-[#FDBA74]/50 transition-all">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-xl bg-[#16325C] text-[#FDBA74] flex items-center justify-center shadow-md border border-slate-600">
+                  <i data-lucide="stethoscope" class="w-5 h-5"></i>
+                </span>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                  Atención en Consultorio
+                </span>
+              </div>
+              <h3 class="text-base font-black text-white">Consulta Médica &amp; Triaje</h3>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Cefalea, malestar estomacal, presión arterial, resfriado o medicación.
+              </p>
+            </div>
+
+            <div class="mt-5">
+              <button onclick="abrirModalSolicitudPiso('6')" class="w-full py-3 bg-[#E35205] hover:bg-[#C84500] text-white font-black text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 border border-orange-400/40">
+                <i data-lucide="clipboard-plus" class="w-4 h-4 text-white"></i>
+                <span>SOLICITAR TURNO MÉDICO</span>
+              </button>
+              <div class="text-[10px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
+                <i data-lucide="message-square" class="w-3 h-3 text-slate-400"></i>
+                <span>Asigna turno y chat directo en pantalla</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Column: Live Nurse Beacon & Instant Mobile QR Link -->
+      <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+        
+        <!-- Live Nurse Location & Operations Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <div class="h-1 w-full bg-gradient-to-r from-emerald-500 via-[#E35205] to-[#16325C] absolute top-0 left-0 right-0"></div>
+          
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Servicio Activo Hoy
+              </span>
+              <h3 class="text-base font-black text-white">Ubicación de Enfermería</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Lunes a Sábado</span>
+          </div>
+
+          <!-- Locations breakdown -->
+          <div class="space-y-2.5 my-4">
+            <div class="flex items-start gap-3 p-3 rounded-2xl bg-slate-800/80 border border-slate-700/70">
+              <div class="w-8 h-8 rounded-xl bg-[#16325C] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                6
+              </div>
+              <div class="text-left">
+                <div class="font-bold text-white text-xs">Piso 6: Consultorio Central de Enfermería</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Consultas presenciales, reposo, signos vitales y botiquín oficial.</div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+              <div class="w-8 h-8 rounded-xl bg-[#E35205] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                M
+              </div>
+              <div class="text-left">
+                <div class="font-bold text-white text-xs">Mezzanine: Minimarket &amp; Punto de Encuentro</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Punto de apoyo donde también asiste y colabora la enfermera.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Voice Line Box -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-850 border border-slate-700 flex items-center justify-between">
+            <div class="text-left">
+              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Línea Telefónica Directa</div>
+              <div class="text-lg font-black text-white">099 598 3685</div>
+            </div>
+            <a href="tel:+593995983685" class="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="phone-call" class="w-3.5 h-3.5 text-white"></i>
+              <span>Llamar</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- MOBILE SMARTPHONE QR SCANNER CARD ("Ten el sistema en tu celular") -->
+        <div class="bg-gradient-to-br from-slate-900 to-[#0E254A] border border-slate-800 rounded-3xl p-5 shadow-2xl flex items-center gap-4 text-left">
+          
+          <!-- Dynamic QR Container -->
+          <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-2xl p-2 shrink-0 shadow-lg flex items-center justify-center border border-slate-200">
+            <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://dispensario-fydi.onrender.com" alt="Código QR Portal Móvil" class="w-full h-full object-contain">
+          </div>
+
+          <!-- QR Pitch for Supervisors & Agents -->
+          <div class="flex-1">
+            <span class="text-[10px] font-bold text-[#FDBA74] uppercase tracking-wider flex items-center gap-1">
+              <i data-lucide="smartphone" class="w-3 h-3 text-[#FDBA74]"></i> Acceso Móvil Rápido
+            </span>
+            <h4 class="text-xs sm:text-sm font-black text-white mt-0.5">Lleva el botón de emergencia en tu celular</h4>
+            <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+              Supervisores y líderes: escaneen con la cámara de su teléfono para guardar este portal en su pantalla de inicio y activar emergencias al instante.
+            </p>
+            <button onclick="copiarEnlacePortal()" class="mt-2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span id="txt-copiar-enlace">Copiar enlace de acceso</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   </section>
 
- <!-- Fast Inline Ticket Tracker Widget -->
-  <section class="max-w-4xl mx-auto px-4 -mt-6 relative z-20 w-full">
-    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-3 text-left">
-        <div class="w-10 h-10 rounded-xl bg-[#FFF4ED] text-[#E35205] flex items-center justify-center shrink-0 border border-[#FDBA74]">
-          <i data-lucide="message-square" class="w-5 h-5"></i>
+  <!-- ======================================================== -->
+  <!-- FAST INLINE TICKET STATUS TRACKER -->
+  <!-- ======================================================== -->
+  <section class="max-w-4xl mx-auto px-4 -mt-5 relative z-20 w-full">
+    <div class="bg-slate-900/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#16325C] text-[#FDBA74] flex items-center justify-center shrink-0 border border-slate-700">
+          <i data-lucide="search" class="w-5 h-5"></i>
         </div>
         <div>
-          <h4 class="font-bold text-xs text-slate-900">¿Tienes un turno médico o consulta solicitada?</h4>
-          <p class="text-[11px] text-slate-500">Ingresa tu número de ticket para abrir el chat directo con la enfermera:</p>
+          <h4 class="font-bold text-xs sm:text-sm text-white">¿Ya solicitaste atención médica o un turno?</h4>
+          <p class="text-[11px] text-slate-400">Ingresa tu número de ticket para abrir el canal de comunicación en directo con la enfermera:</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 w-full sm:w-auto">
-        <input type="text" id="quick-ticket-input" placeholder="Ej. 1" class="border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-[#16325C] focus:outline-none w-full sm:w-28 font-bold text-center">
-        <button onclick="abrirChatDesdeQuickInput()" class="px-4 py-2 bg-[#16325C] hover:bg-[#0E254A] text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5">
+        <input type="text" id="quick-ticket-input" placeholder="Ej. 12" class="bg-slate-800 border border-slate-700 text-white rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-[#E35205] focus:outline-none w-full sm:w-28 font-bold text-center">
+        <button onclick="abrirChatDesdeQuickInput()" class="px-4 py-2 bg-[#E35205] hover:bg-[#C84500] text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5">
           <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
           <span>Abrir Chat</span>
         </button>
         <button id="btn-resume-cached-ticket" onclick="abrirChatTicketCacheado()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shrink-0 shadow-xs flex items-center gap-1.5 animate-pulse" title="Continuar tu última conversación">
           <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span id="txt-resume-cached-ticket">Mi Chat (#--)</span>
+          <span id="txt-resume-cached-ticket">Mi Turno</span>
         </button>
       </div>
     </div>
   </section>
 
- <!-- Detailed Building Floors Section (Edificio FYDI - 9 Niveles) -->
- <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-10 w-full">
- <div class="text-center mb-8">
- <span class="text-xs font-bold text-[#E35205] uppercase tracking-wider bg-orange-50 px-3.5 py-1 rounded-full border border-orange-200">Distribución Física y Cobertura</span>
- <h2 id="lbl-landing-pisos-title" class="text-2xl font-black text-slate-900 mt-2 flex items-center justify-center gap-2">
- <i data-lucide="building-2" class="w-6 h-6 text-[#16325C]"></i>
- Edificio Corporativo FYDI: Ubicación y Departamentos
- </h2>
- <p id="lbl-landing-pisos-sub" class="text-xs text-slate-500 mt-1 max-w-2xl mx-auto">
- Selecciona tu piso o área de trabajo. En todas las plantas operativas funciona el Call Center de Cobranzas. La enfermera se encuentra en el <strong>Piso 6</strong> o en el <strong>Minimarket del Mezzanine</strong>:
- </p>
- </div>
+  <!-- ======================================================== -->
+  <!-- DIRECTORIO ARQUITECTÓNICO DEL EDIFICIO FYDI (9 NIVELES) -->
+  <!-- ======================================================== -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-12 w-full">
+    <div class="text-center mb-8">
+      <span class="text-xs font-bold text-[#FDBA74] uppercase tracking-wider bg-slate-800 px-3.5 py-1 rounded-full border border-slate-700">
+        Distribución Física y Cobertura Sanitaria
+      </span>
+      <h2 class="text-2xl sm:text-3xl font-black text-white mt-3 flex items-center justify-center gap-2">
+        <i data-lucide="building-2" class="w-6 h-6 text-[#FDBA74]"></i>
+        Directorio por Plantas • Edificio FYDI
+      </h2>
+      <p class="text-xs text-slate-400 mt-1 max-w-2xl mx-auto leading-relaxed">
+        El personal médico se encuentra en el <strong>Piso 6 (Consultorio)</strong> y en el <strong>Mezzanine (Minimarket)</strong>. Selecciona tu piso para solicitar asistencia o consultar información:
+      </p>
+    </div>
 
- <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
- 
- <!-- Planta Baja (PB) -->
- <div onclick="abrirModalSolicitudPiso('PB')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">PB</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Acceso Principal</span>
- </div>
- <div class="font-black text-sm text-slate-900">Planta Baja (Recepción)</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Recepción Principal</div>
- <div>&bull; Personal de Seguridad y Control</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Pedir asistencia a PB</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Mezzanine (Minimarket) -->
- <div onclick="abrirModalSolicitudPiso('Mezzanine')" class="bg-white p-4 rounded-2xl border-2 border-orange-300 bg-orange-50/20 shadow-xs hover:border-[#E35205] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between relative">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-[#E35205] text-white flex items-center justify-center font-black text-xs shadow-xs">M</span>
- <span class="text-[10px] bg-[#FFF4ED] text-[#E35205] font-bold px-2 py-0.5 rounded-md border border-[#FDBA74]"> Minimarket & Apoyo</span>
- </div>
- <div class="font-black text-sm text-slate-900">Mezzanine (Tiendita)</div>
- <div class="text-xs text-slate-600 mt-1 space-y-0.5">
- <div>&bull; Minimarket / Tiendita del personal</div>
- <div class="text-[#E35205] font-semibold">&bull; Punto de colaboración de la Enfermera</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-orange-100 flex items-center justify-between text-xs font-bold text-[#E35205]">
- <span>Pedir asistencia a Mezzanine</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 1 -->
- <div onclick="abrirModalSolicitudPiso('1')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">1</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 1</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 1: Cobranzas & Soporte</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Call Center: Asesores, Líderes y Auditores</div>
- <div>&bull; Departamento de Sistemas</div>
- <div>&bull; Departamento de Recursos Humanos (RRHH)</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 1)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 2 -->
- <div onclick="abrirModalSolicitudPiso('2')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">2</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 2</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 2: Call Center Cobranzas</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Asesores de Cobranza</div>
- <div>&bull; Líderes de Campaña</div>
- <div>&bull; Auditores de Calidad</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 2)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 3 -->
- <div onclick="abrirModalSolicitudPiso('3')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">3</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 3</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 3: Call Center Cobranzas</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Asesores de Cobranza</div>
- <div>&bull; Líderes de Campaña</div>
- <div>&bull; Auditores de Calidad</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 3)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 4 -->
- <div onclick="abrirModalSolicitudPiso('4')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">4</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 4</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 4: Call Center Cobranzas</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Asesores de Cobranza</div>
- <div>&bull; Líderes de Campaña</div>
- <div>&bull; Auditores de Calidad</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 4)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 5 -->
- <div onclick="abrirModalSolicitudPiso('5')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">5</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 5</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 5: Cobranzas & Gerencia</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Call Center: Asesores, Líderes y Auditores</div>
- <div>&bull; Despacho de Gerencia</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 5)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 6 (CONSULTORIO CENTRAL) -->
- <div onclick="abrirModalSolicitudPiso('6')" class="bg-white p-4 rounded-2xl border-2 border-[#16325C] bg-blue-50/20 shadow-md hover:shadow-xl cursor-pointer transition text-left group flex flex-col justify-between relative overflow-hidden">
- <span class="absolute -right-9 top-3 bg-[#E35205] text-white text-[8px] font-black uppercase px-9 py-0.5 rotate-45 shadow-xs">Sede Médica</span>
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-[#16325C] text-white flex items-center justify-center font-black text-xs shadow-xs">6</span>
- <span class="text-[10px] bg-[#FFF4ED] text-[#E35205] font-black px-2 py-0.5 rounded-md border border-[#FDBA74]"> CONSULTORIO CENTRAL</span>
- </div>
- <div class="font-black text-sm text-[#16325C]">Piso 6: Dispensario Médico & Cobranzas</div>
- <div class="text-xs text-slate-700 mt-1 space-y-0.5">
- <div class="font-bold text-[#16325C]">&bull; Consultorio de Enfermería y Botiquín Central</div>
- <div>&bull; Call Center: Asesores, Líderes y Auditores</div>
- <div>&bull; Despacho de Gerencia / Jefatura</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-blue-100 flex items-center justify-between text-xs font-black text-[#16325C]">
- <span>Atención Directa en Piso 6</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- <!-- Piso 7 -->
- <div onclick="abrirModalSolicitudPiso('7')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-[#16325C] hover:shadow-md cursor-pointer transition text-left group flex flex-col justify-between">
- <div>
- <div class="flex items-center justify-between mb-2">
- <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">7</span>
- <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">Piso 7</span>
- </div>
- <div class="font-black text-sm text-slate-900">Piso 7: Call Center Cobranzas</div>
- <div class="text-xs text-slate-500 mt-1 space-y-0.5">
- <div>&bull; Asesores de Cobranza</div>
- <div>&bull; Líderes de Campaña</div>
- <div>&bull; Auditores de Calidad</div>
- </div>
- </div>
- <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#16325C]">
- <span>Solicitar Consulta (Piso 7)</span>
- <i data-lucide="chevron-right" class="w-4 h-4"></i>
- </div>
- </div>
-
- </div>
- </section>
-
- <!-- Campus de Salud, Prevención y Educación Médica FYDI -->
-  <section class="bg-white border-y border-slate-200 py-16" id="seccion-educacion-prevencion">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
       
-      <div class="text-center mb-12">
-        <span class="text-xs font-bold text-[#E35205] uppercase tracking-wider bg-orange-50 px-3.5 py-1.5 rounded-full border border-orange-200">
-          Cultura de Prevención &amp; Bienestar Integral
-        </span>
-        <h2 id="lbl-landing-consejos-title" class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mt-3">
-          Guía Médica y Protocolos de Prevención FYDI
-        </h2>
-        <p id="lbl-landing-consejos-sub" class="text-xs sm:text-sm text-slate-600 mt-2 max-w-3xl mx-auto leading-relaxed">
-          Medidas obligatorias y recomendaciones clínicas para proteger tu salud en el trabajo, prevenir contagios y garantizar un entorno seguro y profesional en cada área del edificio.
-        </p>
+      <!-- Planta Baja (PB) -->
+      <div onclick="abrirModalSolicitudPiso('PB')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 hover:bg-slate-850 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">PB</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Acceso Principal</span>
+          </div>
+          <div class="font-black text-sm text-white">Planta Baja (Recepción)</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Recepción Principal y Control de Acceso</div>
+            <div>&bull; Personal de Seguridad Física</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Turno (PB)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        <!-- MÓDULO 1: Lavado y Desinfección de Manos -->
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-[#16325C]">
-          <div class="p-6 bg-gradient-to-br from-sky-50 to-blue-50/30 border-b border-slate-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-[#16325C] text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="droplets" class="w-6 h-6 text-sky-300"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-[#16325C] border border-slate-200 shadow-2xs">
-              Protocolo Diario
-            </span>
+      <!-- Mezzanine (Minimarket) -->
+      <div onclick="abrirModalSolicitudPiso('Mezzanine')" class="bg-gradient-to-br from-slate-900 to-orange-950/30 p-4 rounded-2xl border-2 border-orange-500/60 hover:border-orange-400 cursor-pointer transition text-left group flex flex-col justify-between relative shadow-md">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-[#E35205] text-white flex items-center justify-center font-black text-xs shadow-xs">M</span>
+            <span class="text-[10px] bg-orange-500/20 text-orange-300 font-bold px-2 py-0.5 rounded-md border border-orange-500/40">Punto de Apoyo</span>
           </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-[#16325C] mb-2">1. Lavado y Desinfección de Manos</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                El lavado de manos es la barrera más efectiva contra patógenos en el entorno de oficina y call center.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Técnica de 40 a 60 segundos:</strong> Frotar palmas, dorsos, espacios entre los dedos y uñas con agua y jabón.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Alcohol en Gel al 70%:</strong> Utiliza los dispensadores ubicados al ingreso de cada piso antes de tocar diademas y teclados.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Momentos clave:</strong> Antes y después de comer en el comedor, al salir de los baños y al llegar de la calle.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-emerald-700 font-bold flex items-center gap-1"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Higiene preventiva</span>
-              <span>Dispensadores en pisos 1-7</span>
-            </div>
+          <div class="font-black text-sm text-white">Mezzanine: Minimarket &amp; Punto de Encuentro</div>
+          <div class="text-xs text-slate-300 mt-1 space-y-0.5">
+            <div class="text-orange-200 font-semibold">&bull; Punto de colaboración donde asiste la enfermera</div>
+            <div>&bull; Zona de descanso e hidratación</div>
           </div>
         </div>
-
-        <!-- MÓDULO 2: Protocolo de Mascarillas e Infecciones Respiratorias -->
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-[#16325C]">
-          <div class="p-6 bg-gradient-to-br from-indigo-50 to-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-[#0E254A] text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="shield-check" class="w-6 h-6 text-[#FDBA74]"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-indigo-900 border border-slate-200 shadow-2xs">
-              Protección Respiratoria
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-[#16325C] mb-2">2. Mascarillas y Cuadros Gripales</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                En ambientes de alta densidad como salas telefónicas, las gotas microscópicas se propagan con rapidez si no se actúa oportunamente.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Uso Obligatorio ante Síntomas:</strong> Si presentas carraspera, tos, estornudos o congestión, ponte mascarilla de inmediato.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Retiro de Mascarilla Quirúrgica:</strong> Solicita una mascarilla limpia en el Consultorio del Piso 6 de forma gratuita.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Ventilación y Distancia:</strong> Mantén las ventanas de pasillo abiertas y evita hablar de frente a corta distancia sin protección.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-indigo-700 font-bold flex items-center gap-1"><i data-lucide="heart" class="w-3.5 h-3.5"></i> Cuida a tu compañero</span>
-              <span>Entrega gratis en Piso 6</span>
-            </div>
-          </div>
+        <div class="mt-3 pt-2.5 border-t border-orange-500/20 flex items-center justify-between text-xs font-bold text-orange-400">
+          <span>Solicitar en Mezzanine</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
         </div>
-
-        <!-- MÓDULO 3: Cero Alcohol y Política Laboral -->
-        <div class="rounded-2xl border-2 border-rose-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-rose-400">
-          <div class="p-6 bg-gradient-to-br from-rose-50 to-orange-50/40 border-b border-rose-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="ban" class="w-6 h-6 text-white"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
-              Tolerancia Cero
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-rose-900 mb-2">3. Prohibición de Alcohol en el Trabajo</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                El ingreso bajo efectos del alcohol o con hálito alcohólico está estrictamente prohibido por el Reglamento de Seguridad y Salud.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Efectos Fisiológicos Críticos:</strong> Deshidratación severa, baja brusca de presión arterial (hipotensión), mareos y somnolencia.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Seguridad Ocupacional:</strong> Afecta los reflejos al bajar gradas y eleva drásticamente el riesgo de caídas graves y síncopes.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Control Médico:</strong> Se realizan valoraciones y pruebas ante sospecha. Quien no esté en condiciones debe retirarse por su salud.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-rose-700 font-bold flex items-center gap-1"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Normativa Institucional</span>
-              <span>Reglamento Interno</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- MÓDULO 4: Sustancias Psicoactivas y Convulsiones -->
-        <div class="rounded-2xl border-2 border-amber-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-amber-400">
-          <div class="p-6 bg-gradient-to-br from-amber-50 to-yellow-50/40 border-b border-amber-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="alert-octagon" class="w-6 h-6 text-white"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
-              Alerta Vital
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-amber-950 mb-2">4. Prevención de Drogas y Convulsiones</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                El consumo de sustancias estupefacientes o mezclas energizantes genera un impacto letal en el cerebro y sistema cardiovascular.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5"></i>
-                  <span><strong>Riesgo de Convulsiones y Paro:</strong> Desencadenan arritmias cardíacas violentas, colapso cerebral y convulsiones prolongadas de 5 a 10 min.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5"></i>
-                  <span><strong>Protocolo ante Convulsión:</strong> No sujetar con fuerza, proteger la cabeza con prendas suaves, despejar el área y presionar el Botón de Pánico.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5"></i>
-                  <span><strong>Ayuda Confidencial:</strong> Si atraviesas un problema de adicción, acude al Piso 6. Recibirás orientación médica con total discreción.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-amber-800 font-bold flex items-center gap-1"><i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i> Apoyo Médico Seguro</span>
-              <span>100% Confidencial</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- MÓDULO 5: Salud Sexual y Reproductiva -->
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-[#16325C]">
-          <div class="p-6 bg-gradient-to-br from-emerald-50 to-teal-50/40 border-b border-slate-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="heart-handshake" class="w-6 h-6 text-emerald-200"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-800 border border-slate-200 shadow-2xs">
-              Salud &amp; Bienestar
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-[#16325C] mb-2">5. Salud Sexual y Reproductiva Responsable</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                Una vida afectiva y sexual saludable requiere información científica libre de tabúes y acceso a prevención oportuna.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Prevención de ITS y VIH:</strong> El preservativo es el único método con doble barrera eficaz contra infecciones de transmisión sexual y embarazos no planificados.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Asesoría Personalizada:</strong> Información clara sobre métodos anticonceptivos regulares y de emergencia (anticoncepción poscoital).</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Consultas Sin Costo:</strong> Puedes acercarte al Consultorio del Piso 6 para hablar con la Licenciada con total reserva y respeto.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-emerald-700 font-bold flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Secreto profesional</span>
-              <span>Consultorio Piso 6</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- MÓDULO 6: Cuidado Vocal, Ergonomía y Técnica 4-7-8 -->
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col group hover:border-[#16325C]">
-          <div class="p-6 bg-gradient-to-br from-orange-50 to-amber-50/30 border-b border-slate-100 flex items-center justify-between">
-            <div class="w-12 h-12 rounded-2xl bg-[#E35205] text-white flex items-center justify-center shadow-sm">
-              <i data-lucide="mic" class="w-6 h-6 text-orange-200"></i>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-orange-800 border border-slate-200 shadow-2xs">
-              Call Center Saludable
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-base font-black text-[#16325C] mb-2">6. Voz, Ergonomía y Descompresión 4-7-8</h3>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                Optimiza tu rendimiento diario en la diadema protegiendo tu aparato fonador, columna y niveles de estrés.
-              </p>
-              <ul class="text-xs text-slate-700 space-y-2 mb-4">
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Hidratación Continua de la Voz:</strong> Toma sorbos pequeños de agua al clima cada 15 min. No carraspees con fuerza.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Ergonomía &amp; Regla 20-20-20:</strong> Silla a 90°-100° con apoyo lumbar. Cada 20 min mira a 6 metros por 20 seg para relajar la vista.</span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
-                  <span><strong>Respiración Antiestrés 4-7-8:</strong> Inhala en 4s, retén el aire 7s y exhala suavemente en 8s tras llamadas de alta tensión.</span>
-                </li>
-              </ul>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-              <span class="text-orange-700 font-bold flex items-center gap-1"><i data-lucide="activity" class="w-3.5 h-3.5"></i> Bienestar diario</span>
-              <span>Pausas activas</span>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <!-- Banner de Resumen de Ubicación y Contacto Directo -->
-      <div class="mt-12 bg-gradient-to-r from-[#0E254A] to-[#16325C] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-slate-700">
-        <div class="space-y-2 text-center md:text-left">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-orange-200 text-xs font-bold border border-white/20">
-            <i data-lucide="cross" class="w-3.5 h-3.5 text-[#FDBA74]"></i> Consultorio Central Piso 6 • Mezzanine Minimarket
+      <!-- Piso 1 -->
+      <div onclick="abrirModalSolicitudPiso('1')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">1</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 1</span>
           </div>
-          <h4 class="text-xl sm:text-2xl font-black text-white">¿Tienes síntomas o requieres atención presencial?</h4>
-          <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">
-            Sube al Consultorio del Piso 6 o acércate al Mezzanine. Para emergencias donde el paciente no pueda trasladarse, pulsa el botón de pánico o escribe directamente a WhatsApp.
-          </p>
+          <div class="font-black text-sm text-white">Piso 1: Call Center Cobranzas</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Asesores Telefónicos de Cobranza</div>
+            <div>&bull; Supervisión Operativa</div>
+          </div>
         </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 1)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
 
-        <div class="flex flex-wrap items-center justify-center gap-3 shrink-0">
-          <button onclick="abrirModalPanico()" class="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-black text-xs transition flex items-center gap-2 shadow-lg animate-pulse border border-rose-400">
-            <i data-lucide="alert-octagon" class="w-4 h-4"></i>
-            <span>Botón de Pánico</span>
-          </button>
-          <a href="https://wa.me/593995983685?text=Hola%20Licenciada%20Enfermera%20FYDI%2C%20necesito%20asistencia%20m%C3%A9dica." target="_blank" rel="noopener noreferrer" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition flex items-center gap-2 shadow-md">
-            <i data-lucide="message-circle" class="w-4 h-4"></i>
-            <span>WhatsApp 099 598 3685</span>
-          </a>
+      <!-- Piso 2 -->
+      <div onclick="abrirModalSolicitudPiso('2')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">2</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 2</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 2: Call Center Cobranzas</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Asesores Telefónicos de Cobranza</div>
+            <div>&bull; Líderes de Campaña</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 2)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Piso 3 -->
+      <div onclick="abrirModalSolicitudPiso('3')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">3</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 3</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 3: Call Center Cobranzas</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Asesores Telefónicos y Validación</div>
+            <div>&bull; Auditoría de Calidad</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 3)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Piso 4 -->
+      <div onclick="abrirModalSolicitudPiso('4')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">4</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 4</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 4: Call Center Cobranzas</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Asesores Telefónicos de Cobranza</div>
+            <div>&bull; Líderes de Campaña</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 4)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Piso 5 -->
+      <div onclick="abrirModalSolicitudPiso('5')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">5</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 5</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 5: Cobranzas &amp; Gerencia</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Call Center: Asesores y Auditores</div>
+            <div>&bull; Despacho de Gerencia</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 5)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Piso 6 (CONSULTORIO CENTRAL) -->
+      <div onclick="abrirModalSolicitudPiso('6')" class="bg-gradient-to-br from-slate-900 to-blue-950/40 p-4 rounded-2xl border-2 border-cyan-400/80 hover:border-cyan-300 cursor-pointer transition text-left group flex flex-col justify-between relative shadow-xl">
+        <span class="absolute -right-8 top-3 bg-[#E35205] text-white text-[8px] font-black uppercase px-8 py-0.5 rotate-45 shadow-xs">Sede Médica</span>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-cyan-600 text-white flex items-center justify-center font-black text-xs shadow-xs">6</span>
+            <span class="text-[10px] bg-cyan-500/20 text-cyan-300 font-black px-2 py-0.5 rounded-md border border-cyan-500/40">CONSULTORIO CENTRAL</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 6: Dispensario Médico &amp; Cobranzas</div>
+          <div class="text-xs text-slate-300 mt-1 space-y-0.5">
+            <div class="font-bold text-cyan-300">&bull; Consultorio de Enfermería y Botiquín Central</div>
+            <div>&bull; Call Center: Asesores y Líderes</div>
+            <div>&bull; Despacho de Jefatura</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-cyan-500/20 flex items-center justify-between text-xs font-black text-cyan-300">
+          <span>Atención Directa en Piso 6</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+      <!-- Piso 7 -->
+      <div onclick="abrirModalSolicitudPiso('7')" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 hover:border-slate-600 cursor-pointer transition text-left group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-xs group-hover:bg-[#16325C] group-hover:text-white transition">7</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded-md">Piso 7</span>
+          </div>
+          <div class="font-black text-sm text-white">Piso 7: Call Center Cobranzas</div>
+          <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+            <div>&bull; Asesores Telefónicos de Cobranza</div>
+            <div>&bull; Líderes de Campaña</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-[#FDBA74]">
+          <span>Solicitar Consulta (Piso 7)</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
         </div>
       </div>
 
     </div>
   </section>
-  <!-- Corporate Footer -->
- <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
- <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
- <div class="flex items-center gap-3">
- <img src="/img/fydi_logo.png" alt="FYDI" class="h-6 w-auto">
- <span class="font-bold text-slate-700">FYDI Global BPO</span>
- <span>&bull; Seguridad y Salud en el Trabajo</span>
- </div>
- <div class="flex items-center gap-4 text-xs">
- <button onclick="abrirModalSolicitudPiso('6')" class="text-[#E35205] hover:underline font-bold">Solicitar Asistencia</button>
- <button onclick="abrirModalConsultarTicket()" class="text-slate-600 hover:underline font-medium">Consultar Ticket</button>
- <button onclick="abrirModalLogin()" class="text-[#16325C] hover:underline font-bold">Personal Médico</button>
- </div>
- </div>
- </footer>
- </div>
- <!-- ======================================================== -->
- <!-- VISTA INTERNA: SISTEMA CLÍNICO Y BODEGA FYDI -->
+
+  <!-- ======================================================== -->
+  <!-- CAMPUS DE SALUD, PREVENCIÓN & PROTOCOLOS OCUPACIONALES -->
+  <!-- (Diseño Enterprise Knowledge Hub - Limpio y Estético) -->
+  <!-- ======================================================== -->
+  <section class="bg-slate-950 border-t border-slate-850 py-16 text-slate-200" id="seccion-educacion-prevencion">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-12">
+        <span class="text-xs font-bold text-[#FDBA74] uppercase tracking-wider bg-slate-900 px-3.5 py-1 rounded-full border border-slate-800">
+          Cultura de Prevención &amp; Bienestar Integral
+        </span>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white mt-3">
+          Protocolos Clínicos y Guía de Prevención FYDI
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-2 max-w-3xl mx-auto leading-relaxed">
+          Estándares médicos y procedimientos de seguridad ocupacional para proteger tu salud y garantizar un entorno de trabajo seguro y profesional.
+        </p>
+      </div>
+
+      <!-- 6 Clean Enterprise Knowledge Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+        
+        <!-- CARD 1: CÓDIGO ANTE CONVULSIONES & PRIMEROS AUXILIOS -->
+        <div class="bg-slate-900/90 rounded-2xl border border-rose-500/30 p-6 flex flex-col justify-between hover:border-rose-400 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-rose-600/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20">
+                Protocolo Vital
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">1. Protocolo ante Convulsiones</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              Una convulsión tónico-clónica puede prolongarse varios minutos. La reacción oportuna salva vidas:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5"></i>
+                <span><strong>No sujetar con fuerza:</strong> Permite el movimiento para no ocasionar fracturas o desgarros musculares.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5"></i>
+                <span><strong>Proteger la cabeza:</strong> Coloca prendas suaves o una chaqueta bajo su cabeza y despeja sillas y cables.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5"></i>
+                <span><strong>No introducir objetos en la boca:</strong> Nunca introduzcas dedos, cucharas o pañuelos; podría asfixiarse.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5"></i>
+                <span><strong>Activar Código Rojo:</strong> Presiona el botón en pantalla para despacho inmediato de la enfermera.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-rose-300/80 font-semibold flex items-center justify-between">
+            <span>Guía de Emergencia</span>
+            <span>Respuesta en puesto</span>
+          </div>
+        </div>
+
+        <!-- CARD 2: MASCARILLAS E INFECCIONES RESPIRATORIAS -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                Protección Colectiva
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">2. Mascarillas y Cuadros Gripales</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              En plataformas telefónicas cerradas, los virus respiratorios se transmiten por aerosoles con alta velocidad:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5"></i>
+                <span><strong>Uso Obligatorio ante Síntomas:</strong> Si presentas estornudos, tos o congestión nasal, colócate mascarilla quirúrgica.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5"></i>
+                <span><strong>Mascarillas Gratuitas:</strong> Retira una mascarilla estéril en el Consultorio del Piso 6 sin costo alguno.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5"></i>
+                <span><strong>Diademas Personales:</strong> No compartas almohadillas ni micrófonos de diadema para prevenir contagios cruzados.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-blue-300/80 font-semibold flex items-center justify-between">
+            <span>Cuida a tu equipo</span>
+            <span>Entrega en Piso 6</span>
+          </div>
+        </div>
+
+        <!-- CARD 3: TOLERANCIA CERO Y EFECTOS DEL ALCOHOL -->
+        <div class="bg-slate-900/90 rounded-2xl border border-amber-500/30 p-6 flex flex-col justify-between hover:border-amber-400 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                <i data-lucide="ban" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                Reglamento Laboral
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">3. Prohibición Estricta de Alcohol</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              El ingreso bajo efectos o con aliento a alcohol está prohibido por el Reglamento de Seguridad y Salud:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                <span><strong>Efectos Fisiológicos Graves:</strong> Causa deshidratación celular aguda, hipotensión (baja de presión) y pérdida de reflejos.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                <span><strong>Riesgo de Caídas y Traumas:</strong> La alteración del equilibrio eleva el riesgo de caídas severas en gradas y pasillos.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                <span><strong>Control Sanitario:</strong> Se practican valoraciones clínicas inmediatas. Quien no esté en condiciones debe retirarse.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-amber-300/80 font-semibold flex items-center justify-between">
+            <span>Seguridad Ocupacional</span>
+            <span>Tolerancia Cero</span>
+          </div>
+        </div>
+
+        <!-- CARD 4: PREVENCIÓN DE DROGAS & AYUDA CONFIDENCIAL -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+                <i data-lucide="heart-crack" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                Apoyo Confidencial
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">4. Prevención de Sustancias Psicoactivas</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              El consumo de estupefacientes o mezclas energizantes daña severamente el sistema cardiovascular y cerebral:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5"></i>
+                <span><strong>Arritmias y Colapsos Cardíacos:</strong> Provoca taquicardias violentas, infartos en jóvenes y convulsiones masivas.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5"></i>
+                <span><strong>Ayuda Médica Sin Sanción:</strong> Si tú o un compañero necesitan apoyo para superar una adicción, acude al Piso 6.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5"></i>
+                <span><strong>Secreto Médico:</strong> La consulta se maneja bajo absoluta reserva y ética profesional sanitaria.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-purple-300/80 font-semibold flex items-center justify-between">
+            <span>Orientación Médica</span>
+            <span>100% Confidencial</span>
+          </div>
+        </div>
+
+        <!-- CARD 5: SALUD SEXUAL Y REPRODUCTIVA -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-teal-600/20 text-teal-400 flex items-center justify-center border border-teal-500/30">
+                <i data-lucide="heart-handshake" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20">
+                Salud &amp; Bienestar
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">5. Salud Sexual y Reproductiva</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              Información médica clara, responsable y libre de prejuicios para una vida afectiva y sexual protegida:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5"></i>
+                <span><strong>Prevención de ITS y VIH:</strong> El preservativo es el único método con doble barrera eficaz contra infecciones y embarazos no planificados.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5"></i>
+                <span><strong>Métodos Anticonceptivos:</strong> Asesoría profesional sobre métodos de barrera, hormonales y anticoncepción de emergencia.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5"></i>
+                <span><strong>Atención en Consultorio:</strong> Puedes acercarte al Piso 6 para resolver dudas con la Licenciada en privado.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-teal-300/80 font-semibold flex items-center justify-between">
+            <span>Prevención Responsable</span>
+            <span>Consultorio Piso 6</span>
+          </div>
+        </div>
+
+        <!-- CARD 6: SALUD VOCAL, ERGONOMÍA & TÉCNICA 4-7-8 -->
+        <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-11 h-11 rounded-xl bg-orange-600/20 text-orange-400 flex items-center justify-center border border-orange-500/30">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-300 border border-orange-500/20">
+                Call Center Saludable
+              </span>
+            </div>
+            <h3 class="text-base font-black text-white mb-2">6. Voz, Ergonomía y Técnica 4-7-8</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              Herramientas de autocuidado para la jornada diaria en diadema y digitación telefónica:
+            </p>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5"></i>
+                <span><strong>Hidratación de Cuerdas Vocales:</strong> Mantén tu termo en estación. Toma sorbos de agua al clima cada 15 min. No carraspees con fuerza.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5"></i>
+                <span><strong>Regla 20-20-20 &amp; Ergonomía:</strong> Cada 20 min mira a lo lejos por 20 seg para descansar la vista. Regula tu silla con apoyo lumbar a 90°.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5"></i>
+                <span><strong>Respiración Antiestrés 4-7-8:</strong> Tras llamadas tensas: inhala 4 seg, retén 7 seg y exhala lentamente 8 seg. Normaliza el pulso cardíaco.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-orange-300/80 font-semibold flex items-center justify-between">
+            <span>Pausas Activas</span>
+            <span>Rendimiento Óptimo</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- CORPORATE ENTERPRISE FOOTER -->
+  <!-- ======================================================== -->
+  <footer class="bg-[#060F1E] border-t border-slate-850 py-8 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="/img/fydi_logo.png" alt="FYDI" class="h-7 w-auto object-contain">
+        <div class="text-left border-l border-slate-800 pl-3">
+          <span class="font-bold text-white text-xs block">FYDI Global BPO &amp; Contact Center</span>
+          <span class="text-[11px] text-slate-400">Departamento de Seguridad y Salud en el Trabajo</span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-4 text-xs font-medium">
+        <button onclick="abrirModalPanico()" class="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1">
+          <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i>
+          <span>Código Rojo</span>
+        </button>
+        <button onclick="abrirModalSolicitudPiso('6')" class="text-slate-300 hover:text-white font-semibold">Solicitar Turno</button>
+        <button onclick="abrirModalConsultarTicket()" class="text-slate-300 hover:text-white font-semibold">Consultar Turno</button>
+        <button onclick="abrirModalLogin()" class="text-[#FDBA74] hover:text-orange-300 font-bold">Personal Médico</button>
+      </div>
+    </div>
+  </footer>
+
+</div>
+<!-- ======================================================== -->
+<!-- VISTA INTERNA: SISTEMA CLÍNICO Y BODEGA FYDI -->
+
  <!-- ======================================================== -->
  <div id="app-clinica-interna" class="hidden flex-1 flex flex-col w-full">
  <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-40">
@@ -2698,20 +2712,20 @@
 
 
   <!-- ======================================================== -->
-  <!-- MODAL DE PÁNICO Y EMERGENCIA AGUDA (RESPUESTA INMEDIATA) -->
+  <!-- MODAL DE CÓDIGO ROJO / DESPACHO DE EMERGENCIA EN TIEMPO REAL -->
   <!-- ======================================================== -->
-  <div id="modal-panico-emergencia" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border-2 border-rose-500 animate-fade-in text-slate-800">
+  <div id="modal-panico-emergencia" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border-2 border-rose-500 animate-fade-in text-slate-100">
       
-      <!-- Red Emergency Header with Pulse -->
-      <div class="px-6 py-4 bg-gradient-to-r from-rose-700 to-red-600 text-white flex items-center justify-between">
+      <!-- Top Emergency Header with Pulsing Beacon -->
+      <div class="px-6 py-4 bg-gradient-to-r from-rose-700 via-red-600 to-rose-700 text-white flex items-center justify-between shadow-md">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shadow-inner">
             <i data-lucide="alert-octagon" class="w-6 h-6 text-white animate-bounce"></i>
           </div>
           <div>
-            <h3 class="text-base font-black tracking-tight uppercase">Alerta de Pánico y Emergencia</h3>
-            <p class="text-xs text-rose-100">Disparo prioritario a Enfermería FYDI</p>
+            <h3 class="text-base font-black tracking-tight uppercase">CÓDIGO ROJO • DESPACHO INMEDIATO</h3>
+            <p class="text-xs text-rose-100 font-medium">Alerta prioritaria transmitida a Enfermería</p>
           </div>
         </div>
         <button onclick="cerrarModalPanico()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
@@ -2719,98 +2733,167 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-4">
+      <!-- FORM VIEW (PASO 1 Y 2) -->
+      <div id="box-panico-formulario" class="p-6 space-y-4">
         
         <!-- Emergency Instructions Callout -->
-        <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-start gap-2.5">
-          <i data-lucide="shield-alert" class="w-5 h-5 text-rose-600 shrink-0 mt-0.5"></i>
+        <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-200 flex items-start gap-2.5">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-rose-400 shrink-0 mt-0.5"></i>
           <div>
-            <strong class="font-bold">¿Ocurre una emergencia crítica (convulsión, desmayo, paro)?</strong>
-            <p class="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
-              Selecciona tu piso y la situación. Se abrirá de inmediato un mensaje pre-redactado de auxilio al <strong>099 598 3685</strong> y podrás enlazar la llamada al instante.
+            <strong class="font-bold text-white">¿Ocurre una emergencia crítica en tu puesto?</strong>
+            <p class="text-[11px] text-rose-200/80 mt-0.5 leading-relaxed">
+              Selecciona el piso y la situación. Al presionar el botón se emitirá una <strong>alarma sonora en la terminal médica de enfermería</strong> y se despachará atención de forma inmediata sin pasos intermedios.
             </p>
           </div>
         </div>
 
-        <!-- Selector de Piso -->
+        <!-- Selector de Piso Rápido -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-            1. Selecciona el Piso donde se encuentra el paciente:
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+            1. Selecciona el Piso donde está el paciente:
           </label>
           <div class="grid grid-cols-4 sm:grid-cols-5 gap-1.5" id="panico-piso-grid">
-            <button type="button" onclick="seleccionarPisoPanico('PB')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="PB">PB</button>
-            <button type="button" onclick="seleccionarPisoPanico('Mezzanine')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Mezzanine">Mezz</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 1')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 1">Piso 1</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 2')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 2">Piso 2</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 3')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 3">Piso 3</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 4')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 4">Piso 4</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 5')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 5">Piso 5</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 6')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border-2 border-rose-600 bg-rose-50 text-rose-800 transition" data-piso="Piso 6">Piso 6</button>
-            <button type="button" onclick="seleccionarPisoPanico('Piso 7')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition" data-piso="Piso 7">Piso 7</button>
+            <button type="button" onclick="seleccionarPisoPanico('PB')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="PB">PB</button>
+            <button type="button" onclick="seleccionarPisoPanico('Mezzanine')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Mezzanine">Mezz</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 1')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 1">Piso 1</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 2')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 2">Piso 2</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 3')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 3">Piso 3</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 4')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 4">Piso 4</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 5')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 5">Piso 5</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 6')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border-2 border-rose-500 bg-rose-500/20 text-rose-300 transition" data-piso="Piso 6">Piso 6</button>
+            <button type="button" onclick="seleccionarPisoPanico('Piso 7')" class="btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition" data-piso="Piso 7">Piso 7</button>
           </div>
           <input type="hidden" id="panico-piso-seleccionado" value="Piso 6">
         </div>
 
-        <!-- Selector de Situación Médica Crítica -->
+        <!-- Selector de Emergencia Crítica -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
             2. Situación de Emergencia:
           </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="panico-situacion-grid">
-            <button type="button" onclick="seleccionarSituacionPanico('Convulsión / Pérdida de Conocimiento')" class="btn-panico-sit p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold text-left transition flex items-center gap-2">
-              <i data-lucide="zap" class="w-4 h-4 text-rose-600 shrink-0"></i>
+            <button type="button" onclick="seleccionarSituacionPanico('Convulsión / Espasmos')" class="btn-panico-sit p-2.5 rounded-xl border-2 border-rose-500 bg-rose-500/20 text-rose-200 font-bold text-left transition flex items-center gap-2">
+              <i data-lucide="zap" class="w-4 h-4 text-rose-400 shrink-0"></i>
               <span>Convulsión / Espasmos</span>
             </button>
-            <button type="button" onclick="seleccionarSituacionPanico('Desmayo / Hipotensión Severa')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-200 hover:border-rose-400 font-semibold text-slate-700 text-left transition flex items-center gap-2">
-              <i data-lucide="activity" class="w-4 h-4 text-slate-500 shrink-0"></i>
+            <button type="button" onclick="seleccionarSituacionPanico('Desmayo / Inconsciente')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-400 font-semibold text-slate-300 text-left transition flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-slate-400 shrink-0"></i>
               <span>Desmayo / Inconsciente</span>
             </button>
-            <button type="button" onclick="seleccionarSituacionPanico('Dolor en Pecho / Falta de Aire')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-200 hover:border-rose-400 font-semibold text-slate-700 text-left transition flex items-center gap-2">
-              <i data-lucide="heart-crack" class="w-4 h-4 text-slate-500 shrink-0"></i>
+            <button type="button" onclick="seleccionarSituacionPanico('Dolor en Pecho / Asfixia')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-400 font-semibold text-slate-300 text-left transition flex items-center gap-2">
+              <i data-lucide="heart-crack" class="w-4 h-4 text-slate-400 shrink-0"></i>
               <span>Dolor de Pecho / Asfixia</span>
             </button>
-            <button type="button" onclick="seleccionarSituacionPanico('Accidente / Golpe Fuerte / Hemorragia')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-200 hover:border-rose-400 font-semibold text-slate-700 text-left transition flex items-center gap-2">
-              <i data-lucide="shield-alert" class="w-4 h-4 text-slate-500 shrink-0"></i>
+            <button type="button" onclick="seleccionarSituacionPanico('Caída / Trauma / Hemorragia')" class="btn-panico-sit p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-400 font-semibold text-slate-300 text-left transition flex items-center gap-2">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-slate-400 shrink-0"></i>
               <span>Trauma / Hemorragia</span>
             </button>
           </div>
-          <input type="hidden" id="panico-situacion-seleccionada" value="Convulsión / Pérdida de Conocimiento">
+          <input type="hidden" id="panico-situacion-seleccionada" value="Convulsión / Espasmos">
         </div>
 
         <!-- Campo Opcional: Nombre del Paciente o Puesto -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">
-            Nombre del paciente o puesto / estación (opcional):
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">
+            Puesto, fila o nombre del compañero (opcional):
           </label>
-          <input type="text" id="panico-detalle-input" placeholder="Ej. Francesco / Puesto 45 fila central" class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500">
+          <input type="text" id="panico-detalle-input" placeholder="Ej. Puesto 34 fila norte / Francesco" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500">
         </div>
 
-        <!-- Direct Actions Buttons -->
+        <!-- Botón de Transmisión Inmediata (Nativo en tiempo real) -->
         <div class="space-y-2 pt-2">
-          <!-- WhatsApp Despacho Inmediato -->
-          <button onclick="dispararAlertaPanicoWhatsApp()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-950/30 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5">
-            <i data-lucide="message-circle" class="w-5 h-5"></i>
-            <span>ENVIAR ALERTA WHATSAPP INMEDIATA</span>
+          <button onclick="dispararCodigoRojoNativo()" id="btn-disparar-codigo-rojo" class="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-rose-950/80 flex items-center justify-center gap-2.5 transition transform hover:-translate-y-0.5 border border-rose-400/50">
+            <i data-lucide="radio" class="w-5 h-5 animate-pulse"></i>
+            <span>TRANSMITIR ALERTA CÓDIGO ROJO AHORA</span>
           </button>
 
-          <!-- Llamar Directamente -->
-          <a href="tel:+593995983685" class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-2xl flex items-center justify-center gap-2 transition">
-            <i data-lucide="phone-call" class="w-4 h-4 text-[#FDBA74]"></i>
-            <span>LLAMAR A LA ENFERMERA AHORA (099 598 3685)</span>
+          <!-- Teléfono de Emergencia -->
+          <a href="tel:+593995983685" class="w-full py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition border border-slate-700">
+            <i data-lucide="phone-call" class="w-3.5 h-3.5 text-[#FDBA74]"></i>
+            <span>Llamar directamente a Enfermería: 099 598 3685</span>
           </a>
         </div>
 
       </div>
 
-      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <!-- ACTIVE DISPATCH CONFIRMATION SCREEN (SE MUESTRA AL DISPARAR) -->
+      <div id="box-panico-despacho-activo" class="hidden p-6 text-center space-y-5">
+        
+        <!-- Radar Pulsing Animation -->
+        <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60"></span>
+          <div class="relative w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center shadow-lg text-white">
+            <i data-lucide="radio" class="w-8 h-8 animate-pulse"></i>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-black uppercase tracking-wider text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/30">
+            Alerta Transmitida en Tiempo Real
+          </span>
+          <h3 class="text-xl font-black text-white mt-2">CÓDIGO ROJO EN CURSO</h3>
+          <p id="txt-despacho-resumen" class="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
+            Notificación enviada al Consultorio de Enfermería (Piso 6) con sirena acústica.
+          </p>
+        </div>
+
+        <!-- Timer & Ticket Box -->
+        <div class="p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-xs flex items-center justify-around">
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase font-bold">Tiempo Activo</div>
+            <div id="cronometro-codigo-rojo" class="text-lg font-black text-rose-400 font-mono">00:01</div>
+          </div>
+          <div class="border-l border-slate-700 pl-4">
+            <div class="text-[10px] text-slate-400 uppercase font-bold">Ticket de Urgencia</div>
+            <div id="ticket-codigo-rojo-id" class="text-lg font-black text-white">#--</div>
+          </div>
+        </div>
+
+        <!-- Emergency Phone Backup -->
+        <div class="p-3 rounded-2xl bg-slate-800/50 border border-slate-700/60 text-xs">
+          <div class="text-slate-400 text-[11px]">Si necesitas hablar de inmediato por voz:</div>
+          <a href="tel:+593995983685" class="text-base font-black text-[#FDBA74] hover:underline flex items-center justify-center gap-1.5 mt-0.5">
+            <i data-lucide="phone-call" class="w-4 h-4"></i>
+            <span>099 598 3685</span>
+          </a>
+        </div>
+
+        <!-- Action Buttons in Active Dispatch -->
+        <div class="space-y-2">
+          <button onclick="abrirChatTicketEmergencia()" class="w-full py-3 bg-[#E35205] hover:bg-[#C84500] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>Abrir Canal de Chat en Vivo</span>
+          </button>
+          <button onclick="cerrarModalPanico()" class="w-full py-2 text-slate-400 hover:text-white font-semibold text-xs">
+            Cerrar esta ventana (la alerta sigue activa)
+          </button>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
         <span class="flex items-center gap-1 font-medium"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#E35205]"></i> Consultorio Central: Piso 6</span>
-        <button onclick="cerrarModalPanico()" class="text-slate-500 hover:text-slate-800 font-bold">Cerrar</button>
+        <button onclick="cerrarModalPanico()" class="text-slate-400 hover:text-white font-bold">Cerrar</button>
       </div>
 
     </div>
   </div>
 
-  <!-- FLOATING ACTION BUTTONS (BOTTOM RIGHT) -->
+  <!-- FLOATING ACTION BUTTONS (BOTTOM RIGHT - NATIVE EMERGENCY & CALL) -->
+  <div class="fixed bottom-5 right-5 z-40 flex flex-col gap-2.5 items-end">
+    <!-- Floating Code Red Button -->
+    <button onclick="abrirModalPanico()" class="group flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white px-4 py-3 rounded-full shadow-2xl border-2 border-white/20 transition transform hover:scale-105 animate-pulse" title="Código Rojo - Emergencias Médicas">
+      <i data-lucide="alert-octagon" class="w-5 h-5 text-white"></i>
+      <span class="text-xs font-black tracking-wide hidden sm:inline">CÓDIGO ROJO</span>
+    </button>
+
+    <!-- Floating Direct Phone Call Button -->
+    <a href="tel:+593995983685" class="group flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-full shadow-2xl border border-slate-700 transition transform hover:scale-105" title="Llamar a Enfermería: 099 598 3685">
+      <i data-lucide="phone-call" class="w-4 h-4 text-[#FDBA74]"></i>
+      <span class="text-xs font-bold text-slate-200 hidden sm:inline">099 598 3685</span>
+    </a>
+  </div>
+ (BOTTOM RIGHT) -->
   <div class="fixed bottom-5 right-5 z-40 flex flex-col gap-2.5 items-end">
     <!-- Floating Panic Button -->
     <button onclick="abrirModalPanico()" class="group flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-full shadow-2xl border-2 border-white transition transform hover:scale-105 animate-pulse" title="Botón de Pánico - Emergencias Médicas">

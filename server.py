@@ -1199,11 +1199,17 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             elif path == "/api/solicitudes":
                 piso = str(data.get("piso", "6")).strip()
                 area = data.get("area_campana", "").strip()
-                nombre = data.get("nombre_paciente", "").strip().upper()
+                nombre = (data.get("nombre_paciente") or data.get("colaborador_nombre") or "").strip().upper()
                 cedula = data.get("cedula", "").strip()
-                motivo = data.get("motivo", "").strip()
+                motivo = (data.get("motivo") or data.get("descripcion") or "").strip()
                 prioridad = data.get("prioridad", "NORMAL").strip().upper()
                 extension = data.get("telefono_extension", "").strip()
+
+                if prioridad in ["EMERGENCIA_CRITICA", "PANICO_URGENTE"]:
+                    if not nombre:
+                        nombre = f"ALERTA CÓDIGO ROJO (PISO {piso})"
+                    if not motivo:
+                        motivo = f"EMERGENCIA MÉDICA CRÍTICA EN PISO {piso}"
 
                 if not nombre or not motivo:
                     self.send_json({"error": "Debe especificar su nombre y el motivo o síntoma de la consulta."}, 400)

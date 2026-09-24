@@ -2188,17 +2188,52 @@ function mostrarAppClinica() {
 
 // ================================================================
 // ================================================================
-// MODAL DE PÁNICO Y EMERGENCIAS CRÍTICAS (LLAMADA + WHATSAPP DIRECTO)
+// CÓDIGO ROJO - SISTEMA DE EMERGENCIA EN TIEMPO REAL (NATIVO WEB)
 // ================================================================
-const NUMERO_ENFERMERA_OFICIAL = "593995983685";
-const NUMERO_ENFERMERA_FORMATO = "099 598 3685";
+let cronometroPanicoInterval = null;
+let activeEmergencyTicketId = null;
+let ultimaEmergenciaNotificadaId = null;
+
+function playEmergencyTone() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Tono de buscapersonas médica hospitalaria (880Hz / 1174Hz)
+    for (let i = 0; i < 4; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = now + i * 0.32;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.setValueAtTime(1174, t + 0.12);
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.28);
+    }
+  } catch(e) {
+    console.warn("AudioContext tone warning:", e);
+  }
+}
 
 function abrirModalPanico() {
   const modal = document.getElementById("modal-panico-emergencia");
+  const boxForm = document.getElementById("box-panico-formulario");
+  const boxDespacho = document.getElementById("box-panico-despacho-activo");
+  
   if (!modal) return;
   modal.classList.remove("hidden");
   
-  // Vibración táctil de alerta en móviles si está soportado
+  if (!activeEmergencyTicketId) {
+    if (boxForm) boxForm.classList.remove("hidden");
+    if (boxDespacho) boxDespacho.classList.add("hidden");
+  }
+
   if (navigator.vibrate) {
     try { navigator.vibrate([200, 100, 200]); } catch(e) {}
   }
@@ -2217,9 +2252,9 @@ function seleccionarPisoPanico(piso) {
 
   document.querySelectorAll(".btn-panico-piso").forEach(btn => {
     if (btn.getAttribute("data-piso") === piso) {
-      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border-2 border-rose-600 bg-rose-50 text-rose-800 transition";
+      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border-2 border-rose-500 bg-rose-500/20 text-rose-300 transition";
     } else {
-      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50 transition text-slate-700";
+      btn.className = "btn-panico-piso py-2 px-1 text-center font-bold text-xs rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-rose-500 transition";
     }
   });
 }
@@ -2231,44 +2266,115 @@ function seleccionarSituacionPanico(situacion) {
   document.querySelectorAll(".btn-panico-sit").forEach(btn => {
     const spanText = btn.querySelector("span")?.textContent || "";
     if (situacion.toLowerCase().includes(spanText.toLowerCase().slice(0, 5))) {
-      btn.className = "btn-panico-sit p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold text-left transition flex items-center gap-2";
+      btn.className = "btn-panico-sit p-2.5 rounded-xl border-2 border-rose-500 bg-rose-500/20 text-rose-200 font-bold text-left transition flex items-center gap-2";
     } else {
-      btn.className = "btn-panico-sit p-2.5 rounded-xl border border-slate-200 hover:border-rose-400 font-semibold text-slate-700 text-left transition flex items-center gap-2";
+      btn.className = "btn-panico-sit p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:border-rose-400 font-semibold text-slate-300 text-left transition flex items-center gap-2";
     }
   });
 }
 
-async function dispararAlertaPanicoWhatsApp() {
+async function dispararCodigoRojoNativo() {
+  const btn = document.getElementById("btn-disparar-codigo-rojo");
   const piso = document.getElementById("panico-piso-seleccionado")?.value || "Piso 6";
-  const situacion = document.getElementById("panico-situacion-seleccionada")?.value || "Emergencia Médica Aguda";
+  const situacion = document.getElementById("panico-situacion-seleccionada")?.value || "Convulsión / Espasmos";
   const detalle = document.getElementById("panico-detalle-input")?.value.trim() || "";
 
-  // Registrar en el backend como ticket de emergencia crítica para la consola de la enfermera (sin bloquear)
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>TRANSMITIENDO A ENFERMERÍA...</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Reproducir alerta acústica en la estación
+  playEmergencyTone();
+
   try {
-    fetch("/api/solicitudes", {
+    const res = await fetch("/api/solicitudes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        colaborador_nombre: detalle ? `ALERTA PÁNICO (${detalle})` : "ALERTA PÁNICO URGENTE",
+        nombre_paciente: detalle ? `CÓDIGO ROJO (${detalle})` : `CÓDIGO ROJO - PISO ${piso}`,
         cedula: "9999999999",
         piso: piso,
-        area: "EMERGENCIA CRÍTICA / PÁNICO",
-        motivo: `[EMERGENCIA CRÍTICA] ${situacion}${detalle ? ' - ' + detalle : ''}`,
+        area_campana: detalle ? `[EMERGENCIA PUESTO] ${detalle}` : `[EMERGENCIA] Piso ${piso}`,
+        motivo: `[CÓDIGO ROJO VITAL] ${situacion}${detalle ? ' - Puesto/Paciente: ' + detalle : ''}`,
         prioridad: "EMERGENCIA_CRITICA"
       })
-    }).catch(err => console.warn("Log de pánico en API:", err));
-  } catch(e) {}
+    });
 
-  // Construir mensaje de WhatsApp
-  let msg = `*[URGENTE - ALERTA MEDICA FYDI]*\n*EMERGENCIA EN PISO: ${piso.toUpperCase()}*\n`;
-  msg += `*Situación:* ${situacion}\n`;
-  if (detalle) msg += `*Detalle/Paciente:* ${detalle}\n`;
-  msg += `*Hora:* ${new Date().toLocaleTimeString('es-EC')}\n`;
-  msg += `¡Se solicita asistencia médica urgente en este momento!`;
+    const data = await res.json();
+    const ticketId = data.solicitud_id || "--";
+    activeEmergencyTicketId = ticketId;
 
-  const url = `https://wa.me/${NUMERO_ENFERMERA_OFICIAL}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-  cerrarModalPanico();
+    // Cambiar a pantalla de despacho activo en vivo
+    const boxForm = document.getElementById("box-panico-formulario");
+    const boxDespacho = document.getElementById("box-panico-despacho-activo");
+    const txtResumen = document.getElementById("txt-despacho-resumen");
+    const lblTicket = document.getElementById("ticket-codigo-rojo-id");
+
+    if (boxForm) boxForm.classList.add("hidden");
+    if (boxDespacho) boxDespacho.classList.remove("hidden");
+    if (txtResumen) {
+      txtResumen.textContent = `Alerta transmitida en ${piso}: ${situacion}. Enfermería notificada con alarma acústica prioritaria.`;
+    }
+    if (lblTicket) lblTicket.textContent = `#${ticketId}`;
+
+    iniciarCronometroPanico();
+
+    // Guardar para acceso continuo
+    localStorage.setItem("fydi_ultimo_ticket_id", ticketId);
+    if (typeof actualizarBotonTicketCacheado === "function") {
+      actualizarBotonTicketCacheado();
+    }
+
+  } catch(err) {
+    console.error("Error al transmitir código rojo:", err);
+    showToast("Aviso de Red", "Alerta transmitida. Comunícate al 099 598 3685.", "warning");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="radio" class="w-5 h-5 animate-pulse"></i><span>TRANSMITIR ALERTA CÓDIGO ROJO AHORA</span>`;
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function iniciarCronometroPanico() {
+  if (cronometroPanicoInterval) clearInterval(cronometroPanicoInterval);
+  let segundos = 1;
+  const cronoEl = document.getElementById("cronometro-codigo-rojo");
+  cronometroPanicoInterval = setInterval(() => {
+    segundos++;
+    const m = String(Math.floor(segundos / 60)).padStart(2, '0');
+    const s = String(segundos % 60).padStart(2, '0');
+    if (cronoEl) cronoEl.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function abrirChatTicketEmergencia() {
+  if (activeEmergencyTicketId) {
+    cerrarModalPanico();
+    if (typeof abrirChatPublico === "function") {
+      abrirChatPublico(activeEmergencyTicketId);
+    }
+  }
+}
+
+function copiarEnlacePortal() {
+  const url = window.location.origin;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      const txt = document.getElementById("txt-copiar-enlace");
+      if (txt) {
+        txt.textContent = "¡Copiado con éxito!";
+        setTimeout(() => { txt.textContent = "Copiar enlace de acceso"; }, 2500);
+      }
+    }).catch(() => {
+      prompt("Copia este enlace de acceso para guardarlo en tu celular:", url);
+    });
+  } else {
+    prompt("Copia este enlace de acceso para guardarlo en tu celular:", url);
+  }
 }
 
 // SOLICITUDES DE ASISTENCIA A PISOS (1 AL 7) - FORMULARIO PÚBLICO
@@ -2563,7 +2669,7 @@ function iniciarPollingSolicitudes() {
  if (!document.hidden) {
  cargarSolicitudesPisos();
  }
- }, 15000);
+ }, 5000);
 }
 
 async function cargarSolicitudesPisos(notify = false) {
@@ -3634,3 +3740,44 @@ function setMotivoChip(texto) {
     txtArea.focus();
   }
 }
+
+function mostrarBannerEmergenciaEnfermera(emergencia) {
+  let banner = document.getElementById("banner-emergencia-terminal");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "banner-emergencia-terminal";
+    banner.className = "fixed top-3 left-1/2 -translate-x-1/2 z-50 max-w-xl w-full px-4 animate-bounce";
+    document.body.appendChild(banner);
+  }
+
+  banner.innerHTML = `
+    <div class="bg-rose-600 text-white p-4 rounded-2xl shadow-2xl border-2 border-white flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-octagon" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <div class="text-[10px] font-black uppercase tracking-wider text-rose-200">ALERTA CÓDIGO ROJO EN TIEMPO REAL</div>
+          <div class="text-sm font-black leading-tight">PISO ${emergencia.piso}: ${emergencia.motivo}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="responderSolicitudEstado(${emergencia.id}, 'EN_CAMINO'); document.getElementById('banner-emergencia-terminal')?.remove();" class="px-3 py-1.5 bg-white text-rose-700 font-bold text-xs rounded-xl shadow-sm hover:bg-rose-50 transition">
+          ATENDER
+        </button>
+        <button onclick="document.getElementById('banner-emergencia-terminal')?.remove()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+}
+
+// Actualizar QR Code al dominio actual
+window.addEventListener("DOMContentLoaded", () => {
+  const qr = document.getElementById("qr-code-img");
+  if (qr && window.location.origin) {
+    qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin)}`;
+  }
+});
