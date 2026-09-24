@@ -509,7 +509,7 @@ function renderInventarioTabla(lista) {
  if (!tbody) return;
 
  if (lista.length === 0) {
- tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400 font-medium">No se encontraron productos coincidentes en el inventario.</td></tr>`;
+ tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">No se encontraron productos coincidentes en el inventario.</td></tr>`;
  return;
  }
 
@@ -525,124 +525,178 @@ function renderInventarioTabla(lista) {
  const esAdmin = currentUser && currentUser.rol === "ADMINISTRADOR";
 
  tbody.innerHTML = lista.map(m => {
- totUnidades += (m.stock_actual || 0);
- if (m.stock_actual === 0) {
- agotados++;
- } else if (m.stock_actual <= m.stock_minimo) {
- bajos++;
- } else {
- disponibles++;
- }
+    totUnidades += (m.stock_actual || 0);
+    if (m.stock_actual === 0) {
+      agotados++;
+    } else if (m.stock_actual <= m.stock_minimo) {
+      bajos++;
+    } else {
+      disponibles++;
+    }
 
- // Contadores de caducidad
- if (m.estado_vencimiento === "VENCIDO") {
- caducados++;
- } else if (m.estado_vencimiento === "POR_VENCER") {
- porVencer++;
- } else if (m.estado_vencimiento === "VIGENTE") {
- vigentes++;
- } else {
- sinFecha++;
- }
+    // Contadores de caducidad
+    if (m.estado_vencimiento === "VENCIDO") {
+      caducados++;
+    } else if (m.estado_vencimiento === "POR_VENCER") {
+      porVencer++;
+    } else if (m.estado_vencimiento === "VIGENTE") {
+      vigentes++;
+    } else {
+      sinFecha++;
+    }
 
- // Badge vectorial elegante para stock
- let badgeHtml = "";
- if (m.estado === "DISPONIBLE") {
- badgeHtml = `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-full text-[10px]"><i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> DISPONIBLE</span>`;
- } else if (m.estado === "STOCK BAJO") {
- badgeHtml = `<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200/80 font-bold px-2 py-0.5 rounded-full text-[10px]"><i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600"></i> STOCK BAJO</span>`;
- } else {
- badgeHtml = `<span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200/80 font-bold px-2 py-0.5 rounded-full text-[10px]"><i data-lucide="slash" class="w-3 h-3 text-rose-600"></i> AGOTADO</span>`;
- }
+    // Badge semáforo compacto y anti-tontos para Estado Stock
+    let badgeHtml = "";
+    if (m.estado === "DISPONIBLE") {
+      badgeHtml = `
+        <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/90 font-bold px-2 py-1 rounded-lg text-[10px] cursor-help transition hover:bg-emerald-100"
+          title="DISPONIBLE: Stock óptimo en bodega para despachar">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span class="hidden xl:inline">Disponible</span>
+        </span>
+      `;
+    } else if (m.estado === "STOCK BAJO") {
+      badgeHtml = `
+        <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300 font-bold px-2 py-1 rounded-lg text-[10px] cursor-help transition hover:bg-amber-100"
+          title="STOCK BAJO: Stock menor o igual al mínimo. Priorizar reposición">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i>
+          <span class="hidden xl:inline">Stock Bajo</span>
+        </span>
+      `;
+    } else {
+      badgeHtml = `
+        <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-300 font-bold px-2 py-1 rounded-lg text-[10px] cursor-help transition hover:bg-rose-100"
+          title="AGOTADO: 0 unidades en bodega. No disponible para recetar">
+          <i data-lucide="ban" class="w-3.5 h-3.5 text-rose-600"></i>
+          <span class="hidden xl:inline">Agotado</span>
+        </span>
+      `;
+    }
 
- // Badge vectorial semaforizado para Lote y Caducidad
- let caducidadHtml = "";
- const loteDisplay = m.lote ? `<span class="font-mono text-[10px] font-bold text-slate-500 tracking-wider">LT: ${m.lote}</span>` : `<span class="font-mono text-[10px] text-slate-400">LT: S/N</span>`;
+    // Badge semaforizado FEFO para Lote y Caducidad
+    let caducidadHtml = "";
+    const loteDisplay = m.lote
+      ? `<span class="font-mono text-[10px] font-bold text-slate-600 tracking-wider">LT: ${m.lote}</span>`
+      : `<span class="font-mono text-[10px] text-slate-400">LT: S/N</span>`;
 
- if (m.estado_vencimiento === "VENCIDO") {
- const diasTxt = m.dias_restantes !== null ? `(${Math.abs(m.dias_restantes)}d atrás)` : '';
- caducidadHtml = `
- <div class="flex flex-col items-center gap-0.5">
- ${loteDisplay}
- <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-xs" title="Fecha: ${m.fecha_vencimiento || 'No registrada'}">
- <i data-lucide="shield-alert" class="w-3 h-3 text-rose-600"></i> CADUCADO ${diasTxt}
- </span>
- </div>
- `;
- } else if (m.estado_vencimiento === "POR_VENCER") {
- caducidadHtml = `
- <div class="flex flex-col items-center gap-0.5">
- ${loteDisplay}
- <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs" title="Fecha: ${m.fecha_vencimiento || ''}">
- <i data-lucide="clock" class="w-3 h-3 text-amber-600"></i> ${m.dias_restantes}d por vencer
- </span>
- </div>
- `;
- } else if (m.estado_vencimiento === "VIGENTE") {
- caducidadHtml = `
- <div class="flex flex-col items-center gap-0.5">
- ${loteDisplay}
- <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Vigente hasta ${m.fecha_vencimiento}">
- <i data-lucide="calendar-check" class="w-3 h-3 text-emerald-600"></i> ${m.fecha_vencimiento}
- </span>
- </div>
- `;
- } else {
- caducidadHtml = `
- <div class="flex flex-col items-center gap-0.5">
- ${loteDisplay}
- <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-normal bg-slate-50 text-slate-500 border border-slate-200">
- <i data-lucide="help-circle" class="w-3 h-3 text-slate-400"></i> Sin registrar
- </span>
- </div>
- `;
- }
+    if (m.estado_vencimiento === "VENCIDO") {
+      const diasTxt = m.dias_restantes !== null ? `(${Math.abs(m.dias_restantes)}d atrás)` : '';
+      caducidadHtml = `
+        <div class="flex flex-col items-center gap-0.5">
+          ${loteDisplay}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs" title="CADUCADO: Retirar de bodega. Venció: ${m.fecha_vencimiento || 'No registrada'}">
+            <i data-lucide="shield-alert" class="w-3 h-3 text-rose-600"></i> CADUCADO ${diasTxt}
+          </span>
+        </div>
+      `;
+    } else if (m.estado_vencimiento === "POR_VENCER") {
+      caducidadHtml = `
+        <div class="flex flex-col items-center gap-0.5">
+          ${loteDisplay}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs" title="POR VENCER: Priorizar rotación. Vence: ${m.fecha_vencimiento || ''}">
+            <i data-lucide="clock" class="w-3 h-3 text-amber-600"></i> ${m.dias_restantes}d por vencer
+          </span>
+        </div>
+      `;
+    } else if (m.estado_vencimiento === "VIGENTE") {
+      caducidadHtml = `
+        <div class="flex flex-col items-center gap-0.5">
+          ${loteDisplay}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" title="VIGENTE: Apto hasta ${m.fecha_vencimiento}">
+            <i data-lucide="calendar-check" class="w-3 h-3 text-emerald-600"></i> ${m.fecha_vencimiento}
+          </span>
+        </div>
+      `;
+    } else {
+      caducidadHtml = `
+        <div class="flex flex-col items-center gap-0.5">
+          ${loteDisplay}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-normal bg-slate-50 text-slate-500 border border-slate-200" title="Sin fecha de vencimiento registrada">
+            <i data-lucide="help-circle" class="w-3 h-3 text-slate-400"></i> Sin registrar
+          </span>
+        </div>
+      `;
+    }
 
- const marcasHtml = m.marcas_comerciales ? `<span class="text-slate-500 italic text-[11px]">${m.marcas_comerciales}</span>` : `<span class="text-slate-300">-</span>`;
+    // Subtítulo descriptivo integrado (Presentación • Concentración • Marcas)
+    let detallesExtra = [];
+    if (m.presentacion) detallesExtra.push(m.presentacion);
+    if (m.concentracion) detallesExtra.push(m.concentracion);
+    const subTxt = detallesExtra.join(" • ");
+    const marcasTxt = m.marcas_comerciales ? `<span class="italic text-sky-700 font-medium font-sans">(${m.marcas_comerciales})</span>` : "";
 
- const lblKardex = typeof t === "function" ? t("btn_kardex") : "Kardex";
- const lblEditar = typeof t === "function" ? t("btn_editar") : "Editar";
- const lblAjustar = typeof t === "function" ? t("btn_ajustar") : "Ajustar";
+    // Botones de acción semánticos de alta visibilidad (Anti-tontos)
+    let botonesAcciones = `
+      <button type="button" onclick="abrirModalKardex(${m.id}, '${m.nombre}', '${m.presentacion || ''}')"
+        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 transition shadow-2xs group"
+        title="KÁRDEX: Ver historial detallado de movimientos, entradas y salidas de bodega"
+        aria-label="Ver Kárdex de ${m.nombre}">
+        <i data-lucide="clipboard-list" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:scale-110"></i>
+      </button>
+    `;
 
- // Acciones según rol
- let accionesHtml = `
- <button onclick="abrirModalKardex(${m.id}, '${m.nombre}', '${m.presentacion || ''}')" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition" title="Ver movimientos Kardex">
- <i data-lucide="list-collapse" class="w-3 h-3"></i> ${lblKardex}
- </button>
- `;
+    if (esAdmin) {
+      botonesAcciones += `
+        <button type="button" onclick="abrirModalEditarMed(${m.id})"
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 transition shadow-2xs group"
+          title="EDITAR: Modificar nombre, presentación, lote o datos de catálogo"
+          aria-label="Editar producto ${m.nombre}">
+          <i data-lucide="pencil" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:scale-110"></i>
+        </button>
+        <button type="button" onclick="abrirModalAjusteStock(${m.id})"
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-amber-50 hover:bg-amber-600 text-amber-700 hover:text-white border border-amber-200 hover:border-amber-600 transition shadow-2xs group"
+          title="AJUSTE FÍSICO: Corregir cantidad real existente en bodega por conteo físico"
+          aria-label="Ajustar stock de ${m.nombre}">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:scale-110"></i>
+        </button>
+      `;
+    }
 
- if (esAdmin) {
- accionesHtml += `
- <button onclick="abrirModalEditarMed(${m.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg transition ml-1" title="Editar catálogo y lote">
- <i data-lucide="edit-2" class="w-3 h-3"></i> ${lblEditar}
- </button>
- <button onclick="abrirModalAjusteStock(${m.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded-lg transition ml-1" title="Ajuste físico de stock">
- <i data-lucide="sliders" class="w-3 h-3"></i> ${lblAjustar}
- </button>
- `;
- }
+    const rowVencidaClass = m.estado_vencimiento === "VENCIDO" ? "bg-rose-50/40" : "";
 
- const rowVencidaClass = m.estado_vencimiento === "VENCIDO" ? "bg-rose-50/40" : "";
+    return `
+      <tr class="hover:bg-slate-50/80 transition ${rowVencidaClass}">
+        <!-- 1. Código -->
+        <td class="py-2.5 px-3">
+          <span class="font-mono font-bold text-slate-700 text-xs bg-slate-100 px-2 py-1 rounded-md border border-slate-200/80 whitespace-nowrap">
+            ${m.codigo}
+          </span>
+        </td>
 
- return `
- <tr class="hover:bg-slate-50/80 transition ${rowVencidaClass}">
- <td class="py-2.5 px-4 font-mono font-bold text-slate-700">${m.codigo}</td>
- <td class="py-2.5 px-4 font-semibold text-slate-800">${m.nombre}</td>
- <td class="py-2.5 px-4 text-slate-600">${m.presentacion || '-'}</td>
- <td class="py-2.5 px-4 text-slate-600">${m.concentracion || '-'}</td>
- <td class="py-2.5 px-4">${marcasHtml}</td>
- <td class="py-2.5 px-4 text-center">${caducidadHtml}</td>
- <td class="py-2.5 px-4 text-center">
- <span class="text-sm font-bold ${m.stock_actual === 0 ? 'text-rose-600' : m.stock_actual <= m.stock_minimo ? 'text-amber-600' : 'text-slate-800'}">
- ${m.stock_actual}
- </span>
- </td>
- <td class="py-2.5 px-4 text-center text-slate-500">${m.stock_minimo}</td>
- <td class="py-2.5 px-4 text-center">${badgeHtml}</td>
- <td class="py-2.5 px-4 text-center whitespace-nowrap">${accionesHtml}</td>
- </tr>
- `;
- }).join("");
+        <!-- 2. Medicamento & Detalles Integrados -->
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-slate-800 text-xs leading-tight">${m.nombre}</div>
+          <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5 mt-0.5">
+            ${subTxt ? `<span>${subTxt}</span>` : ''}
+            ${marcasTxt ? `<span>${marcasTxt}</span>` : ''}
+          </div>
+        </td>
+
+        <!-- 3. Lote & Vencimiento -->
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">${caducidadHtml}</td>
+
+        <!-- 4. Stock Bodega -->
+        <td class="py-2.5 px-3 text-center">
+          <span class="text-sm font-black ${m.stock_actual === 0 ? 'text-rose-600' : m.stock_actual <= m.stock_minimo ? 'text-amber-600' : 'text-slate-800'}">
+            ${m.stock_actual}
+          </span>
+        </td>
+
+        <!-- 5. Mínimo -->
+        <td class="py-2.5 px-3 text-center font-mono font-semibold text-slate-500 text-xs">${m.stock_minimo}</td>
+
+        <!-- 6. Estado Stock -->
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">${badgeHtml}</td>
+
+        <!-- 7. Acciones Semánticas (Iconografía Anti-tontos) -->
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <div class="inline-flex items-center gap-1.5 p-1 bg-slate-50/80 rounded-xl border border-slate-200/80 shadow-2xs">
+            ${botonesAcciones}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 
  const setEl = (id, val) => {
  const el = document.getElementById(id);
@@ -656,6 +710,8 @@ function renderInventarioTabla(lista) {
  setEl("metric-inv-porvencer", porVencer);
  setEl("metric-inv-caducados", caducados);
  setEl("metric-inv-sinfecha", sinFecha);
+
+  if (window.lucide) lucide.createIcons();
 
  const badgeAlertas = document.getElementById("badge-alertas");
  if (badgeAlertas) {
