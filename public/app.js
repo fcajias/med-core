@@ -199,7 +199,7 @@ function aplicarPermisosRol() {
  if (currentUser.rol === "ADMINISTRADOR") {
  iconEl.innerHTML = `<i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-300"></i>`;
  badgeEl.className = "text-[10px] font-bold text-purple-300 uppercase tracking-wider";
- bannerContainer.className = "mb-5 p-3 rounded-xl border border-purple-200 bg-purple-50 text-xs flex items-center justify-between";
+ bannerContainer.className = "hidden";
  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-purple-200 text-purple-900";
  bannerBadge.textContent = typeof t === "function" ? t("role_admin_banner") : "ROL: ADMINISTRADOR / SUPERVISOR";
  bannerDesc.textContent = typeof t === "function" ? t("role_admin_desc") : "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico, anular consultas y configurar permisos.";
@@ -212,7 +212,7 @@ function aplicarPermisosRol() {
  } else if (currentUser.rol === "ENFERMERIA") {
  iconEl.innerHTML = `<i data-lucide="stethoscope" class="w-3.5 h-3.5 text-sky-300"></i>`;
  badgeEl.className = "text-[10px] font-bold text-sky-300 uppercase tracking-wider";
- bannerContainer.className = "mb-5 p-3 rounded-xl border border-sky-200 bg-sky-50 text-xs flex items-center justify-between";
+ bannerContainer.className = "hidden";
  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
  bannerBadge.textContent = typeof t === "function" ? t("role_enf_banner") : "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
  bannerDesc.textContent = typeof t === "function" ? t("role_enf_desc") : "Puedes registrar atenciones a pacientes y recetar medicinas con doble confirmación. La edición de catálogo y ajustes están restringidos.";
@@ -225,7 +225,7 @@ function aplicarPermisosRol() {
  } else { // AUDITOR
  iconEl.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>`;
  badgeEl.className = "text-[10px] font-bold text-slate-300 uppercase tracking-wider";
- bannerContainer.className = "mb-5 p-3 rounded-xl border border-slate-200 bg-slate-100 text-xs flex items-center justify-between";
+ bannerContainer.className = "hidden";
  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-900";
  bannerBadge.textContent = typeof t === "function" ? t("role_aud_banner") : "ROL: AUDITORÍA (SOLO CONSULTA)";
  bannerDesc.textContent = typeof t === "function" ? t("role_aud_desc") : "Acceso de solo lectura para supervisión de Kardex, bitácora de atenciones y descarga de balances.";
@@ -2137,12 +2137,12 @@ function aplicarTraducciones() {
  setText("lbl-btn-download-excel", t("btn_download_excel"));
 
  // Pestañas de Navegación
- setHtml("tab-btn-atencion", `<i data-lucide="stethoscope" class="w-4 h-4"></i> ${t("tab_atencion")}`);
- setHtml("tab-btn-inventario", `<i data-lucide="package" class="w-4 h-4"></i> ${t("tab_inventario")} <span id="badge-alertas" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>`);
- setHtml("tab-btn-pacientes", `<i data-lucide="users" class="w-4 h-4"></i> ${t("tab_pacientes")}`);
- setHtml("tab-btn-estadisticas", `<i data-lucide="bar-chart-3" class="w-4 h-4"></i> ${t("tab_estadisticas")}`);
- setHtml("tab-btn-historial", `<i data-lucide="history" class="w-4 h-4"></i> ${t("tab_historial")}`);
- setHtml("tab-btn-permisos", `<i data-lucide="shield-alert" class="w-4 h-4"></i> ${t("tab_permisos")}`);
+ setHtml("tab-btn-atencion", `<i data-lucide="stethoscope" class="w-3.5 h-3.5"></i> <span>${t("tab_atencion")}</span>`);
+ setHtml("tab-btn-inventario", `<i data-lucide="package" class="w-3.5 h-3.5"></i> <span>${t("tab_inventario")}</span> <span id="badge-alertas" class="hidden bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0</span>`);
+ setHtml("tab-btn-pacientes", `<i data-lucide="users" class="w-3.5 h-3.5"></i> <span>${t("tab_pacientes")}</span>`);
+ setHtml("tab-btn-estadisticas", `<i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i> <span>${t("tab_estadisticas")}</span>`);
+ setHtml("tab-btn-historial", `<i data-lucide="history" class="w-3.5 h-3.5"></i> <span>${t("tab_historial")}</span>`);
+ setHtml("tab-btn-permisos", `<i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> <span>${t("tab_permisos")}</span>`);
 
  // Botones de Acción de Inventario
  const btnNuevoProd = document.getElementById("btn-admin-nuevo-producto");
