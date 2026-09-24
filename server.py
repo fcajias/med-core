@@ -226,6 +226,9 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
         self.wfile.write(body)
 
@@ -319,10 +322,12 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
             elif path == "/api/pacientes":
                 q = params.get("q", [""])[0].strip().lower()
+                sort_order = params.get("sort", ["recent"])[0].strip().lower()
                 sql = """
                     SELECT p.id, p.cedula, p.nombres, p.apellidos, p.edad, p.celular, p.piso_area,
                            COUNT(CASE WHEN a.estado != 'ANULADA' THEN a.id END) as total_atenciones,
-                           MAX(CASE WHEN a.estado != 'ANULADA' THEN a.fecha END) as ultima_visita
+                           MAX(CASE WHEN a.estado != 'ANULADA' THEN a.fecha END) as ultima_visita,
+                           p.creado_en
                     FROM pacientes p
                     LEFT JOIN atenciones a ON p.id = a.paciente_id
                 """
@@ -330,7 +335,13 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 if q:
                     sql += " WHERE (lower(p.nombres) LIKE ? OR lower(p.apellidos) LIKE ? OR p.cedula LIKE ?)"
                     args.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
-                sql += " GROUP BY p.id ORDER BY p.nombres ASC, p.apellidos ASC"
+                
+                if sort_order == "alpha":
+                    sql += " GROUP BY p.id ORDER BY p.nombres ASC, p.apellidos ASC"
+                else:
+                    # Mostrar más recientes primero (última atención o ID más alto)
+                    sql += " GROUP BY p.id ORDER BY COALESCE(MAX(a.fecha), p.creado_en) DESC, p.id DESC"
+                
                 cur.execute(sql, args)
                 self.send_json([dict(r) for r in cur.fetchall()])
 
@@ -366,7 +377,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(pac_dict)
 
             elif path == "/api/atenciones":
-                lim = int(params.get("limit", [60])[0])
+                lim = int(params.get("limit", [150])[0])
                 cur.execute("""
                     SELECT a.id, a.fecha, p.nombres, p.apellidos, p.cedula, p.piso_area, 
                            a.diagnostico, a.observaciones,

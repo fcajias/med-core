@@ -1,3 +1,84 @@
+// ================================================================
+// CLIENTE API ANTI-CACHÉ EN TIEMPO REAL (TIMESTAMP + NO-STORE)
+// ================================================================
+let ordenPacientesActual = "recent";
+
+async function apiFetch(url, options = {}) {
+  const sep = url.includes("?") ? "&" : "?";
+  const noCacheUrl = `${url}${sep}_t=${Date.now()}`;
+  
+  const headers = {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    ...(options.headers || {})
+  };
+
+  return fetch(noCacheUrl, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
+}
+
+function cambiarOrdenPacientes(orden) {
+  ordenPacientesActual = orden;
+  const btnRec = document.getElementById("btn-orden-pac-recent");
+  const btnAlpha = document.getElementById("btn-orden-pac-alpha");
+  if (btnRec && btnAlpha) {
+    if (orden === "recent") {
+      btnRec.className = "px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1";
+      btnAlpha.className = "px-2.5 py-1.5 rounded-lg font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+    } else {
+      btnAlpha.className = "px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1";
+      btnRec.className = "px-2.5 py-1.5 rounded-lg font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+    }
+  }
+  cargarPacientes();
+}
+
+async function sincronizarTodoEnVivo(notify = false) {
+  const icon = document.getElementById("icon-sync-global");
+  if (icon) icon.classList.add("animate-spin");
+  try {
+    await Promise.all([
+      cargarMedicamentos(),
+      cargarPacientes(),
+      cargarHistorial(),
+      cargarEstadisticas(),
+      cargarSolicitudesPisos()
+    ]);
+    const hora = new Date().toLocaleTimeString('es-EC');
+    const txt = document.getElementById("txt-sync-global");
+    if (txt) txt.textContent = `Sincronizado ${hora}`;
+    if (notify) {
+      showToast("Datos Sincronizados", `Base de datos actualizada al instante (${hora}).`, "success");
+    }
+  } catch(e) {
+    console.warn("Error en sincronización en vivo:", e);
+  } finally {
+    if (icon) icon.classList.remove("animate-spin");
+  }
+}
+
+// Auto-sincronización reactiva al enfocar ventana o pestaña
+window.addEventListener("focus", () => {
+  sincronizarTodoEnVivo(false);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    sincronizarTodoEnVivo(false);
+  }
+});
+
+// Auto-sincronización periódica cada 25 segundos
+setInterval(() => {
+  if (!document.hidden) {
+    sincronizarTodoEnVivo(false);
+  }
+}, 25000);
+
 // Dispensario Médico FYDI - Frontend JavaScript con Control de Roles
 function escapeHtml(text) {
   if (text === null || text === undefined) return "";
@@ -1709,7 +1790,7 @@ async function guardarEdicionPaciente(e) {
 // ================================================================
 async function cargarEstadisticas() {
  try {
- const res = await fetch("/api/estadisticas");
+ const res = await apiFetch("/api/estadisticas");
  const st = await res.json();
 
  document.getElementById("stat-tot-atenciones").textContent = st.totales.atenciones;
@@ -1788,7 +1869,7 @@ async function cargarEstadisticas() {
 // ================================================================
 async function cargarHistorial() {
  try {
- const res = await fetch("/api/atenciones?limit=60");
+ const res = await apiFetch("/api/atenciones?limit=150");
  const atenciones = await res.json();
  atencionesCache = atenciones;
  const tbody = document.getElementById("tabla-historial-body");
@@ -2677,7 +2758,7 @@ async function cargarSolicitudesPisos(notify = false) {
  if (icon) icon.classList.add("animate-spin");
 
  try {
- const res = await fetch("/api/solicitudes?limit=100");
+ const res = await apiFetch("/api/solicitudes?limit=100");
  if (!res.ok) return;
  solicitudesCache = await res.json();
  renderSolicitudesPisos();
