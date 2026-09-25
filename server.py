@@ -5,8 +5,16 @@ import json
 import os
 import urllib.parse
 import hashlib
+import threading
+import signal
+import sys
 from datetime import datetime
 from excel_generator import generar_excel_en_memoria
+
+class DispensarioServer(http.server.ThreadingHTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
 
 PORT = int(os.environ.get("PORT", 5000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -169,7 +177,12 @@ class DualConnection:
 
 def get_db():
     turso = get_turso_client()
-    local_conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    local_conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=15.0)
+    try:
+        local_conn.execute("PRAGMA journal_mode=WAL;")
+        local_conn.execute("PRAGMA busy_timeout=5000;")
+    except Exception:
+        pass
     local_conn.row_factory = sqlite3.Row
     return DualConnection(turso, local_conn)
 
@@ -199,6 +212,14 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         url = urllib.parse.urlparse(self.path)
         path = url.path
         params = urllib.parse.parse_qs(url.query)
+
+        if path in ("/health", "/ping", "/api/ping", "/api/health"):
+            self.send_json({
+                "status": "ok",
+                "service": "dispensario-fydi",
+                "timestamp": datetime.now().isoformat()
+            })
+            return
 
         if path.startswith("/api/"):
             self.handle_api_get(path, params)
@@ -1654,10 +1675,29 @@ def sync_databases_on_startup():
 def run_server():
     os.makedirs(PUBLIC_DIR, exist_ok=True)
     init_system_tables()
-    sync_databases_on_startup()
+    
+    # Sincronización en segundo plano para abrir el puerto de red en milisegundos
+    sync_thread = threading.Thread(target=sync_databases_on_startup, daemon=True, name="DB-Sync-Worker")
+    sync_thread.start()
+
     server_address = ('', PORT)
-    httpd = socketserver.TCPServer(server_address, DispensarioHandler)
-    print(f"Dispensario FYDI Server running on http://localhost:{PORT}")
+    httpd = DispensarioServer(server_address, DispensarioHandler)
+    print(f"Dispensario FYDI Server running on http://localhost:{PORT} (Multi-threaded)")
+
+    def handle_signal(signum, frame):
+        print(f"\nSignal {signum} received, shutting down gracefully...")
+        try:
+            httpd.server_close()
+        except Exception:
+            pass
+        sys.exit(0)
+
+    try:
+        signal.signal(signal.SIGTERM, handle_signal)
+        signal.signal(signal.SIGINT, handle_signal)
+    except Exception:
+        pass
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -148,7 +148,21 @@ document.addEventListener("DOMContentLoaded", () => {
  if (window.lucide) {
  lucide.createIcons();
  }
+
+ // Keep-Alive para evitar suspensión por inactividad en Render Cloud
+ iniciarHeartbeatKeepAlive();
 });
+
+// Keep-Alive: envía un ping ligero cada 3 minutos para mantener el servidor despierto
+function iniciarHeartbeatKeepAlive() {
+ setInterval(async () => {
+  try {
+   await fetch(`/api/ping?_t=${Date.now()}`, { cache: "no-store" });
+  } catch (_) {
+   // Silencioso
+  }
+ }, 3 * 60 * 1000);
+}
 
 // Reloj en vivo
 function initReloj() {
