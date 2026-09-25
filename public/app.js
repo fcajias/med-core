@@ -1233,6 +1233,17 @@ function prepararConfirmacionAtencion(e) {
  const presMed = med ? (med.presentacion || "") : "";
  const stockActual = med ? med.stock_actual : 0;
 
+ // Validación preventiva de caducidad y stock en cliente
+ if (med && med.estado_vencimiento === "VENCIDO") {
+  showToast("Medicamento Caducado", `El producto '${nombreMed}' (${presMed}) se encuentra caducado y no puede ser dispensado por norma sanitaria.`, "error");
+  return;
+ }
+
+ if (cant > stockActual) {
+  showToast("Stock Insuficiente", `Solo hay ${stockActual} unidades disponibles en bodega de '${nombreMed}'.`, "warning");
+  return;
+ }
+
  medItems.push({
  medicamento_id: mid,
  cantidad: cant
@@ -1280,6 +1291,8 @@ function prepararConfirmacionAtencion(e) {
 
 function cerrarModalConfirmacion() {
  document.getElementById("modal-confirmar-despacho").classList.add("hidden");
+ const errBox = document.getElementById("confirm-despacho-error");
+ if (errBox) errBox.classList.add("hidden");
  atencionPendiente = null;
 }
 
@@ -1287,8 +1300,13 @@ async function ejecutarGuardadoAtencion() {
  if (!atencionPendiente) return;
 
  const btn = document.getElementById("btn-confirmar-definitivo");
+ const errBox = document.getElementById("confirm-despacho-error");
+ const errTxt = document.getElementById("confirm-despacho-error-msg");
+ if (errBox) errBox.classList.add("hidden");
+
  btn.disabled = true;
  btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Descontando de bodega...`;
+ if (window.lucide) lucide.createIcons();
 
  try {
  const res = await fetch("/api/atenciones", {
@@ -1299,7 +1317,13 @@ async function ejecutarGuardadoAtencion() {
 
  const data = await res.json();
  if (!res.ok) {
- showToast("Error en Despacho", data.error || "No se pudo registrar la atención.", "error");
+  const msg = data.error || "No se pudo registrar la atención.";
+  if (errBox && errTxt) {
+   errBox.classList.remove("hidden");
+   errTxt.textContent = msg;
+  }
+  showToast("Error en Despacho", msg, "error");
+  if (window.lucide) lucide.createIcons();
  } else {
  showToast("¡Atención y Despacho Registrados!", `${data.mensaje} Paciente: ${data.paciente}.`, "success");
  
@@ -1332,7 +1356,13 @@ async function ejecutarGuardadoAtencion() {
  cargarHistorial();
  }
  } catch (err) {
- showToast("Error de Conexión", err.message, "error");
+  const errMsg = err.message || "Error de conexión con el servidor.";
+  if (errBox && errTxt) {
+   errBox.classList.remove("hidden");
+   errTxt.textContent = errMsg;
+  }
+  showToast("Error de Conexión", errMsg, "error");
+  if (window.lucide) lucide.createIcons();
  } finally {
  btn.disabled = false;
  btn.innerHTML = `Confirmar y Despachar`;

@@ -263,7 +263,8 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 cat = params.get("cat", [""])[0].strip()
                 sql = """
                     SELECT id, codigo, nombre, presentacion, concentracion, categoria, 
-                           marcas_comerciales, stock_actual, stock_minimo, unidad_medida, activo
+                           marcas_comerciales, stock_actual, stock_minimo, unidad_medida, activo,
+                           lote, fecha_vencimiento
                     FROM medicamentos WHERE activo = 1
                 """
                 args = []
