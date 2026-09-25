@@ -182,6 +182,8 @@ function aplicarPermisosRol() {
  const bannerContainer = document.getElementById("role-info-banner");
 
  const btnNuevoProd = document.getElementById("btn-admin-nuevo-producto");
+ const btnIngresoBodega = document.getElementById("btn-ingreso-bodega");
+ const btnDownloadExcel = document.getElementById("btn-download-excel");
  const readonlyNotice = document.getElementById("atencion-readonly-notice");
  const formAtencion = document.getElementById("form-atencion");
  const tabPermisosBtn = document.getElementById("tab-btn-permisos");
@@ -203,38 +205,61 @@ function aplicarPermisosRol() {
  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-purple-200 text-purple-900";
  bannerBadge.textContent = typeof t === "function" ? t("role_admin_banner") : "ROL: ADMINISTRADOR / SUPERVISOR";
  bannerDesc.textContent = typeof t === "function" ? t("role_admin_desc") : "Tienes control total del dispensario: puedes editar el catálogo, ajustar stock físico, anular consultas y configurar permisos.";
- if (btnNuevoProd) btnNuevoProd.classList.remove("hidden");
- if (readonlyNotice) readonlyNotice.classList.add("hidden");
- if (tabPermisosBtn) tabPermisosBtn.classList.remove("hidden");
- if (formAtencion) {
- formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = false);
- }
  } else if (currentUser.rol === "ENFERMERIA") {
- iconEl.innerHTML = `<i data-lucide="stethoscope" class="w-3.5 h-3.5 text-sky-300"></i>`;
- badgeEl.className = "text-[10px] font-bold text-sky-300 uppercase tracking-wider";
- bannerContainer.className = "hidden";
- bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
- bannerBadge.textContent = typeof t === "function" ? t("role_enf_banner") : "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
- bannerDesc.textContent = typeof t === "function" ? t("role_enf_desc") : "Puedes registrar atenciones a pacientes y recetar medicinas con doble confirmación. La edición de catálogo y ajustes están restringidos.";
- if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
- if (readonlyNotice) readonlyNotice.classList.add("hidden");
- if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
- if (formAtencion) {
- formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = false);
- }
+  iconEl.innerHTML = `<i data-lucide="stethoscope" class="w-3.5 h-3.5 text-sky-300"></i>`;
+  badgeEl.className = "text-[10px] font-bold text-sky-300 uppercase tracking-wider";
+  bannerContainer.className = "hidden";
+  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
+  bannerBadge.textContent = typeof t === "function" ? t("role_enf_banner") : "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
+  bannerDesc.textContent = typeof t === "function" ? t("role_enf_desc") : "Puedes registrar atenciones a pacientes y recetar medicinas según los permisos asignados.";
  } else { // AUDITOR
- iconEl.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>`;
- badgeEl.className = "text-[10px] font-bold text-slate-300 uppercase tracking-wider";
- bannerContainer.className = "hidden";
- bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-900";
- bannerBadge.textContent = typeof t === "function" ? t("role_aud_banner") : "ROL: AUDITORÍA (SOLO CONSULTA)";
- bannerDesc.textContent = typeof t === "function" ? t("role_aud_desc") : "Acceso de solo lectura para supervisión de Kardex, bitácora de atenciones y descarga de balances.";
- if (btnNuevoProd) btnNuevoProd.classList.add("hidden");
- if (readonlyNotice) readonlyNotice.classList.remove("hidden");
- if (tabPermisosBtn) tabPermisosBtn.classList.add("hidden");
- if (formAtencion) {
- formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = true);
+  iconEl.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>`;
+  badgeEl.className = "text-[10px] font-bold text-slate-300 uppercase tracking-wider";
+  bannerContainer.className = "hidden";
+  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-900";
+  bannerBadge.textContent = typeof t === "function" ? t("role_aud_banner") : "ROL: AUDITORÍA (SOLO CONSULTA)";
+  bannerDesc.textContent = typeof t === "function" ? t("role_aud_desc") : "Acceso de supervisión de Kardex, bitácora de atenciones y descarga de balances según permisos.";
  }
+
+ // --- CONTROLES DINÁMICOS BASADOS EN MATRIZ DE PERMISOS ---
+ // 1. Crear medicamentos en catálogo (+ Registrar Nuevo Medicamento)
+ const puedeCrearMed = tienePermiso("gestionar_medicamentos");
+ if (btnNuevoProd) {
+  if (puedeCrearMed) btnNuevoProd.classList.remove("hidden");
+  else btnNuevoProd.classList.add("hidden");
+ }
+
+ // 2. Ingreso a bodega (+ Entrada de Mercadería)
+ const puedeIngresarBodega = tienePermiso("registrar_entradas");
+ if (btnIngresoBodega) {
+  if (puedeIngresarBodega) btnIngresoBodega.classList.remove("hidden");
+  else btnIngresoBodega.classList.add("hidden");
+ }
+
+ // 3. Descarga de balances en Excel Maestro
+ const puedeDescargarExcel = tienePermiso("descargar_excel");
+ if (btnDownloadExcel) {
+  if (puedeDescargarExcel) btnDownloadExcel.classList.remove("hidden");
+  else btnDownloadExcel.classList.add("hidden");
+ }
+
+ // 4. Registro y atención de pacientes
+ const puedeAtender = tienePermiso("registrar_atenciones");
+ if (readonlyNotice) {
+  if (puedeAtender) readonlyNotice.classList.add("hidden");
+  else readonlyNotice.classList.remove("hidden");
+ }
+ if (formAtencion) {
+  formAtencion.querySelectorAll("input, select, textarea, button").forEach(el => {
+   el.disabled = !puedeAtender;
+  });
+ }
+
+ // 5. Configurar matriz de permisos de roles
+ const puedePermisos = currentUser.rol === "ADMINISTRADOR" || tienePermiso("gestionar_permisos");
+ if (tabPermisosBtn) {
+  if (puedePermisos) tabPermisosBtn.classList.remove("hidden");
+  else tabPermisosBtn.classList.add("hidden");
  }
 
  if (window.lucide) lucide.createIcons();
@@ -245,7 +270,7 @@ function tienePermiso(accion) {
  if (currentUser.rol === "ADMINISTRADOR") return true;
  const p = permisosCache.find(x => x.rol === currentUser.rol);
  if (!p) return false;
- return p[accion] === 1;
+ return p[accion] === 1 || p[accion] === true || p[accion] === "1";
 }
 
 async function sincronizarPermisos() {
@@ -522,7 +547,8 @@ function renderInventarioTabla(lista) {
  let caducados = 0;
  let sinFecha = 0;
 
- const esAdmin = currentUser && currentUser.rol === "ADMINISTRADOR";
+ const puedeEditar = currentUser && (currentUser.rol === "ADMINISTRADOR" || tienePermiso("gestionar_medicamentos"));
+ const puedeAjustar = currentUser && (currentUser.rol === "ADMINISTRADOR" || tienePermiso("ajustar_stock"));
 
  tbody.innerHTML = lista.map(m => {
     totUnidades += (m.stock_actual || 0);
@@ -635,7 +661,7 @@ function renderInventarioTabla(lista) {
       </button>
     `;
 
-    if (esAdmin) {
+    if (puedeEditar) {
       botonesAcciones += `
         <button type="button" onclick="abrirModalEditarMed(${m.id})"
           class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 transition shadow-2xs group"
@@ -643,6 +669,11 @@ function renderInventarioTabla(lista) {
           aria-label="Editar producto ${m.nombre}">
           <i data-lucide="pencil" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:scale-110"></i>
         </button>
+      `;
+    }
+
+    if (puedeAjustar) {
+      botonesAcciones += `
         <button type="button" onclick="abrirModalAjusteStock(${m.id})"
           class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-amber-50 hover:bg-amber-600 text-amber-700 hover:text-white border border-amber-200 hover:border-amber-600 transition shadow-2xs group"
           title="AJUSTE FÍSICO: Corregir cantidad real existente en bodega por conteo físico"
@@ -787,7 +818,7 @@ function renderAlertasPanel(lista) {
 // 2. EDICIÓN Y AJUSTES DE STOCK (ADMINISTRADOR)
 // ================================================================
 function abrirModalNuevoMedicamento() {
- if (currentUser.rol !== "ADMINISTRADOR") {
+ if (!tienePermiso("gestionar_medicamentos")) {
  showToast("Permiso Denegado", typeof t === "function" ? t("role_admin_banner") : "Solo el Administrador puede agregar nuevos productos.", "error");
  return;
  }
@@ -826,7 +857,7 @@ function abrirModalNuevoMedicamento() {
 
 function abrirModalEditarMed(medId) {
  try {
- if (currentUser.rol !== "ADMINISTRADOR") {
+ if (!tienePermiso("gestionar_medicamentos")) {
  showToast("Permiso Denegado", "Solo el Administrador puede modificar los datos del medicamento.", "error");
  return;
  }
@@ -937,7 +968,7 @@ async function guardarMedicamentoAdmin(e) {
 
 // Modal Ajuste de Stock
 function abrirModalAjusteStock(medId) {
- if (currentUser.rol !== "ADMINISTRADOR") {
+ if (!tienePermiso("ajustar_stock")) {
  showToast("Permiso Denegado", "Solo el Administrador puede realizar ajustes manuales de stock.", "error");
  return;
  }
@@ -1173,7 +1204,7 @@ function seleccionarSugerenciaPaciente(p) {
 function prepararConfirmacionAtencion(e) {
  e.preventDefault();
 
- if (currentUser.rol === "AUDITOR") {
+ if (!tienePermiso("registrar_atenciones")) {
  showToast("Rol de Auditoría", "No tienes permisos para registrar atenciones.", "warning");
  return;
  }
@@ -1311,16 +1342,12 @@ async function ejecutarGuardadoAtencion() {
 
 // ANULACIÓN DE ATENCIÓN Y REVERSIÓN DE STOCK
 function abrirModalAnulacion(atencionId, pacienteNombreOpt, medsSummaryOpt) {
- if (currentUser.rol === "AUDITOR") {
- showToast("Acceso Denegado", "El rol de Auditoría no puede anular atenciones.", "error");
- return;
+ if (!tienePermiso("anular_atenciones")) {
+  showToast("Acceso Denegado", "Tu rol no tiene autorización para anular atenciones médicas.", "error");
+  return;
  }
 
- const puede = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
- if (!puede) {
- showToast("Acceso Denegado", "Tu rol no tiene autorización para anular atenciones médicas. Solicítalo al Administrador.", "error");
- return;
- }
+
 
  // Buscar en atencionesCache o pacienteHistorialCache
  let at = atencionesCache.find(a => a.id === atencionId);
@@ -1432,7 +1459,7 @@ function actualizarSelectorEntradaModal(lista) {
 }
 
 function abrirModalEntrada() {
- if (currentUser.rol === "AUDITOR") {
+ if (!tienePermiso("registrar_entradas")) {
  showToast("Rol de Auditoría", "No tienes permisos para registrar entradas.", "warning");
  return;
  }
@@ -1688,9 +1715,9 @@ function cerrarModalExpediente() {
 // GESTIÓN DE PACIENTES: ALTA INDEPENDIENTE Y EDICIÓN DE DATOS
 // ----------------------------------------------------------------
 function abrirModalNuevoPaciente() {
- if (currentUser && currentUser.rol === "AUDITOR") {
- showToast("Acceso Denegado", "El rol de Auditoría no puede registrar pacientes.", "error");
- return;
+ if (!tienePermiso("registrar_atenciones")) {
+  showToast("Acceso Denegado", "No tienes permisos para registrar pacientes.", "error");
+  return;
  }
  document.getElementById("nuevo-pac-cedula").value = "";
  document.getElementById("nuevo-pac-nombres").value = "";
@@ -1760,9 +1787,9 @@ async function guardarNuevoPaciente(e) {
 }
 
 function abrirModalEditarPaciente(pid) {
- if (currentUser && currentUser.rol === "AUDITOR") {
- showToast("Acceso Denegado", "El rol de Auditoría no puede editar pacientes.", "error");
- return;
+ if (!tienePermiso("registrar_atenciones")) {
+  showToast("Acceso Denegado", "No tienes permisos para editar pacientes.", "error");
+  return;
  }
 
  const pac = pacientesCache.find(p => p.id === pid);
@@ -2022,7 +2049,7 @@ const FUNCIONES_SISTEMA = [
 ];
 
 async function cargarMatrizPermisos() {
- if (currentUser.rol !== "ADMINISTRADOR") {
+ if (currentUser.rol !== "ADMINISTRADOR" && !tienePermiso("gestionar_permisos")) {
  showToast("Permiso Denegado", "Solo el Administrador puede ver o modificar la matriz de permisos.", "error");
  return;
  }
@@ -2075,7 +2102,7 @@ async function cargarMatrizPermisos() {
 }
 
 async function guardarMatrizPermisos() {
- if (currentUser.rol !== "ADMINISTRADOR") {
+ if (currentUser.rol !== "ADMINISTRADOR" && !tienePermiso("gestionar_permisos")) {
  showToast("Permiso Denegado", "Solo el Administrador puede guardar la matriz de permisos.", "error");
  return;
  }
@@ -2108,8 +2135,13 @@ async function guardarMatrizPermisos() {
  if (!res.ok) {
  showToast("Error", data.error || "No se pudo actualizar los permisos.", "error");
  } else {
- showToast("Permisos Actualizados", "La matriz de accesos y exclusiones se guardó correctamente.", "success");
- aplicarPermisosRol();
+  permisosCache = matrix;
+  await sincronizarPermisos();
+  aplicarPermisosRol();
+  if (medicamentosCache && medicamentosCache.length > 0) {
+   renderInventarioTabla(medicamentosCache);
+  }
+  showToast("Permisos Actualizados", "La matriz de accesos y exclusiones se guardó correctamente.", "success");
  }
  } catch (err) {
  showToast("Error de Conexión", err.message, "error");

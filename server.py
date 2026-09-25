@@ -177,10 +177,12 @@ def hash_pw(pw):
     return hashlib.sha256(pw.encode('utf-8')).hexdigest()
 
 def tiene_permiso(cur, rol, accion):
+    if rol == "ADMINISTRADOR":
+        return True
     cur.execute("SELECT * FROM permisos_roles WHERE rol = ?", (rol,))
     row = cur.fetchone()
     if not row:
-        return rol == "ADMINISTRADOR"
+        return False
     return bool(row[accion])
 
 class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
@@ -876,8 +878,8 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             # ---------------------------------------------------------
             elif path == "/api/pacientes":
                 user_role = (data.get("user_role") or data.get("rol") or "ENFERMERIA").upper()
-                if user_role == "AUDITOR":
-                    self.send_json({"error": "El rol AUDITOR no tiene permisos para crear pacientes."}, 403)
+                if not tiene_permiso(cur, user_role, "registrar_atenciones"):
+                    self.send_json({"error": f"El rol '{user_role}' no tiene permisos para crear pacientes."}, 403)
                     return
 
                 cedula = (data.get("cedula") or "").strip()
@@ -916,8 +918,8 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             # ---------------------------------------------------------
             elif path == "/api/pacientes/editar":
                 user_role = (data.get("user_role") or data.get("rol") or "ENFERMERIA").upper()
-                if user_role == "AUDITOR":
-                    self.send_json({"error": "El rol AUDITOR no tiene permisos para editar pacientes."}, 403)
+                if not tiene_permiso(cur, user_role, "registrar_atenciones"):
+                    self.send_json({"error": f"El rol '{user_role}' no tiene permisos para editar pacientes."}, 403)
                     return
 
                 pid = data.get("id")
@@ -1173,33 +1175,38 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             # ---------------------------------------------------------
             elif path == "/api/permisos":
                 user_role = data.get("user_role", "").upper()
-                if user_role != "ADMINISTRADOR":
-                    self.send_json({"error": "Solo el Administrador puede configurar la matriz de permisos."}, 403)
+                if not (user_role == "ADMINISTRADOR" or tiene_permiso(cur, user_role, "gestionar_permisos")):
+                    self.send_json({"error": "Solo usuarios autorizados pueden configurar la matriz de permisos."}, 403)
                     return
 
                 permisos = data.get("permisos", [])
                 for p in permisos:
-                    rol = p.get("rol")
+                    rol = (p.get("rol") or "").strip().upper()
                     if rol:
+                        # Administrador siempre mantiene gestionar_permisos=1 por seguridad
+                        gp = 1 if rol == "ADMINISTRADOR" else int(p.get("gestionar_permisos", 0))
                         cur.execute("""
-                            UPDATE permisos_roles SET
-                                registrar_atenciones = ?,
-                                anular_atenciones = ?,
-                                registrar_entradas = ?,
-                                ajustar_stock = ?,
-                                gestionar_medicamentos = ?,
-                                gestionar_permisos = ?,
-                                descargar_excel = ?
-                            WHERE rol = ?
+                            INSERT INTO permisos_roles (
+                                rol, registrar_atenciones, anular_atenciones, registrar_entradas,
+                                ajustar_stock, gestionar_medicamentos, gestionar_permisos, descargar_excel
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(rol) DO UPDATE SET
+                                registrar_atenciones = excluded.registrar_atenciones,
+                                anular_atenciones = excluded.anular_atenciones,
+                                registrar_entradas = excluded.registrar_entradas,
+                                ajustar_stock = excluded.ajustar_stock,
+                                gestionar_medicamentos = excluded.gestionar_medicamentos,
+                                gestionar_permisos = excluded.gestionar_permisos,
+                                descargar_excel = excluded.descargar_excel
                         """, (
+                            rol,
                             int(p.get("registrar_atenciones", 0)),
                             int(p.get("anular_atenciones", 0)),
                             int(p.get("registrar_entradas", 0)),
                             int(p.get("ajustar_stock", 0)),
                             int(p.get("gestionar_medicamentos", 0)),
-                            int(p.get("gestionar_permisos", 0)),
-                            int(p.get("descargar_excel", 1)),
-                            rol
+                            gp,
+                            int(p.get("descargar_excel", 1))
                         ))
                 conn.commit()
                 self.send_json({"success": True, "mensaje": "Matriz de permisos actualizada exitosamente."})
@@ -1608,6 +1615,34 @@ def sync_databases_on_startup():
                 local_names.add((nom, ape))
             except Exception as ex:
                 print(f"[SYNC SQLITE WARNING] {ex}")
+
+        # Sincronizar permisos_roles entre Turso y SQLite
+        try:
+            res_perms_t = turso.execute("SELECT rol, registrar_atenciones, anular_atenciones, registrar_entradas, ajustar_stock, gestionar_medicamentos, gestionar_permisos, descargar_excel FROM permisos_roles")
+            turso_perms = res_perms_t.rows
+            if turso_perms:
+                for tp in turso_perms:
+                    lcur.execute("""
+                        INSERT INTO permisos_roles (rol, registrar_atenciones, anular_atenciones, registrar_entradas, ajustar_stock, gestionar_medicamentos, gestionar_permisos, descargar_excel)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(rol) DO UPDATE SET
+                            registrar_atenciones = excluded.registrar_atenciones,
+                            anular_atenciones = excluded.anular_atenciones,
+                            registrar_entradas = excluded.registrar_entradas,
+                            ajustar_stock = excluded.ajustar_stock,
+                            gestionar_medicamentos = excluded.gestionar_medicamentos,
+                            gestionar_permisos = excluded.gestionar_permisos,
+                            descargar_excel = excluded.descargar_excel
+                    """, list(tp))
+            else:
+                lcur.execute("SELECT rol, registrar_atenciones, anular_atenciones, registrar_entradas, ajustar_stock, gestionar_medicamentos, gestionar_permisos, descargar_excel FROM permisos_roles")
+                for lp in lcur.fetchall():
+                    turso.execute("""
+                        INSERT INTO permisos_roles (rol, registrar_atenciones, anular_atenciones, registrar_entradas, ajustar_stock, gestionar_medicamentos, gestionar_permisos, descargar_excel)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, [lp[k] for k in ["rol", "registrar_atenciones", "anular_atenciones", "registrar_entradas", "ajustar_stock", "gestionar_medicamentos", "gestionar_permisos", "descargar_excel"]])
+        except Exception as e_perm:
+            print(f"[SYNC PERMISOS WARNING] {e_perm}")
 
         local_conn.commit()
         local_conn.close()
