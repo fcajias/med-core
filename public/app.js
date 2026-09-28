@@ -1,3 +1,4 @@
+
 // ================================================================
 // CLIENTE API ANTI-CACHÉ EN TIEMPO REAL (TIMESTAMP + NO-STORE)
 // ================================================================
@@ -23,18 +24,33 @@ async function apiFetch(url, options = {}) {
 
 function cambiarOrdenPacientes(orden) {
   ordenPacientesActual = orden;
-  const btnRec = document.getElementById("btn-orden-pac-recent");
-  const btnAlpha = document.getElementById("btn-orden-pac-alpha");
-  if (btnRec && btnAlpha) {
-    if (orden === "recent") {
-      btnRec.className = "px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1";
-      btnAlpha.className = "px-2.5 py-1.5 rounded-lg font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+  const btns = {
+    recent: document.getElementById("btn-orden-pac-recent"),
+    oldest: document.getElementById("btn-orden-pac-oldest"),
+    alpha: document.getElementById("btn-orden-pac-alpha"),
+    alphadesc: document.getElementById("btn-orden-pac-alphadesc")
+  };
+
+  Object.entries(btns).forEach(([k, btn]) => {
+    if (!btn) return;
+    if (k === orden) {
+      btn.className = "px-2 py-1 rounded font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1 border border-slate-200";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.className = icon.className.replace("text-slate-400", "text-brand-600");
+        if (!icon.className.includes("text-brand-600")) icon.classList.add("text-brand-600");
+      }
     } else {
-      btnAlpha.className = "px-2.5 py-1.5 rounded-lg font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1";
-      btnRec.className = "px-2.5 py-1.5 rounded-lg font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+      btn.className = "px-2 py-1 rounded font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.remove("text-brand-600");
+        if (!icon.className.includes("text-slate-400")) icon.classList.add("text-slate-400");
+      }
     }
-  }
-  cargarPacientes();
+  });
+
+  actualizarVistaPacientes();
 }
 
 async function sincronizarTodoEnVivo(notify = false) {
@@ -1619,61 +1635,105 @@ function cerrarModalKardex() {
 // ================================================================
 // 6. EXPEDIENTE DE PACIENTES
 // ================================================================
+function getPacientesFiltradosYOrdenados() {
+  let lista = [...pacientesCache];
+  const q = (document.getElementById("filtro-pac-busqueda")?.value || "").toLowerCase().trim();
+  if (q) {
+    lista = lista.filter(p => {
+      const nom = (p.nombres || "").toLowerCase();
+      const ape = (p.apellidos || "").toLowerCase();
+      const pacCompleto = `${nom} ${ape}`;
+      const ced = (p.cedula || "").toLowerCase();
+      const area = (p.piso_area || "").toLowerCase();
+      return nom.includes(q) || ape.includes(q) || pacCompleto.includes(q) || ced.includes(q) || area.includes(q);
+    });
+  }
+
+  if (ordenPacientesActual === "alpha") {
+    lista.sort((a, b) => `${a.nombres} ${a.apellidos}`.localeCompare(`${b.nombres} ${b.apellidos}`));
+  } else if (ordenPacientesActual === "alphadesc") {
+    lista.sort((a, b) => `${b.nombres} ${b.apellidos}`.localeCompare(`${a.nombres} ${a.apellidos}`));
+  } else if (ordenPacientesActual === "oldest") {
+    // Más antiguos primero (ID menor o fecha de creación)
+    lista.sort((a, b) => (a.id || 0) - (b.id || 0));
+  } else {
+    // Recientes primero: por última visita o por ID descendente
+    lista.sort((a, b) => {
+      if (a.ultima_visita && b.ultima_visita && a.ultima_visita !== b.ultima_visita) {
+        return b.ultima_visita.localeCompare(a.ultima_visita);
+      }
+      return (b.id || 0) - (a.id || 0);
+    });
+  }
+
+  return lista;
+}
+
+function actualizarVistaPacientes() {
+  const filtrados = getPacientesFiltradosYOrdenados();
+  renderPacientesTabla(filtrados);
+}
+
 async function cargarPacientes() {
- try {
- const res = await fetch("/api/pacientes");
- pacientesCache = await res.json();
- renderPacientesTabla(pacientesCache);
- } catch (err) {
- console.error("Error al cargar pacientes:", err);
- }
+  try {
+    const res = await fetch("/api/pacientes");
+    pacientesCache = await res.json();
+    actualizarVistaPacientes();
+  } catch (err) {
+    console.error("Error al cargar pacientes:", err);
+  }
 }
 
 function renderPacientesTabla(lista) {
- const tbody = document.getElementById("tabla-pacientes-body");
- if (!tbody) return;
+  const tbody = document.getElementById("tabla-pacientes-body");
+  if (!tbody) return;
 
- if (lista.length === 0) {
- tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No se encontraron pacientes.</td></tr>`;
- return;
- }
+  if (lista.length === 0) {
+    const q = (document.getElementById("filtro-pac-busqueda")?.value || "").trim();
+    if (q) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">
+        <div class="flex flex-col items-center gap-1">
+          <i data-lucide="search-x" class="w-7 h-7 text-slate-300 mb-1"></i>
+          <span class="font-semibold text-slate-600">No se encontró ningún paciente que coincida con "${q}"</span>
+          <span class="text-[11px] text-slate-400">Verifica el nombre o número de cédula.</span>
+        </div>
+      </td></tr>`;
+    } else {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No se encontraron pacientes registrados.</td></tr>`;
+    }
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
 
- tbody.innerHTML = lista.map(p => `
- <tr class="hover:bg-slate-50/80 transition">
- <td class="py-2.5 px-4 font-mono font-medium text-slate-700">${p.cedula || '<span class="text-slate-300">S/C</span>'}</td>
- <td class="py-2.5 px-4 font-bold text-slate-800">${p.nombres} ${p.apellidos}</td>
- <td class="py-2.5 px-4 text-center text-slate-600">${p.edad || '-'}</td>
- <td class="py-2.5 px-4 text-slate-600">${p.celular || '-'}</td>
- <td class="py-2.5 px-4 text-slate-600">${p.piso_area || '-'}</td>
- <td class="py-2.5 px-4 text-center">
- <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[11px]">${p.total_atenciones} visitas</span>
- </td>
- <td class="py-2.5 px-4 text-center font-mono text-slate-500">${p.ultima_visita || '-'}</td>
- <td class="py-2.5 px-4 text-center whitespace-nowrap">
- <div class="inline-flex items-center gap-1.5">
- <button onclick="abrirModalExpediente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition" title="Ver Historial Clínico">
- <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_ver_expediente") : "Historial"}
- </button>
- <button onclick="abrirModalEditarPaciente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition" title="Editar Datos del Paciente">
- <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_editar_paciente") : "Editar"}
- </button>
- </div>
- </td>
- </tr>
- `).join("");
+  tbody.innerHTML = lista.map(p => `
+    <tr class="hover:bg-slate-50/80 transition">
+      <td class="py-2.5 px-4 font-mono font-medium text-slate-700">${p.cedula || '<span class="text-slate-300">S/C</span>'}</td>
+      <td class="py-2.5 px-4 font-bold text-slate-800">${p.nombres} ${p.apellidos}</td>
+      <td class="py-2.5 px-4 text-center text-slate-600">${p.edad || '-'}</td>
+      <td class="py-2.5 px-4 text-slate-600">${p.celular || '-'}</td>
+      <td class="py-2.5 px-4 text-slate-600">${p.piso_area || '-'}</td>
+      <td class="py-2.5 px-4 text-center">
+        <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[11px]">${p.total_atenciones} visitas</span>
+      </td>
+      <td class="py-2.5 px-4 text-center font-mono text-slate-500">${p.ultima_visita || '-'}</td>
+      <td class="py-2.5 px-4 text-center whitespace-nowrap">
+        <div class="inline-flex items-center gap-1.5">
+          <button onclick="abrirModalExpediente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition" title="Ver Historial Clínico">
+            <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_ver_expediente") : "Historial"}
+          </button>
+          <button onclick="abrirModalEditarPaciente(${p.id})" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition" title="Editar Datos del Paciente">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> ${typeof t === "function" ? t("btn_editar_paciente") : "Editar"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
 
- if (window.lucide) lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 function buscarPacientes(texto) {
- const q = texto.toLowerCase().trim();
- const filtrados = pacientesCache.filter(p => {
- return (p.cedula && p.cedula.includes(q)) ||
- p.nombres.toLowerCase().includes(q) ||
- p.apellidos.toLowerCase().includes(q) ||
- (p.piso_area && p.piso_area.toLowerCase().includes(q));
- });
- renderPacientesTabla(filtrados);
+  actualizarVistaPacientes();
 }
 
 async function abrirModalExpediente(pid) {
@@ -1992,91 +2052,241 @@ async function cargarEstadisticas() {
 }
 
 // ================================================================
-// 8. HISTORIAL GENERAL (CON TRAZABILIDAD DE USUARIO Y ANULACIÓN)
+// 8. HISTORIAL GENERAL (CON BÚSQUEDA EN VIVO, ORDENAMIENTO Y TRAZABILIDAD)
 // ================================================================
+let ordenHistorialActual = "recent";
+let busquedaHistorialTexto = "";
+
+function getHistorialFiltradoYOrdenado() {
+  let lista = [...atencionesCache];
+  const q = busquedaHistorialTexto.toLowerCase().trim();
+  if (q) {
+    lista = lista.filter(a => {
+      const nom = (a.nombres || "").toLowerCase();
+      const ape = (a.apellidos || "").toLowerCase();
+      const pacCompleto = `${nom} ${ape}`;
+      const ced = (a.cedula || "").toLowerCase();
+      const diag = (a.diagnostico || "").toLowerCase();
+      const obs = (a.observaciones || "").toLowerCase();
+      const area = (a.piso_area || "").toLowerCase();
+      const user = (a.usuario_registro || "").toLowerCase();
+      const idStr = `#${a.id}`;
+      const meds = (a.medicamentos || []).map(m => `${m.nombre || ""} ${m.presentacion || ""}`).join(" ").toLowerCase();
+
+      return pacCompleto.includes(q) || 
+             ced.includes(q) || 
+             diag.includes(q) || 
+             obs.includes(q) || 
+             area.includes(q) || 
+             user.includes(q) || 
+             idStr.includes(q) || 
+             meds.includes(q);
+    });
+  }
+
+  if (ordenHistorialActual === "oldest") {
+    // Del más antiguo al más reciente (cronológico ascendente)
+    lista.sort((a, b) => {
+      if (a.fecha && b.fecha && a.fecha !== b.fecha) {
+        return a.fecha.localeCompare(b.fecha);
+      }
+      return (a.id || 0) - (b.id || 0);
+    });
+  } else if (ordenHistorialActual === "alpha_asc") {
+    // Alfabético A - Z por nombres y apellidos
+    lista.sort((a, b) => {
+      const nomA = `${a.nombres || ""} ${a.apellidos || ""}`.trim();
+      const nomB = `${b.nombres || ""} ${b.apellidos || ""}`.trim();
+      return nomA.localeCompare(nomB);
+    });
+  } else if (ordenHistorialActual === "alpha_desc") {
+    // Alfabético Z - A por nombres y apellidos
+    lista.sort((a, b) => {
+      const nomA = `${a.nombres || ""} ${a.apellidos || ""}`.trim();
+      const nomB = `${b.nombres || ""} ${b.apellidos || ""}`.trim();
+      return nomB.localeCompare(nomA);
+    });
+  } else {
+    // Recent (default): Del más reciente al más antiguo
+    lista.sort((a, b) => {
+      if (a.fecha && b.fecha && a.fecha !== b.fecha) {
+        return b.fecha.localeCompare(a.fecha);
+      }
+      return (b.id || 0) - (a.id || 0);
+    });
+  }
+
+  return lista;
+}
+
+function buscarHistorial(texto) {
+  busquedaHistorialTexto = texto || "";
+  const btnLimpiar = document.getElementById("btn-limpiar-historial");
+  if (btnLimpiar) {
+    if (busquedaHistorialTexto) {
+      btnLimpiar.classList.remove("hidden");
+    } else {
+      btnLimpiar.classList.add("hidden");
+    }
+  }
+  actualizarVistaHistorial();
+}
+
+function limpiarBusquedaHistorial() {
+  const inp = document.getElementById("filtro-historial-busqueda");
+  if (inp) inp.value = "";
+  buscarHistorial("");
+  if (inp) inp.focus();
+}
+
+function cambiarOrdenHistorial(orden) {
+  ordenHistorialActual = orden;
+  const btns = {
+    recent: document.getElementById("btn-orden-hist-recent"),
+    oldest: document.getElementById("btn-orden-hist-oldest"),
+    alpha_asc: document.getElementById("btn-orden-hist-alpha"),
+    alpha_desc: document.getElementById("btn-orden-hist-alphadesc")
+  };
+
+  Object.entries(btns).forEach(([k, btn]) => {
+    if (!btn) return;
+    if (k === orden) {
+      btn.className = "px-2 py-1 rounded font-bold text-[11px] bg-white text-slate-800 shadow-xs transition flex items-center gap-1 border border-slate-200";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.className = icon.className.replace("text-slate-400", "text-brand-600");
+        if (!icon.className.includes("text-brand-600")) icon.classList.add("text-brand-600");
+      }
+    } else {
+      btn.className = "px-2 py-1 rounded font-medium text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.remove("text-brand-600");
+        if (!icon.className.includes("text-slate-400")) icon.classList.add("text-slate-400");
+      }
+    }
+  });
+
+  actualizarVistaHistorial();
+}
+
+function actualizarVistaHistorial() {
+  const filtrados = getHistorialFiltradoYOrdenado();
+  renderHistorialTabla(filtrados);
+
+  // Actualizar indicador contador
+  const contador = document.getElementById("contador-historial-filtro");
+  if (contador) {
+    if (busquedaHistorialTexto) {
+      contador.textContent = `${filtrados.length} de ${atencionesCache.length}`;
+      contador.className = "text-[11px] font-bold text-brand-700 bg-brand-50 px-2.5 py-1.5 rounded-lg border border-brand-200 whitespace-nowrap";
+    } else {
+      contador.textContent = `${filtrados.length} registros`;
+      contador.className = "text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 whitespace-nowrap";
+    }
+  }
+}
+
+function renderHistorialTabla(atenciones) {
+  const tbody = document.getElementById("tabla-historial-body");
+  if (!tbody) return;
+
+  if (atenciones.length === 0) {
+    if (busquedaHistorialTexto) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">
+        <div class="flex flex-col items-center gap-1">
+          <i data-lucide="search-x" class="w-8 h-8 text-slate-300 mb-1"></i>
+          <span class="font-semibold text-slate-700 text-xs">No se encontró ninguna atención médica para "${busquedaHistorialTexto}"</span>
+          <span class="text-[11px] text-slate-400">Intenta buscar por cédula, apellido o nombre del paciente.</span>
+          <button onclick="limpiarBusquedaHistorial()" class="mt-2 text-[11px] font-bold text-brand-600 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition border border-brand-200">
+            Limpiar búsqueda
+          </button>
+        </div>
+      </td></tr>`;
+    } else {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">Sin atenciones registradas.</td></tr>`;
+    }
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  const puedeAnular = currentUser && (currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones"));
+
+  tbody.innerHTML = atenciones.map(a => {
+    const esAnulada = a.estado === "ANULADA";
+
+    let medList = "";
+    if (a.medicamentos && a.medicamentos.length > 0) {
+      medList = a.medicamentos.map(m => `
+        <span class="px-2 py-0.5 rounded text-[11px] font-medium border ${esAnulada ? 'bg-slate-100 text-slate-400 line-through border-slate-200' : 'bg-brand-50 text-brand-800 border-brand-200'}">
+          ${m.nombre} (${m.presentacion || ''}) x${m.cantidad}
+        </span>
+      `).join(" ");
+    } else {
+      medList = `<span class="text-slate-400 italic">Procedimiento</span>`;
+    }
+
+    const txtAnulada = typeof t === "function" ? t("badge_anulada") : "ANULADA";
+    const txtActiva = typeof t === "function" ? t("badge_activa") : "ACTIVA";
+    const txtReversada = typeof t === "function" ? t("lbl_reversada") : "Reversada";
+    const txtBtnAnular = typeof t === "function" ? t("btn_anular") : "Anular";
+
+    const estadoBadge = esAnulada
+      ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1" title="${a.motivo_anulacion || 'Consulta anulada'}">
+          <i data-lucide="ban" class="w-3 h-3"></i> ${txtAnulada}
+        </span>`
+      : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+          <i data-lucide="check" class="w-3 h-3"></i> ${txtActiva}
+        </span>`;
+
+    let accionesHtml = "";
+    if (esAnulada) {
+      accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">${txtReversada}</span>`;
+    } else if (puedeAnular) {
+      accionesHtml = `
+        <button onclick="abrirModalAnulacion(${a.id})" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
+          <i data-lucide="rotate-ccw" class="w-3 h-3"></i> ${txtBtnAnular}
+        </button>
+      `;
+    } else {
+      accionesHtml = `<span class="text-slate-300 text-[11px]">-</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition ${esAnulada ? 'bg-slate-50/40 opacity-75' : ''}">
+        <td class="py-2.5 px-3">
+          <span class="font-mono font-bold text-slate-800 text-xs">#${a.id}</span>
+          <span class="block font-mono text-[11px] text-slate-400">${a.fecha}</span>
+        </td>
+        <td class="py-2.5 px-3 text-center">${estadoBadge}</td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-slate-800 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.nombres} ${a.apellidos}</div>
+          <div class="text-[11px] font-mono text-slate-400">${a.cedula || 'Sin Cédula'}</div>
+        </td>
+        <td class="py-2.5 px-3 text-slate-600">${a.piso_area || '-'}</td>
+        <td class="py-2.5 px-3 font-medium text-slate-700 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.diagnostico}</td>
+        <td class="py-2.5 px-3 flex flex-wrap gap-1 items-center">${medList}</td>
+        <td class="py-2.5 px-3">
+          <span class="font-semibold text-slate-700 capitalize text-xs">${a.usuario_registro || 'sistema'}</span>
+          ${esAnulada && a.anulado_por ? `<div class="text-[10px] text-rose-600 font-medium">Anuló: ${a.anulado_por}</div>` : ''}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">${accionesHtml}</td>
+      </tr>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+}
+
 async function cargarHistorial() {
- try {
- const res = await apiFetch("/api/atenciones?limit=150");
- const atenciones = await res.json();
- atencionesCache = atenciones;
- const tbody = document.getElementById("tabla-historial-body");
- if (!tbody) return;
-
- if (atenciones.length === 0) {
- tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Sin atenciones registradas.</td></tr>`;
- return;
- }
-
- const puedeAnular = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
-
- tbody.innerHTML = atenciones.map(a => {
- const esAnulada = a.estado === "ANULADA";
-
- let medList = "";
- if (a.medicamentos && a.medicamentos.length > 0) {
- medList = a.medicamentos.map(m => `
- <span class="px-2 py-0.5 rounded text-[11px] font-medium border ${esAnulada ? 'bg-slate-100 text-slate-400 line-through border-slate-200' : 'bg-brand-50 text-brand-800 border-brand-200'}">
- ${m.nombre} (${m.presentacion || ''}) x${m.cantidad}
- </span>
- `).join(" ");
- } else {
- medList = `<span class="text-slate-400 italic">Procedimiento</span>`;
- }
-
- const txtAnulada = typeof t === "function" ? t("badge_anulada") : "ANULADA";
- const txtActiva = typeof t === "function" ? t("badge_activa") : "ACTIVA";
- const txtReversada = typeof t === "function" ? t("lbl_reversada") : "Reversada";
- const txtBtnAnular = typeof t === "function" ? t("btn_anular") : "Anular";
-
- const estadoBadge = esAnulada
- ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1" title="${a.motivo_anulacion || 'Consulta anulada'}">
- <i data-lucide="ban" class="w-3 h-3"></i> ${txtAnulada}
- </span>`
- : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
- <i data-lucide="check" class="w-3 h-3"></i> ${txtActiva}
- </span>`;
-
- let accionesHtml = "";
- if (esAnulada) {
- accionesHtml = `<span class="text-slate-400 text-[11px] italic" title="${a.motivo_anulacion || ''}">${txtReversada}</span>`;
- } else if (puedeAnular) {
- accionesHtml = `
- <button onclick="abrirModalAnulacion(${a.id})" class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
- <i data-lucide="rotate-ccw" class="w-3 h-3"></i> ${txtBtnAnular}
- </button>
- `;
- } else {
- accionesHtml = `<span class="text-slate-300 text-[11px]">-</span>`;
- }
-
- return `
- <tr class="hover:bg-slate-50/80 transition ${esAnulada ? 'bg-slate-50/40 opacity-75' : ''}">
- <td class="py-2.5 px-3">
- <span class="font-mono font-bold text-slate-800 text-xs">#${a.id}</span>
- <span class="block font-mono text-[11px] text-slate-400">${a.fecha}</span>
- </td>
- <td class="py-2.5 px-3 text-center">${estadoBadge}</td>
- <td class="py-2.5 px-3">
- <div class="font-bold text-slate-800 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.nombres} ${a.apellidos}</div>
- <div class="text-[11px] font-mono text-slate-400">${a.cedula || 'Sin Cédula'}</div>
- </td>
- <td class="py-2.5 px-3 text-slate-600">${a.piso_area || '-'}</td>
- <td class="py-2.5 px-3 font-medium text-slate-700 ${esAnulada ? 'line-through text-slate-400' : ''}">${a.diagnostico}</td>
- <td class="py-2.5 px-3 flex flex-wrap gap-1 items-center">${medList}</td>
- <td class="py-2.5 px-3">
- <span class="font-semibold text-slate-700 capitalize text-xs">${a.usuario_registro || 'sistema'}</span>
- ${esAnulada && a.anulado_por ? `<div class="text-[10px] text-rose-600 font-medium">Anuló: ${a.anulado_por}</div>` : ''}
- </td>
- <td class="py-2.5 px-3 text-center whitespace-nowrap">${accionesHtml}</td>
- </tr>
- `;
- }).join("");
-
- if (window.lucide) lucide.createIcons();
-
- } catch (err) {
- console.error("Error al cargar historial:", err);
- }
+  try {
+    const res = await apiFetch("/api/atenciones?limit=300");
+    const atenciones = await res.json();
+    atencionesCache = atenciones;
+    actualizarVistaHistorial();
+  } catch (err) {
+    console.error("Error al cargar historial:", err);
+  }
 }
 
 // ================================================================
@@ -2234,7 +2444,10 @@ function cambiarIdioma(lang, notify = true) {
  renderInventarioTabla(medicamentosCache);
  }
  if (pacientesCache && pacientesCache.length > 0) {
- renderPacientesTabla(pacientesCache);
+ actualizarVistaPacientes();
+ }
+ if (atencionesCache && atencionesCache.length > 0) {
+ actualizarVistaHistorial();
  }
 
  if (notify) {

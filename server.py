@@ -360,11 +360,16 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     sql += " WHERE (lower(p.nombres) LIKE ? OR lower(p.apellidos) LIKE ? OR p.cedula LIKE ?)"
                     args.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
                 
+                sql += " GROUP BY p.id"
                 if sort_order == "alpha":
-                    sql += " GROUP BY p.id ORDER BY p.nombres ASC, p.apellidos ASC"
+                    sql += " ORDER BY p.nombres ASC, p.apellidos ASC"
+                elif sort_order == "alphadesc":
+                    sql += " ORDER BY p.nombres DESC, p.apellidos DESC"
+                elif sort_order == "oldest":
+                    sql += " ORDER BY p.id ASC"
                 else:
                     # Mostrar más recientes primero (última atención o ID más alto)
-                    sql += " GROUP BY p.id ORDER BY COALESCE(MAX(a.fecha), p.creado_en) DESC, p.id DESC"
+                    sql += " ORDER BY COALESCE(MAX(a.fecha), p.creado_en) DESC, p.id DESC"
                 
                 cur.execute(sql, args)
                 self.send_json([dict(r) for r in cur.fetchall()])
@@ -401,7 +406,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(pac_dict)
 
             elif path == "/api/atenciones":
-                lim = int(params.get("limit", [150])[0])
+                lim = int(params.get("limit", [300])[0])
                 cur.execute("""
                     SELECT a.id, a.fecha, p.nombres, p.apellidos, p.cedula, p.piso_area, 
                            a.diagnostico, a.observaciones,
