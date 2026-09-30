@@ -191,13 +191,21 @@ function initReloj() {
  setInterval(update, 1000);
 }
 
-// Fecha por defecto hoy
+// Fecha por defecto hoy (usando hora local del navegador)
+function getFechaHoyLocal() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function initFechaHoy() {
- const f = document.getElementById("atencion-fecha");
- const f_ent = document.getElementById("entrada-fecha");
- const hoy = new Date().toISOString().split("T")[0];
- if (f) f.value = hoy;
- if (f_ent) f_ent.value = hoy;
+  const f = document.getElementById("atencion-fecha");
+  const f_ent = document.getElementById("entrada-fecha");
+  const hoy = getFechaHoyLocal();
+  if (f) f.value = hoy;
+  if (f_ent) f_ent.value = hoy;
 }
 
 // ================================================================
@@ -490,7 +498,9 @@ function cambiarTab(tabName) {
  if (targetPane) targetPane.classList.remove("hidden");
  if (targetBtn) targetBtn.classList.add("active-tab");
 
- if (tabName === "solicitudes") {
+ if (tabName === "atencion") {
+  initFechaHoy();
+ } else if (tabName === "solicitudes") {
  cargarSolicitudesPisos(true);
  } else if (tabName === "inventario") {
  cargarMedicamentos();
@@ -1657,13 +1667,8 @@ function getPacientesFiltradosYOrdenados() {
     // Más antiguos primero (ID menor o fecha de creación)
     lista.sort((a, b) => (a.id || 0) - (b.id || 0));
   } else {
-    // Recientes primero: por última visita o por ID descendente
-    lista.sort((a, b) => {
-      if (a.ultima_visita && b.ultima_visita && a.ultima_visita !== b.ultima_visita) {
-        return b.ultima_visita.localeCompare(a.ultima_visita);
-      }
-      return (b.id || 0) - (a.id || 0);
-    });
+    // Recientes primero: por ID descendente (últimos registrados / atendidos)
+    lista.sort((a, b) => (b.id || 0) - (a.id || 0));
   }
 
   return lista;
@@ -1676,7 +1681,7 @@ function actualizarVistaPacientes() {
 
 async function cargarPacientes() {
   try {
-    const res = await fetch("/api/pacientes");
+    const res = await apiFetch("/api/pacientes");
     pacientesCache = await res.json();
     actualizarVistaPacientes();
   } catch (err) {
@@ -2085,13 +2090,8 @@ function getHistorialFiltradoYOrdenado() {
   }
 
   if (ordenHistorialActual === "oldest") {
-    // Del más antiguo al más reciente (cronológico ascendente)
-    lista.sort((a, b) => {
-      if (a.fecha && b.fecha && a.fecha !== b.fecha) {
-        return a.fecha.localeCompare(b.fecha);
-      }
-      return (a.id || 0) - (b.id || 0);
-    });
+    // Del más antiguo al más reciente (cronológico ascendente por ID)
+    lista.sort((a, b) => (a.id || 0) - (b.id || 0));
   } else if (ordenHistorialActual === "alpha_asc") {
     // Alfabético A - Z por nombres y apellidos
     lista.sort((a, b) => {
@@ -2107,13 +2107,8 @@ function getHistorialFiltradoYOrdenado() {
       return nomB.localeCompare(nomA);
     });
   } else {
-    // Recent (default): Del más reciente al más antiguo
-    lista.sort((a, b) => {
-      if (a.fecha && b.fecha && a.fecha !== b.fecha) {
-        return b.fecha.localeCompare(a.fecha);
-      }
-      return (b.id || 0) - (a.id || 0);
-    });
+    // Recent (default): Del más reciente al más antiguo (últimos registros primero)
+    lista.sort((a, b) => (b.id || 0) - (a.id || 0));
   }
 
   return lista;

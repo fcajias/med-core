@@ -369,7 +369,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     sql += " ORDER BY p.id ASC"
                 else:
                     # Mostrar más recientes primero (última atención o ID más alto)
-                    sql += " ORDER BY COALESCE(MAX(a.fecha), p.creado_en) DESC, p.id DESC"
+                    sql += " ORDER BY COALESCE(MAX(a.id), p.id) DESC, p.id DESC"
                 
                 cur.execute(sql, args)
                 self.send_json([dict(r) for r in cur.fetchall()])
@@ -412,21 +412,34 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                            a.diagnostico, a.observaciones,
                            COALESCE(a.estado, 'ACTIVA') as estado,
                            a.motivo_anulacion, a.anulado_por, a.anulado_en,
-                           COALESCE(a.usuario_registro, 'enfermeria') as usuario_registro
+                           COALESCE(a.usuario_registro, 'enfermeria') as usuario_registro,
+                           a.creado_en
                     FROM atenciones a
                     JOIN pacientes p ON a.paciente_id = p.id
-                    ORDER BY a.fecha DESC, a.id DESC
+                    ORDER BY a.id DESC
                     LIMIT ?
                 """, (lim,))
                 atenciones = [dict(r) for r in cur.fetchall()]
-                for at in atenciones:
-                    cur.execute("""
-                        SELECT m.nombre, m.presentacion, d.cantidad
+                if atenciones:
+                    at_ids = [str(a["id"]) for a in atenciones]
+                    cur.execute(f"""
+                        SELECT d.atencion_id, m.nombre, m.presentacion, d.cantidad
                         FROM despachos d
                         JOIN medicamentos m ON d.medicamento_id = m.id
-                        WHERE d.atencion_id = ?
-                    """, (at["id"],))
-                    at["medicamentos"] = [dict(m) for m in cur.fetchall()]
+                        WHERE d.atencion_id IN ({','.join(at_ids)})
+                    """)
+                    despachos_map = {}
+                    for d in cur.fetchall():
+                        aid = d["atencion_id"]
+                        if aid not in despachos_map:
+                            despachos_map[aid] = []
+                        despachos_map[aid].append({
+                            "nombre": d["nombre"],
+                            "presentacion": d["presentacion"],
+                            "cantidad": d["cantidad"]
+                        })
+                    for at in atenciones:
+                        at["medicamentos"] = despachos_map.get(at["id"], [])
                 self.send_json(atenciones)
 
             elif path == "/api/kardex":
@@ -1670,6 +1683,23 @@ def sync_databases_on_startup():
                     """, [lp[k] for k in ["rol", "registrar_atenciones", "anular_atenciones", "registrar_entradas", "ajustar_stock", "gestionar_medicamentos", "gestionar_permisos", "descargar_excel"]])
         except Exception as e_perm:
             print(f"[SYNC PERMISOS WARNING] {e_perm}")
+
+        # Sincronizar atenciones y despachos recientes de Turso a SQLite local si faltasen
+        try:
+            res_at = turso.execute("SELECT id, paciente_id, fecha, diagnostico, observaciones, estado, motivo_anulacion, anulado_por, anulado_en, usuario_registro, creado_en FROM atenciones ORDER BY id DESC LIMIT 100")
+            for rat in res_at.rows:
+                lcur.execute("""
+                    INSERT OR IGNORE INTO atenciones (id, paciente_id, fecha, diagnostico, observaciones, estado, motivo_anulacion, anulado_por, anulado_en, usuario_registro, creado_en)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, list(rat))
+            res_desp = turso.execute("SELECT id, atencion_id, medicamento_id, cantidad, creado_en FROM despachos ORDER BY id DESC LIMIT 200")
+            for rdesp in res_desp.rows:
+                lcur.execute("""
+                    INSERT OR IGNORE INTO despachos (id, atencion_id, medicamento_id, cantidad, creado_en)
+                    VALUES (?, ?, ?, ?, ?)
+                """, list(rdesp))
+        except Exception as e_at:
+            print(f"[SYNC ATENCIONES WARNING] {e_at}")
 
         local_conn.commit()
         local_conn.close()
