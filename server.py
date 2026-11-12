@@ -198,7 +198,7 @@ def tiene_permiso(cur, rol, accion):
         return False
     return bool(row[accion])
 
-SYSTEM_LOCKED = True
+SYSTEM_LOCKED = False
 
 class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -314,7 +314,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
         if path in ("/health", "/ping", "/api/ping", "/api/health"):
             self.send_json({
-                "status": "locked",
+                "status": "locked" if SYSTEM_LOCKED else "ok",
                 "service": "dispensario-fydi",
                 "timestamp": datetime.now().isoformat()
             })
