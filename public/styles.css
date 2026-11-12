@@ -110,6 +110,49 @@ body {
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
 }
 
+/* FIDI Modern 2x2 Role Selector Cards (Replicación exacta del diseño del usuario) */
+.role-card-fidi {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.875rem;
+  border: 1.5px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #16325C;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  user-select: none;
+}
+
+.role-card-fidi:hover {
+  border-color: #0B4A82;
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.role-card-fidi.active-fidi-role {
+  background-color: #0B4A82 !important;
+  border-color: #0B4A82 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 74, 130, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+.role-card-fidi.active-fidi-role svg,
+.role-card-fidi.active-fidi-role i {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.role-card-fidi svg,
+.role-card-fidi i {
+  color: #0B4A82;
+  stroke: #0B4A82;
+  transition: color 0.2s ease, stroke 0.2s ease;
+}
+
 /* Corporate Card & Shadows */
 .corporate-card {
   background: #ffffff;

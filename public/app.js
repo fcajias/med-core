@@ -390,9 +390,16 @@ function seleccionarPerfil(usuario) {
  }
 
  // Actualizar tarjetas de rol visuales
- document.querySelectorAll(".role-smart-card").forEach(el => el.classList.remove("active-role"));
- const card = document.getElementById(`card-role-${usuario}`);
- if (card) card.classList.add("active-role");
+  // Actualizar tarjetas de rol visuales (estilo FIDI 2x2)
+  document.querySelectorAll(".role-card-fidi").forEach(el => el.classList.remove("active-fidi-role"));
+  document.querySelectorAll(".role-smart-card").forEach(el => el.classList.remove("active-role"));
+  const cardFidi = document.getElementById(`card-role-${usuario}`);
+  if (cardFidi) {
+    cardFidi.classList.add("active-fidi-role", "active-role");
+  } else if (usuario === "patricia.pilataxi" || usuario === "enfermeria") {
+    const c1 = document.getElementById("card-role-patricia.pilataxi") || document.getElementById("card-role-enfermeria");
+    if (c1) c1.classList.add("active-fidi-role", "active-role");
+  }
 
  if (hint) {
  const rolNombres = {
