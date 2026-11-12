@@ -437,6 +437,12 @@
           <span id="lbl-btn-download-excel" class="hidden md:inline">Excel en Vivo</span>
         </a>
 
+        <!-- Botón de Emergencia: Bloqueo de Intrusos (Solo Administrador) -->
+        <button id="btn-lock-emergency-admin" onclick="abrirModalBloqueoSeguridad()" class="hidden inline-flex items-center gap-1.5 bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg transition-all shadow-xs border border-rose-500 animate-pulse" title="Seguridad: Bloquear acceso inmediato al sistema ante un intruso">
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-200"></i>
+          <span class="hidden lg:inline">Bloqueo Intruso</span>
+        </button>
+
         <!-- Button to Toggle/View Public Wellness Landing -->
         <button onclick="mostrarPortalPublico()" class="inline-flex items-center gap-1 bg-slate-800/80 hover:bg-slate-700 text-sky-200 hover:text-white text-xs px-2.5 py-1 rounded-lg transition border border-slate-700" title="Ver el portal público de salud que ven los colaboradores">
           <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-300"></i>
@@ -1211,7 +1217,8 @@
  <tr>
  <th class="py-3 px-4">Función / Capacidad del Sistema</th>
  <th class="py-3 px-4 text-center font-bold text-purple-900"><div class="flex items-center justify-center gap-1.5"><i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Administrador</div></th>
- <th class="py-3 px-4 text-center font-bold text-sky-900"><div class="flex items-center justify-center gap-1.5"><i data-lucide="stethoscope" class="w-4 h-4 text-sky-600"></i> Enfermería</div></th>
+ <th class="py-3 px-4 text-center font-bold text-sky-900"><div class="flex items-center justify-center gap-1.5"><i data-lucide="stethoscope" class="w-4 h-4 text-sky-600"></i> Enfermería (Patricia)</div></th>
+ <th class="py-3 px-4 text-center font-bold text-amber-900"><div class="flex items-center justify-center gap-1.5"><i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i> Auxiliar (Mañana)</div></th>
  <th class="py-3 px-4 text-center font-bold text-slate-700"><div class="flex items-center justify-center gap-1.5"><i data-lucide="eye" class="w-4 h-4 text-slate-600"></i> Auditoría</div></th>
  </tr>
  </thead>
@@ -1905,38 +1912,50 @@
  <span class="text-[10px] text-[#16325C] font-bold">Clic para elegir</span>
  </div>
 
- <div class="grid grid-cols-3 gap-2">
- <!-- Role 1: Enfermería -->
- <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+ <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+ <!-- Role 1: Enfermería Titular -->
+ <div onclick="seleccionarPerfil('patricia.pilataxi')" id="card-role-patricia.pilataxi" class="role-smart-card p-2 rounded-2xl border cursor-pointer group text-left">
  <div class="flex items-center justify-between mb-1">
  <span class="role-icon-box w-6 h-6 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-xs transition">
  <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
  </span>
- <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">Clínica</span>
+ <span class="text-[9px] font-bold px-1 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">9:30-18:30</span>
  </div>
- <div class="role-title font-bold text-xs text-slate-800 group-hover:text-[#16325C] transition">Enfermería</div>
- <div class="text-[9px] text-slate-500 truncate">Piso 6 / Mezz</div>
+ <div class="role-title font-bold text-xs text-slate-800 group-hover:text-[#16325C] transition">Lic. Patricia</div>
+ <div class="text-[9px] text-slate-500 truncate">Enfermera Titular</div>
  </div>
 
- <!-- Role 2: Administrador -->
- <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+ <!-- Role 2: Asistente Mañana -->
+ <div onclick="seleccionarPerfil('asistente.manana')" id="card-role-asistente.manana" class="role-smart-card p-2 rounded-2xl border cursor-pointer group text-left">
+ <div class="flex items-center justify-between mb-1">
+ <span class="role-icon-box w-6 h-6 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xs transition">
+ <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+ </span>
+ <span class="text-[9px] font-bold px-1 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">7:30-9:30</span>
+ </div>
+ <div class="role-title font-bold text-xs text-slate-800 group-hover:text-amber-700 transition">Auxiliar Mañana</div>
+ <div class="text-[9px] text-slate-500 truncate">Atención sin Bodega</div>
+ </div>
+
+ <!-- Role 3: Administrador -->
+ <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-smart-card p-2 rounded-2xl border cursor-pointer group text-left">
  <div class="flex items-center justify-between mb-1">
  <span class="role-icon-box w-6 h-6 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs transition">
  <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
  </span>
- <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">Jefatura</span>
+ <span class="text-[9px] font-bold px-1 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">Sistemas</span>
  </div>
  <div class="role-title font-bold text-xs text-slate-800 group-hover:text-purple-700 transition">Administrador</div>
- <div class="text-[9px] text-slate-500 truncate">Stock & Permisos</div>
+ <div class="text-[9px] text-slate-500 truncate">Control & Bloqueo</div>
  </div>
 
- <!-- Role 3: Auditor -->
- <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-2.5 rounded-2xl border cursor-pointer group text-left">
+ <!-- Role 4: Auditor -->
+ <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-smart-card p-2 rounded-2xl border cursor-pointer group text-left">
  <div class="flex items-center justify-between mb-1">
  <span class="role-icon-box w-6 h-6 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs transition">
  <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
  </span>
- <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300">Auditor</span>
+ <span class="text-[9px] font-bold px-1 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300">Auditor</span>
  </div>
  <div class="role-title font-bold text-xs text-slate-800 group-hover:text-slate-900 transition">Auditoría</div>
  <div class="text-[9px] text-slate-500 truncate">Balances & Excel</div>
@@ -2539,6 +2558,59 @@
         <button onclick="cerrarModalPanico()" class="text-slate-400 hover:text-white font-bold">Cerrar</button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: BLOQUEO INMEDIATO DE SISTEMA POR SEGURIDAD / INTRUSO -->
+  <!-- ======================================================== -->
+  <div id="modal-bloqueo-seguridad" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-rose-500 rounded-3xl shadow-2xl max-w-md w-full p-6 text-white text-xs">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Bloqueo de Seguridad TI</h3>
+            <p class="text-[10px] text-rose-300">Control de Intrusos y Protocolo de Búnker</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalBloqueoSeguridad()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-3 bg-rose-950/50 border border-rose-800/80 rounded-2xl mb-4 text-rose-200">
+        <p class="font-semibold text-xs mb-1">¿Qué sucede al bloquear el sistema?</p>
+        <ul class="list-disc list-inside space-y-0.5 text-[11px] text-rose-300">
+          <li>Se cierra el acceso a todas las pantallas del dispensario.</li>
+          <li>Cualquier usuario o intruso verá la pantalla de Acceso Restringido.</li>
+          <li>Todas las consultas a la base de datos quedarán congeladas (403).</li>
+        </ul>
+      </div>
+
+      <form onsubmit="ejecutarAccionBloqueo(event)" class="space-y-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Contraseña de Administrador (Sistemas):</label>
+          <input type="password" id="bloqueo-admin-pass" required placeholder="Ingresa tu contraseña de admin" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Motivo / Incidente (opcional):</label>
+          <input type="text" id="bloqueo-admin-motivo" placeholder="Ej. Detección de intruso en red" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalBloqueoSeguridad()" class="px-3 py-2 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-confirmar-bloqueo" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg transition inline-flex items-center gap-1.5">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span>BLOQUEAR SISTEMA AHORA</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

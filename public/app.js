@@ -248,8 +248,15 @@ function aplicarPermisosRol() {
   badgeEl.className = "text-[10px] font-bold text-sky-300 uppercase tracking-wider";
   bannerContainer.className = "hidden";
   bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-900";
-  bannerBadge.textContent = typeof t === "function" ? t("role_enf_banner") : "ROL: ENFERMERÍA (ATENCIÓN Y RECETA)";
-  bannerDesc.textContent = typeof t === "function" ? t("role_enf_desc") : "Puedes registrar atenciones a pacientes y recetar medicinas según los permisos asignados.";
+  bannerBadge.textContent = "ROL: ENFERMERÍA TITULAR (PATRICIA PILATAXI)";
+  bannerDesc.textContent = "Turno 9:30 - 18:30. Gestión de atención clínica y consulta de inventario.";
+ } else if (currentUser.rol === "AUXILIAR_ENFERMERIA") {
+  iconEl.innerHTML = `<i data-lucide="user-check" class="w-3.5 h-3.5 text-amber-300"></i>`;
+  badgeEl.className = "text-[10px] font-bold text-amber-300 uppercase tracking-wider";
+  bannerContainer.className = "hidden";
+  bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-amber-200 text-amber-900";
+  bannerBadge.textContent = "ROL: AUXILIAR DE ENFERMERÍA (TURNO MAÑANA 7:30 - 9:30)";
+  bannerDesc.textContent = "Acceso exclusivo para registrar y atender pacientes. Inventario, bodega y reportes restringidos.";
  } else { // AUDITOR
   iconEl.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5 text-slate-300"></i>`;
   badgeEl.className = "text-[10px] font-bold text-slate-300 uppercase tracking-wider";
@@ -257,6 +264,19 @@ function aplicarPermisosRol() {
   bannerBadge.className = "font-bold px-2.5 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-900";
   bannerBadge.textContent = typeof t === "function" ? t("role_aud_banner") : "ROL: AUDITORÍA (SOLO CONSULTA)";
   bannerDesc.textContent = typeof t === "function" ? t("role_aud_desc") : "Acceso de supervisión de Kardex, bitácora de atenciones y descarga de balances según permisos.";
+ }
+
+ // Restringir pestañas completas según el rol
+ const tabInventarioBtn = document.getElementById("tab-btn-inventario");
+ const tabEstadisticasBtn = document.getElementById("tab-btn-estadisticas");
+
+ if (currentUser.rol === "AUXILIAR_ENFERMERIA") {
+   // La auxiliar de la mañana NO debe tener acceso a Inventario ni Estadísticas
+   if (tabInventarioBtn) tabInventarioBtn.classList.add("hidden");
+   if (tabEstadisticasBtn) tabEstadisticasBtn.classList.add("hidden");
+ } else {
+   if (tabInventarioBtn) tabInventarioBtn.classList.remove("hidden");
+   if (tabEstadisticasBtn) tabEstadisticasBtn.classList.remove("hidden");
  }
 
  // --- CONTROLES DINÁMICOS BASADOS EN MATRIZ DE PERMISOS ---
@@ -298,6 +318,13 @@ function aplicarPermisosRol() {
  if (tabPermisosBtn) {
   if (puedePermisos) tabPermisosBtn.classList.remove("hidden");
   else tabPermisosBtn.classList.add("hidden");
+ }
+
+ // 6. Botón de Emergencia para Intrusos (Exclusivo Administrador / TI)
+ const btnLockEmergency = document.getElementById("btn-lock-emergency-admin");
+ if (btnLockEmergency) {
+  if (currentUser.rol === "ADMINISTRADOR") btnLockEmergency.classList.remove("hidden");
+  else btnLockEmergency.classList.add("hidden");
  }
 
  if (window.lucide) lucide.createIcons();
@@ -369,9 +396,11 @@ function seleccionarPerfil(usuario) {
 
  if (hint) {
  const rolNombres = {
- enfermeria: "Enfermería Clínica",
- admin: "Administrador Central",
- auditor: "Auditoría Médica"
+ "patricia.pilataxi": "Lic. Patricia Pilataxi (Titular 9:30-18:30)",
+ "enfermeria": "Lic. Patricia Pilataxi (Titular 9:30-18:30)",
+ "asistente.manana": "Enfermería Apoyo (Turno Mañana 7:30-9:30)",
+ "admin": "Administrador Central (Sistemas)",
+ "auditor": "Auditoría Médica"
  };
  hint.textContent = `Puesto: ${rolNombres[usuario] || usuario.toUpperCase()}`;
  hint.classList.remove("hidden");
@@ -490,6 +519,11 @@ async function handleLoginSubmit(e) {
 
 // Cambiar de Pestaña
 function cambiarTab(tabName) {
+ if (currentUser && currentUser.rol === "AUXILIAR_ENFERMERIA" && (tabName === "inventario" || tabName === "estadisticas" || tabName === "permisos")) {
+  showToast("Acceso Restringido", "Tu perfil de Auxiliar no tiene autorización para acceder a este módulo.", "warning");
+  return;
+ }
+
  document.querySelectorAll(".tab-pane").forEach(el => el.classList.add("hidden"));
  document.querySelectorAll(".nav-tab").forEach(el => el.classList.remove("active-tab"));
 
@@ -2319,6 +2353,7 @@ async function cargarMatrizPermisos() {
  tbody.innerHTML = FUNCIONES_SISTEMA.map(f => {
  const adminChecked = permMap["ADMINISTRADOR"] ? (permMap["ADMINISTRADOR"][f.clave] === 1) : true;
  const enfChecked = permMap["ENFERMERIA"] ? (permMap["ENFERMERIA"][f.clave] === 1) : false;
+ const auxChecked = permMap["AUXILIAR_ENFERMERIA"] ? (permMap["AUXILIAR_ENFERMERIA"][f.clave] === 1) : false;
  const audChecked = permMap["AUDITOR"] ? (permMap["AUDITOR"][f.clave] === 1) : false;
 
  // Administrador siempre tiene gestionar_permisos deshabilitado (bloqueado en true por seguridad)
@@ -2337,6 +2372,9 @@ async function cargarMatrizPermisos() {
  <input type="checkbox" id="perm-ENFERMERIA-${f.clave}" ${enfChecked ? 'checked' : ''} class="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer">
  </td>
  <td class="py-3 px-4 text-center">
+ <input type="checkbox" id="perm-AUXILIAR_ENFERMERIA-${f.clave}" ${auxChecked ? 'checked' : ''} class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+ </td>
+ <td class="py-3 px-4 text-center">
  <input type="checkbox" id="perm-AUDITOR-${f.clave}" ${audChecked ? 'checked' : ''} class="w-4 h-4 text-slate-600 rounded border-slate-300 focus:ring-slate-500 cursor-pointer">
  </td>
  </tr>
@@ -2346,7 +2384,7 @@ async function cargarMatrizPermisos() {
  if (window.lucide) lucide.createIcons();
 
  } catch (err) {
- tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-rose-500">Error al cargar matriz: ${err.message}</td></tr>`;
+ tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-rose-500">Error al cargar matriz: ${err.message}</td></tr>`;
  }
 }
 
@@ -2356,7 +2394,7 @@ async function guardarMatrizPermisos() {
  return;
  }
 
- const roles = ["ADMINISTRADOR", "ENFERMERIA", "AUDITOR"];
+ const roles = ["ADMINISTRADOR", "ENFERMERIA", "AUXILIAR_ENFERMERIA", "AUDITOR"];
  const matrix = roles.map(rol => {
  const obj = { rol };
  FUNCIONES_SISTEMA.forEach(f => {
@@ -4202,3 +4240,73 @@ window.addEventListener("DOMContentLoaded", () => {
     qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin)}`;
   }
 });
+
+// ================================================================
+// PROTOCOLO DE SEGURIDAD TI: BLOQUEO INMEDIATO ANTE INTRUSO
+// ================================================================
+function abrirModalBloqueoSeguridad() {
+  const modal = document.getElementById("modal-bloqueo-seguridad");
+  if (!modal) return;
+  const pInput = document.getElementById("bloqueo-admin-pass");
+  if (pInput) pInput.value = "";
+  modal.classList.remove("hidden");
+  if (pInput) setTimeout(() => pInput.focus(), 50);
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalBloqueoSeguridad() {
+  const modal = document.getElementById("modal-bloqueo-seguridad");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function ejecutarAccionBloqueo(e) {
+  if (e) e.preventDefault();
+  const password = (document.getElementById("bloqueo-admin-pass")?.value || "").trim();
+  const motivo = (document.getElementById("bloqueo-admin-motivo")?.value || "Detección de intruso en red").trim();
+  const btn = document.getElementById("btn-confirmar-bloqueo");
+
+  if (!password) {
+    showToast("Error de Seguridad", "Debe ingresar su contraseña de Administrador.", "error");
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Bloqueando Sistema...`;
+  }
+
+  try {
+    const res = await fetch("/api/seguridad/bloquear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        usuario: currentUser?.usuario || "admin",
+        password,
+        motivo
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Acción Denegada", data.error || "No se pudo bloquear el sistema.", "error");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> BLOQUEAR SISTEMA AHORA`;
+      }
+      return;
+    }
+
+    cerrarModalBloqueoSeguridad();
+    showToast("SISTEMA BLOQUEADO", "Se ha activado el bloqueo general de emergencia.", "error");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
+  } catch (err) {
+    showToast("Error", "Error al comunicarse con el servidor: " + err.message, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> BLOQUEAR SISTEMA AHORA`;
+    }
+  }
+}

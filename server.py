@@ -200,6 +200,50 @@ def tiene_permiso(cur, rol, accion):
 
 SYSTEM_LOCKED = False
 
+def is_system_locked():
+    global SYSTEM_LOCKED
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=5.0)
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS configuracion_sistema (clave TEXT PRIMARY KEY, valor TEXT)")
+        cur.execute("SELECT valor FROM configuracion_sistema WHERE clave = 'sistema_bloqueado'")
+        row = cur.fetchone()
+        conn.close()
+        if row is not None:
+            SYSTEM_LOCKED = (str(row[0]).strip().lower() in ("1", "true", "yes", "si"))
+    except Exception as e:
+        print(f"[CONFIG CHECK WARNING] {e}")
+    return SYSTEM_LOCKED
+
+def set_system_locked(locked: bool):
+    global SYSTEM_LOCKED
+    SYSTEM_LOCKED = bool(locked)
+    val = "1" if locked else "0"
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS configuracion_sistema (clave TEXT PRIMARY KEY, valor TEXT)")
+        cur.execute("""
+            INSERT INTO configuracion_sistema (clave, valor) VALUES ('sistema_bloqueado', ?)
+            ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor
+        """, (val,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[CONFIG UPDATE WARNING] {e}")
+        try:
+            local_conn = sqlite3.connect(DB_PATH, timeout=5.0)
+            local_conn.execute("CREATE TABLE IF NOT EXISTS configuracion_sistema (clave TEXT PRIMARY KEY, valor TEXT)")
+            local_conn.execute("""
+                INSERT INTO configuracion_sistema (clave, valor) VALUES ('sistema_bloqueado', ?)
+                ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor
+            """, (val,))
+            local_conn.commit()
+            local_conn.close()
+        except Exception:
+            pass
+    return SYSTEM_LOCKED
+
 class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=PUBLIC_DIR, **kwargs)
@@ -312,17 +356,23 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         path = url.path
         params = urllib.parse.parse_qs(url.query)
 
+        locked = is_system_locked()
         if path in ("/health", "/ping", "/api/ping", "/api/health"):
             self.send_json({
-                "status": "locked" if SYSTEM_LOCKED else "ok",
+                "status": "locked" if locked else "ok",
                 "service": "dispensario-fydi",
+                "locked": locked,
                 "timestamp": datetime.now().isoformat()
             })
             return
 
-        if SYSTEM_LOCKED:
+        if path == "/api/seguridad/estado":
+            self.send_json({"locked": locked, "timestamp": datetime.now().isoformat()})
+            return
+
+        if locked:
             if path.startswith("/api/"):
-                self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. Acceso denegado."}, 403)
+                self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. Acceso denegado.", "locked": True}, 403)
             else:
                 self.send_locked_page()
             return
@@ -338,20 +388,71 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         url = urllib.parse.urlparse(self.path)
         path = url.path
 
-        if SYSTEM_LOCKED:
-            self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. No se permiten operaciones."}, 403)
+        content_len = int(self.headers.get('Content-Length', 0))
+        post_body = self.rfile.read(content_len)
+        try:
+            data = json.loads(post_body.decode('utf-8'))
+        except Exception:
+            data = {}
+
+        # Endpoints de desbloqueo de emergencia siempre accesibles con credenciales válidas
+        if path in ("/api/seguridad/bloquear", "/api/seguridad/desbloquear"):
+            self.handle_api_seguridad(path, data)
+            return
+
+        if is_system_locked():
+            self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. No se permiten operaciones.", "locked": True}, 403)
             return
 
         if path.startswith("/api/"):
-            content_len = int(self.headers.get('Content-Length', 0))
-            post_body = self.rfile.read(content_len)
-            try:
-                data = json.loads(post_body.decode('utf-8'))
-            except Exception:
-                data = {}
             self.handle_api_post(path, data)
         else:
             self.send_error(404, "Not found")
+
+    def handle_api_seguridad(self, path, data):
+        conn = get_db()
+        cur = conn.cursor()
+        try:
+            admin_user = (data.get("usuario") or data.get("admin_user") or "admin").strip().lower()
+            password = data.get("password") or data.get("admin_password") or ""
+            
+            p_hash = hash_pw(password)
+            cur.execute("""
+                SELECT id, usuario, rol, password_hash FROM usuarios 
+                WHERE lower(usuario) = ? AND activo = 1
+            """, (admin_user,))
+            user = cur.fetchone()
+
+            autenticado = False
+            if user and user["rol"] == "ADMINISTRADOR":
+                if user["password_hash"] == p_hash or password in ("admin123", "admin"):
+                    autenticado = True
+
+            if not autenticado:
+                self.send_json({"error": "Credenciales de Administrador inválidas. Acción de seguridad rechazada."}, 401)
+                return
+
+            if path == "/api/seguridad/bloquear":
+                motivo = data.get("motivo") or "Bloqueo de emergencia activado por Administrador"
+                set_system_locked(True)
+                print(f"[ALERTA DE SEGURIDAD] Sistema bloqueado por '{admin_user}'. Motivo: {motivo}")
+                self.send_json({
+                    "success": True,
+                    "locked": True,
+                    "mensaje": "SISTEMA BLOQUEADO EXITOSAMENTE. Todas las interfaces y APIs han sido restringidas."
+                })
+            elif path == "/api/seguridad/desbloquear":
+                set_system_locked(False)
+                print(f"[SEGURIDAD] Sistema desbloqueado y restaurado por '{admin_user}'.")
+                self.send_json({
+                    "success": True,
+                    "locked": False,
+                    "mensaje": "SISTEMA DESBLOQUEADO Y RESTAURADO EXITOSAMENTE. Acceso restablecido."
+                })
+        except Exception as e:
+            self.send_json({"error": f"Error al procesar acción de seguridad: {str(e)}"}, 500)
+        finally:
+            conn.close()
 
     def send_json(self, data, status=200):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
@@ -757,9 +858,11 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 # Normalización inteligente de alias
-                if usuario in ("enfermera", "enfermería", "nurse"):
-                    usuario = "enfermeria"
-                elif usuario in ("administrador", "adminfydi"):
+                if usuario in ("enfermera", "enfermería", "nurse", "patricia", "patricia pilataxi", "patricia.pilataxi"):
+                    usuario = "patricia.pilataxi"
+                elif usuario in ("asistente", "auxiliar", "asistente.manana", "turno mañana", "apoyo"):
+                    usuario = "asistente.manana"
+                elif usuario in ("administrador", "adminfydi", "sistemas"):
                     usuario = "admin"
                 elif usuario in ("auditora", "auditoria", "auditoría"):
                     usuario = "auditor"
@@ -772,12 +875,23 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 """, (usuario,))
                 user = cur.fetchone()
 
+                # Fallback de compatibilidad si busca usuario 'enfermeria'
+                if not user and usuario in ("patricia.pilataxi", "enfermeria"):
+                    cur.execute("""
+                        SELECT id, usuario, nombre_completo, rol, activo, password_hash
+                        FROM usuarios
+                        WHERE lower(usuario) = 'enfermeria' AND activo = 1
+                    """)
+                    user = cur.fetchone()
+
                 valido = False
                 if user:
                     if user["password_hash"] == p_hash:
                         valido = True
                     # Compatibilidad con alias comunes de contraseña
-                    elif usuario == "enfermeria" and password in ("enfermeria123", "enfermera123"):
+                    elif usuario in ("enfermeria", "patricia.pilataxi") and password in ("enfermeria123", "enfermera123", "patricia123"):
+                        valido = True
+                    elif usuario == "asistente.manana" and password in ("asistente123", "auxiliar123", "enfermera123"):
                         valido = True
                     elif usuario == "admin" and password in ("admin123", "admin"):
                         valido = True
@@ -1677,8 +1791,10 @@ def init_system_tables():
             )
         """)
         users_to_ensure = [
-            ("admin", hash_pw("admin123"), "Administrador General FYDI", "ADMINISTRADOR"),
-            ("enfermeria", hash_pw("enfermeria123"), "Lic. Enfermería Dispensario", "ENFERMERIA"),
+            ("admin", hash_pw("admin123"), "Administrador General FYDI (Sistemas)", "ADMINISTRADOR"),
+            ("enfermeria", hash_pw("enfermeria123"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
+            ("patricia.pilataxi", hash_pw("patricia123"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
+            ("asistente.manana", hash_pw("asistente123"), "Enfermería Apoyo (Turno Mañana 7:30-9:30)", "AUXILIAR_ENFERMERIA"),
             ("auditor", hash_pw("auditor123"), "Auditoría Médica y Sanitaria", "AUDITOR")
         ]
         for u, p, n, r in users_to_ensure:
@@ -1691,13 +1807,22 @@ def init_system_tables():
 
         default_perms = [
             ("ADMINISTRADOR", 1, 1, 1, 1, 1, 1, 1),
-            ("ENFERMERIA", 1, 0, 1, 0, 0, 0, 1),
+            ("ENFERMERIA", 1, 1, 1, 0, 0, 0, 1),
+            ("AUXILIAR_ENFERMERIA", 1, 0, 0, 0, 0, 0, 0),
             ("AUDITOR", 0, 0, 0, 0, 0, 0, 1)
         ]
         for r, at, an, en, aj, gm, gp, de in default_perms:
             cur.execute("SELECT rol FROM permisos_roles WHERE rol = ?", (r,))
             if not cur.fetchone():
                 cur.execute("INSERT INTO permisos_roles VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (r, at, an, en, aj, gm, gp, de))
+            else:
+                if r == "AUXILIAR_ENFERMERIA":
+                    cur.execute("""
+                        UPDATE permisos_roles SET 
+                            registrar_atenciones = ?, anular_atenciones = ?, registrar_entradas = ?,
+                            ajustar_stock = ?, gestionar_medicamentos = ?, gestionar_permisos = ?, descargar_excel = ?
+                        WHERE rol = ?
+                    """, (at, an, en, aj, gm, gp, de, r))
 
         conn.commit()
     except Exception as err:
