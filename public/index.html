@@ -1919,6 +1919,14 @@
                 <i data-lucide="eye" class="w-4 h-4"></i>
               </button>
             </div>
+            
+            <!-- Indicador Clave Estándar -->
+            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+              <span class="flex items-center gap-1.5 text-[#0B4A82] font-semibold">
+                <i data-lucide="key" class="w-3.5 h-3.5"></i> Clave: <span class="font-mono bg-sky-50 text-[#0B4A82] px-1.5 py-0.5 rounded border border-sky-200 font-bold">123456</span>
+              </span>
+              <span class="text-slate-400">Autocompletada al elegir rol</span>
+            </div>
 
             <!-- Caps Lock Warning -->
             <div id="caps-warning" class="hidden text-[11px] text-amber-600 font-bold flex items-center gap-1.5 pt-0.5">
@@ -1952,19 +1960,18 @@
                   </div>
                 </div>
 
-                <!-- Rol 2: Enfermera Titular -->
-                <div onclick="seleccionarPerfil('enfermeria')" id="card-role-enfermeria" class="role-card-fidi">
+                <!-- Rol 2: Auditoría Médica -->
+                <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-card-fidi">
                   <div class="shrink-0">
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                      <path d="M9 3h6"/>
-                      <path d="M12 1.5v3"/>
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                      <path d="m9 14 2 2 4-4"/>
                     </svg>
                   </div>
                   <div class="text-left">
-                    <span class="text-xs font-bold block leading-tight">Enfermera</span>
-                    <span class="text-xs font-bold block leading-tight">Titular</span>
+                    <span class="text-xs font-bold block leading-tight">Auditoría</span>
+                    <span class="text-xs font-bold block leading-tight">Médica</span>
                   </div>
                 </div>
 
@@ -1992,7 +1999,7 @@
                   </div>
                   <div class="text-left">
                     <span class="text-xs font-bold block leading-tight">Administrador</span>
-                    <span class="text-xs font-bold block leading-tight">y Auditoría</span>
+                    <span class="text-xs font-bold block leading-tight">General</span>
                   </div>
                 </div>
 

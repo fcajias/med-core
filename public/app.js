@@ -357,7 +357,7 @@ function abrirModalLogin() {
  if (errBox) errBox.classList.add("hidden");
 
  const pInput = document.getElementById("login-password");
- if (pInput) pInput.value = "";
+ if (pInput) { pInput.value = "123456"; pInput.placeholder = "123456"; }
 
  // Recordar el último usuario/rol utilizado sin guardar contraseñas
  const savedUser = localStorage.getItem("fydi_remembered_user") || "enfermeria";
@@ -385,9 +385,10 @@ function seleccionarPerfil(usuario) {
 
  // SEGURIDAD: La contraseña NUNCA se autocompleta por código; se limpia y se pide al usuario
  if (pInput) {
- pInput.value = "";
- setTimeout(() => pInput.focus(), 50);
- }
+    pInput.value = "123456";
+    pInput.placeholder = "123456";
+    setTimeout(() => pInput.focus(), 50);
+  }
 
  // Actualizar tarjetas de rol visuales
   // Actualizar tarjetas de rol visuales (estilo FIDI 2x2)
@@ -4255,7 +4256,7 @@ function abrirModalBloqueoSeguridad() {
   const modal = document.getElementById("modal-bloqueo-seguridad");
   if (!modal) return;
   const pInput = document.getElementById("bloqueo-admin-pass");
-  if (pInput) pInput.value = "";
+  if (pInput) { pInput.value = "123456"; pInput.placeholder = "123456"; }
   modal.classList.remove("hidden");
   if (pInput) setTimeout(() => pInput.focus(), 50);
   if (window.lucide) lucide.createIcons();
