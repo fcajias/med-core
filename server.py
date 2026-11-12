@@ -198,6 +198,8 @@ def tiene_permiso(cur, rol, accion):
         return False
     return bool(row[accion])
 
+SYSTEM_LOCKED = True
+
 class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=PUBLIC_DIR, **kwargs)
@@ -208,6 +210,103 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Expires", "0")
         super().end_headers()
 
+    def send_locked_page(self):
+        html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Bloqueado - Seguridad FYDI</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid #dc2626;
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            padding: 40px 32px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.25);
+        }
+        .icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(220, 38, 38, 0.15);
+            color: #ef4444;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #f87171;
+            letter-spacing: -0.5px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .badge {
+            display: inline-block;
+            background: #7f1d1d;
+            color: #fecaca;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+        </div>
+        <div class="badge">Bloqueo de Emergencia Activo</div>
+        <h1 style="margin-top: 16px;">Acceso Temporalmente Restringido</h1>
+        <p>El acceso al sistema médico y administrativo ha sido suspendido por razones de seguridad preventiva y auditoría de red. Toda solicitud y transacción ha sido bloqueada.</p>
+        <div class="footer">
+            Departamento de TI &amp; Seguridad de Sistemas &bull; FYDI
+        </div>
+    </div>
+</body>
+</html>"""
+        body = html.encode('utf-8')
+        self.send_response(403)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)
         path = url.path
@@ -215,10 +314,17 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
         if path in ("/health", "/ping", "/api/ping", "/api/health"):
             self.send_json({
-                "status": "ok",
+                "status": "locked",
                 "service": "dispensario-fydi",
                 "timestamp": datetime.now().isoformat()
             })
+            return
+
+        if SYSTEM_LOCKED:
+            if path.startswith("/api/"):
+                self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. Acceso denegado."}, 403)
+            else:
+                self.send_locked_page()
             return
 
         if path.startswith("/api/"):
@@ -231,6 +337,10 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         url = urllib.parse.urlparse(self.path)
         path = url.path
+
+        if SYSTEM_LOCKED:
+            self.send_json({"error": "SISTEMA BLOQUEADO POR PROTOCOLO DE SEGURIDAD. No se permiten operaciones."}, 403)
+            return
 
         if path.startswith("/api/"):
             content_len = int(self.headers.get('Content-Length', 0))
