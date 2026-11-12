@@ -80,31 +80,34 @@ body {
 
 /* Corporate Role Selector Cards */
 .role-smart-card {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
+  position: relative;
 }
 
 .role-smart-card:hover {
-  border-color: #93c5fd;
+  border-color: #38bdf8;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
 }
 
 .role-smart-card.active-role {
   border-color: #0284c7 !important;
-  background: #f0f9ff !important;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15), 0 4px 12px rgba(2, 132, 199, 0.1) !important;
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%) !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2), 0 8px 20px -4px rgba(2, 132, 199, 0.15) !important;
+  transform: translateY(-2px);
 }
 
 .role-smart-card.active-role .role-title {
   color: #0369a1 !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
 }
 
 .role-smart-card.active-role .role-icon-box {
   background: #0284c7 !important;
   color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
 }
 
 /* Corporate Card & Shadows */
