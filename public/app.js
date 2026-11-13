@@ -276,13 +276,16 @@ function aplicarPermisosRol() {
  const tabInventarioBtn = document.getElementById("tab-btn-inventario");
  const tabEstadisticasBtn = document.getElementById("tab-btn-estadisticas");
 
+ const avisoAux = document.getElementById("aviso-auxiliar-prescripcion");
  if (currentUser.rol === "AUXILIAR_ENFERMERIA") {
    // La auxiliar de la mañana NO debe tener acceso a Inventario ni Estadísticas
    if (tabInventarioBtn) tabInventarioBtn.classList.add("hidden");
    if (tabEstadisticasBtn) tabEstadisticasBtn.classList.add("hidden");
+   if (avisoAux) avisoAux.classList.remove("hidden");
  } else {
    if (tabInventarioBtn) tabInventarioBtn.classList.remove("hidden");
    if (tabEstadisticasBtn) tabEstadisticasBtn.classList.remove("hidden");
+   if (avisoAux) avisoAux.classList.add("hidden");
  }
 
  // --- CONTROLES DINÁMICOS BASADOS EN MATRIZ DE PERMISOS ---
@@ -1283,34 +1286,137 @@ function setDiag(texto) {
  if (inp) inp.value = texto;
 }
 
+// Variables de Estado Clínico
+let pacienteAlertaCache = null;
+let pacienteSeleccionadoId = null;
+let expedienteActualCache = null;
+
+// Cargar Alerta Clínica y Recurrencia por Cédula o ID
+async function cargarAlertaClinicaPaciente(cedula, pacienteIdOpt) {
+  const cardAlerta = document.getElementById("card-alerta-clinica-paciente");
+  const badgeNivel = document.getElementById("badge-alerta-nivel");
+  const resumenVisitas = document.getElementById("alerta-resumen-visitas");
+  const msgContainer = document.getElementById("alerta-mensajes-container");
+  const boxAlergias = document.getElementById("alerta-alergias-box");
+  const txtAlergias = document.getElementById("alerta-alergias-texto");
+
+  if (!cedula && !pacienteIdOpt) {
+    if (cardAlerta) cardAlerta.classList.add("hidden");
+    pacienteAlertaCache = null;
+    return;
+  }
+
+  try {
+    const url = pacienteIdOpt 
+      ? `/api/pacientes/alerta-clinica?id=${encodeURIComponent(pacienteIdOpt)}`
+      : `/api/pacientes/alerta-clinica?cedula=${encodeURIComponent(cedula)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.existe) {
+      if (cardAlerta) cardAlerta.classList.add("hidden");
+      pacienteAlertaCache = null;
+      pacienteSeleccionadoId = null;
+      return;
+    }
+
+    pacienteAlertaCache = data;
+    pacienteSeleccionadoId = data.paciente.id;
+
+    // Autocompletar antecedentes en el formulario si están vacíos
+    const inpAlergias = document.getElementById("pac-alergias");
+    const inpApp = document.getElementById("pac-app");
+    const inpApf = document.getElementById("pac-apf");
+    const inpMedHab = document.getElementById("pac-med-habitual");
+
+    if (inpAlergias && (!inpAlergias.value || inpAlergias.value === "NIEGA") && data.paciente.alergias) {
+      inpAlergias.value = data.paciente.alergias;
+    }
+    if (inpApp && !inpApp.value && data.paciente.antecedentes_personales) {
+      inpApp.value = data.paciente.antecedentes_personales;
+    }
+    if (inpApf && !inpApf.value && data.paciente.antecedentes_familiares) {
+      inpApf.value = data.paciente.antecedentes_familiares;
+    }
+    if (inpMedHab && !inpMedHab.value && data.paciente.medicacion_habitual) {
+      inpMedHab.value = data.paciente.medicacion_habitual;
+    }
+
+    // Configurar Estilos según Nivel de Alerta
+    if (data.alerta_nivel === "CRITICA") {
+      cardAlerta.className = "mt-3 p-4 rounded-xl border border-rose-400 bg-rose-50/80 text-xs transition-all animate-fade-in shadow-sm";
+      badgeNivel.className = "px-2.5 py-1 rounded-full font-black text-[10px] uppercase tracking-wider bg-rose-600 text-white shadow-sm flex items-center gap-1";
+      badgeNivel.innerHTML = `<i data-lucide="alert-octagon" class="w-3.5 h-3.5 inline"></i> ALERTA CLÍNICA CRÍTICA`;
+    } else if (data.alerta_nivel === "PRECAUCION") {
+      cardAlerta.className = "mt-3 p-4 rounded-xl border border-amber-400 bg-amber-50/80 text-xs transition-all animate-fade-in shadow-sm";
+      badgeNivel.className = "px-2.5 py-1 rounded-full font-black text-[10px] uppercase tracking-wider bg-amber-500 text-white shadow-sm flex items-center gap-1";
+      badgeNivel.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 inline"></i> ATENCIÓN: PACIENTE FRECUENTE`;
+    } else {
+      cardAlerta.className = "mt-3 p-4 rounded-xl border border-emerald-300 bg-emerald-50/50 text-xs transition-all animate-fade-in";
+      badgeNivel.className = "px-2.5 py-1 rounded-full font-black text-[10px] uppercase tracking-wider bg-emerald-600 text-white shadow-sm flex items-center gap-1";
+      badgeNivel.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 inline"></i> ESTADO HABITUAL`;
+    }
+
+    resumenVisitas.textContent = `${data.visitas_ultimos_30_dias} consultas en los últimos 30 días (${data.total_visitas} visitas históricas)`;
+
+    // Renderizar Mensajes de Alerta
+    msgContainer.innerHTML = (data.alertas || []).map(msg => `
+      <div class="flex items-start gap-2 text-slate-800 font-medium">
+        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5"></i>
+        <span>${msg}</span>
+      </div>
+    `).join("");
+
+    // Banner de Alergias
+    const alergiaStr = (data.paciente.alergias || "").trim().toUpperCase();
+    if (alergiaStr && !["NO", "NO REFIERE", "NINGUNA", "NINGUNO", "NIEGA"].includes(alergiaStr)) {
+      boxAlergias.classList.remove("hidden");
+      txtAlergias.textContent = `ALERGIA CRÍTICA REPORTADA: ${data.paciente.alergias}. Verifique contraindicaciones antes de prescribir fármacos.`;
+    } else {
+      boxAlergias.classList.add("hidden");
+    }
+
+    cardAlerta.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.warn("Error al consultar alerta clínica:", err);
+  }
+}
+
 // Búsqueda predictiva de pacientes
 function buscarSugerenciaPaciente(texto) {
  const sugDiv = document.getElementById("pac-sugerencias");
  const q = texto.toLowerCase().trim();
+ 
+ // Si la cédula tiene al menos 8 dígitos, consultar alerta en tiempo real
+ if (/^\d{8,10}$/.test(q)) {
+   cargarAlertaClinicaPaciente(q);
+ }
+
  if (q.length < 2) {
- sugDiv.classList.add("hidden");
- return;
+  sugDiv.classList.add("hidden");
+  return;
  }
 
  const matches = pacientesCache.filter(p => {
- return (p.cedula && p.cedula.includes(q)) || 
- p.nombres.toLowerCase().includes(q) || 
- p.apellidos.toLowerCase().includes(q);
+  return (p.cedula && p.cedula.includes(q)) || 
+  p.nombres.toLowerCase().includes(q) || 
+  p.apellidos.toLowerCase().includes(q);
  }).slice(0, 6);
 
  if (matches.length === 0) {
- sugDiv.classList.add("hidden");
- return;
+  sugDiv.classList.add("hidden");
+  return;
  }
 
  sugDiv.innerHTML = matches.map(p => `
- <div onclick='seleccionarSugerenciaPaciente(${JSON.stringify(p)})' class="p-2.5 hover:bg-brand-50 cursor-pointer flex justify-between items-center">
- <div>
- <span class="font-bold text-slate-800">${p.nombres} ${p.apellidos}</span>
- <span class="text-slate-400 ml-1">(${p.cedula || 'Sin cédula'})</span>
- </div>
- <span class="text-[11px] text-brand-600 font-medium">${p.piso_area || ''}</span>
- </div>
+  <div onclick='seleccionarSugerenciaPaciente(${JSON.stringify(p)})' class="p-2.5 hover:bg-brand-50 cursor-pointer flex justify-between items-center">
+  <div>
+  <span class="font-bold text-slate-800">${p.nombres} ${p.apellidos}</span>
+  <span class="text-slate-400 ml-1">(${p.cedula || 'Sin cédula'})</span>
+  </div>
+  <span class="text-[11px] text-brand-600 font-medium">${p.piso_area || ''}</span>
+  </div>
  `).join("");
 
  sugDiv.classList.remove("hidden");
@@ -1324,6 +1430,117 @@ function seleccionarSugerenciaPaciente(p) {
  document.getElementById("pac-celular").value = p.celular || "";
  document.getElementById("pac-piso").value = p.piso_area || "";
  document.getElementById("pac-sugerencias").classList.add("hidden");
+
+ // Cargar alerta clínica inmediata
+ cargarAlertaClinicaPaciente(p.cedula, p.id);
+}
+
+// Cálculo automático de IMC con semaforización clínica
+function calcularIMCColectivo() {
+  const pInput = document.getElementById("atencion-peso");
+  const tInput = document.getElementById("atencion-talla");
+  const imcInput = document.getElementById("atencion-imc");
+  const badgeImc = document.getElementById("badge-imc-resultado");
+  const clasifHidden = document.getElementById("atencion-clasificacion-imc");
+
+  if (!pInput || !tInput || !imcInput || !badgeImc) return;
+
+  const peso = parseFloat(pInput.value);
+  const talla = parseFloat(tInput.value);
+
+  if (peso > 0 && talla > 50) {
+    const alturaM = talla / 100;
+    const imc = peso / (alturaM * alturaM);
+    const imcRedondeado = imc.toFixed(1);
+    imcInput.value = imcRedondeado;
+
+    let clasif = "";
+    let badgeClass = "";
+
+    if (imc < 18.5) {
+      clasif = "Bajo peso";
+      badgeClass = "bg-sky-100 text-sky-800 font-bold border border-sky-300";
+    } else if (imc < 25.0) {
+      clasif = "Peso normal";
+      badgeClass = "bg-emerald-100 text-emerald-800 font-bold border border-emerald-300";
+    } else if (imc < 30.0) {
+      clasif = "Sobrepeso";
+      badgeClass = "bg-amber-100 text-amber-800 font-bold border border-amber-300";
+    } else if (imc < 35.0) {
+      clasif = "Obesidad Grado I";
+      badgeClass = "bg-rose-100 text-rose-800 font-bold border border-rose-300";
+    } else {
+      clasif = "Obesidad Grado II/III";
+      badgeClass = "bg-rose-200 text-rose-950 font-black border border-rose-400";
+    }
+
+    badgeImc.textContent = clasif;
+    badgeImc.className = `text-[10px] px-2 py-1 rounded-md font-bold truncate flex-1 text-center ${badgeClass}`;
+    if (clasifHidden) clasifHidden.value = clasif;
+  } else {
+    imcInput.value = "";
+    badgeImc.textContent = "-";
+    badgeImc.className = "text-[10px] px-2 py-1 rounded-md font-bold bg-slate-200 text-slate-600 truncate flex-1 text-center";
+    if (clasifHidden) clasifHidden.value = "";
+  }
+}
+
+// Helpers de Interrogatorio y Rutina
+function setTiempoEvolucion(txt) {
+  const el = document.getElementById("atencion-tiempo-evolucion");
+  if (el) el.value = txt;
+}
+
+function setAlergia(txt) {
+  const el = document.getElementById("pac-alergias");
+  if (el) el.value = txt;
+}
+
+function addAPP(txt) {
+  const el = document.getElementById("pac-app");
+  if (!el) return;
+  if (!el.value.trim() || el.value.includes("Aparentemente sano")) {
+    el.value = txt;
+  } else if (!el.value.includes(txt)) {
+    el.value += `, ${txt}`;
+  }
+}
+
+function setAPP(txt) {
+  const el = document.getElementById("pac-app");
+  if (el) el.value = txt;
+}
+
+function addAPF(txt) {
+  const el = document.getElementById("pac-apf");
+  if (!el) return;
+  if (!el.value.trim() || el.value.includes("No refiere")) {
+    el.value = txt;
+  } else if (!el.value.includes(txt)) {
+    el.value += `, ${txt}`;
+  }
+}
+
+function setAPF(txt) {
+  const el = document.getElementById("pac-apf");
+  if (el) el.value = txt;
+}
+
+// Acciones desde la tarjeta de Alerta
+function abrirModalInformeDesdeAlerta() {
+  if (pacienteAlertaCache && pacienteAlertaCache.paciente) {
+    abrirModalInformeClinico(pacienteAlertaCache.paciente.id);
+  } else {
+    showToast("Seleccione Paciente", "Ingrese la cédula de un paciente para emitir el informe.", "warning");
+  }
+}
+
+function verExpedienteDesdeAlerta() {
+  if (pacienteAlertaCache && pacienteAlertaCache.paciente) {
+    abrirModalExpediente(pacienteAlertaCache.paciente.id);
+  } else {
+    showToast("Seleccione Paciente", "Ingrese la cédula de un paciente para ver su expediente.", "warning");
+  }
 }
 
 // DOBLE VERIFICACIÓN PREVIA AL DESPACHO
@@ -1344,6 +1561,25 @@ function prepararConfirmacionAtencion(e) {
  const piso_area = document.getElementById("pac-piso").value.trim();
  const diagnostico = document.getElementById("atencion-diagnostico").value.trim();
  const observaciones = document.getElementById("atencion-obs").value.trim();
+
+ // Datos de Triaje y Signos Vitales
+ const pa = document.getElementById("atencion-pa")?.value.trim() || "";
+ const fc = document.getElementById("atencion-fc")?.value ? parseInt(document.getElementById("atencion-fc").value) : null;
+ const fr = document.getElementById("atencion-fr")?.value ? parseInt(document.getElementById("atencion-fr").value) : null;
+ const temp = document.getElementById("atencion-temperatura")?.value ? parseFloat(document.getElementById("atencion-temperatura").value) : null;
+ const spo2 = document.getElementById("atencion-spo2")?.value ? parseInt(document.getElementById("atencion-spo2").value) : null;
+ const peso = document.getElementById("atencion-peso")?.value ? parseFloat(document.getElementById("atencion-peso").value) : null;
+ const talla = document.getElementById("atencion-talla")?.value ? parseFloat(document.getElementById("atencion-talla").value) : null;
+ const imc = document.getElementById("atencion-imc")?.value ? parseFloat(document.getElementById("atencion-imc").value) : null;
+ const clasificacion_imc = document.getElementById("atencion-clasificacion-imc")?.value.trim() || "";
+ const tiempo_evolucion = document.getElementById("atencion-tiempo-evolucion")?.value.trim() || "";
+ const examen_fisico = document.getElementById("atencion-examen-fisico")?.value.trim() || "";
+
+ // Antecedentes
+ const alergias = document.getElementById("pac-alergias")?.value.trim() || "";
+ const ant_personales = document.getElementById("pac-app")?.value.trim() || "";
+ const ant_familiares = document.getElementById("pac-apf")?.value.trim() || "";
+ const med_habitual = document.getElementById("pac-med-habitual")?.value.trim() || "";
 
  const medItems = [];
  const medSummaryList = [];
@@ -1390,16 +1626,63 @@ function prepararConfirmacionAtencion(e) {
  }
  }
 
+ // RESTRICCIÓN ASISTENCIAL PARA AUXILIAR DE ENFERMERÍA (PREVENCIÓN DE NEGLIGENCIA)
+ if (currentUser.rol === "AUXILIAR_ENFERMERIA" && medItems.length > 0) {
+   showToast("Prescripción Restringida", "El rol Auxiliar de Enfermería no está facultado legalmente para recetar ni entregar medicamentos por su cuenta. Guarde la consulta como triaje/toma de signos vitales para validación de la Licenciada Titular.", "warning");
+   return;
+ }
+
+ // Si no hay medicamentos, se permite guardar como atención de triaje o valoración clínica
  if (medItems.length === 0) {
- showToast("Falta Medicamento", "Por favor selecciona al menos un producto a despachar.", "warning");
- return;
+   if (currentUser.rol === "AUXILIAR_ENFERMERIA") {
+     medSummaryList.push(`
+       <div class="p-3 bg-sky-50 border border-sky-200 rounded-lg text-sky-800 text-xs font-semibold text-center">
+         <i data-lucide="shield-check" class="w-4 h-4 inline mr-1 text-sky-600"></i>
+         Atención registrada como Triaje y Toma de Signos Vitales (Sin despacho de fármacos).
+       </div>
+     `);
+   } else {
+     medSummaryList.push(`
+       <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-xs font-semibold text-center">
+         <i data-lucide="stethoscope" class="w-4 h-4 inline mr-1 text-brand-600"></i>
+         Consulta médica / Curación / Derivación sin entrega de medicamentos.
+       </div>
+     `);
+   }
  }
 
  atencionPendiente = {
  fecha,
- paciente: { cedula, nombres, apellidos, edad, celular, piso_area },
+ paciente: { 
+   id: pacienteSeleccionadoId || null,
+   cedula, 
+   nombres, 
+   apellidos, 
+   edad, 
+   celular, 
+   piso_area,
+   alergias,
+   antecedentes_personales: ant_personales,
+   antecedentes_familiares: ant_familiares,
+   medicacion_habitual: med_habitual
+ },
  diagnostico,
  observaciones,
+ presion_arterial: pa,
+ frecuencia_cardiaca: fc,
+ frecuencia_respiratoria: fr,
+ temperatura: temp,
+ saturacion_oxigeno: spo2,
+ peso,
+ talla,
+ imc,
+ clasificacion_imc,
+ tiempo_evolucion,
+ examen_fisico,
+ alergias,
+ antecedentes_personales: ant_personales,
+ antecedentes_familiares: ant_familiares,
+ medicacion_habitual: med_habitual,
  medicamentos: medItems,
  usuario_registro: currentUser.usuario,
  user_role: currentUser.rol,
@@ -1409,7 +1692,20 @@ function prepararConfirmacionAtencion(e) {
  document.getElementById("confirm-paciente-nombre").textContent = `${nombres} ${apellidos}`;
  document.getElementById("confirm-paciente-detalle").textContent = `C.I: ${cedula || 'S/C'} • Área: ${piso_area || 'General'}`;
  document.getElementById("confirm-diagnostico").textContent = diagnostico;
- document.getElementById("confirm-meds-list").innerHTML = medSummaryList.join("");
+
+ // Resumen de signos vitales en el modal de confirmación
+ const signosListHtml = [];
+ if (pa) signosListHtml.push(`PA: ${pa}`);
+ if (fc) signosListHtml.push(`FC: ${fc} lpm`);
+ if (temp) signosListHtml.push(`Temp: ${temp}°C`);
+ if (spo2) signosListHtml.push(`SpO2: ${spo2}%`);
+ if (imc) signosListHtml.push(`IMC: ${imc} (${clasificacion_imc})`);
+
+ const signosPreview = signosListHtml.length > 0 
+   ? `<div class="mb-2 p-2 bg-brand-50/60 border border-brand-200 rounded-lg text-[11px] text-brand-900 font-medium"><strong>Signos vitales registrados:</strong> ${signosListHtml.join(" • ")}</div>` 
+   : '';
+
+ document.getElementById("confirm-meds-list").innerHTML = signosPreview + medSummaryList.join("");
 
  document.getElementById("modal-confirmar-despacho").classList.remove("hidden");
  if (window.lucide) lucide.createIcons();
@@ -1593,6 +1889,15 @@ function resetFormAtencion() {
  document.getElementById("form-atencion").reset();
  initFechaHoy();
  document.getElementById("pac-sugerencias").classList.add("hidden");
+ const cardAlerta = document.getElementById("card-alerta-clinica-paciente");
+ if (cardAlerta) cardAlerta.classList.add("hidden");
+ const badgeImc = document.getElementById("badge-imc-resultado");
+ if (badgeImc) {
+   badgeImc.textContent = "-";
+   badgeImc.className = "text-[10px] px-2 py-1 rounded-md font-bold bg-slate-200 text-slate-600 truncate flex-1 text-center";
+ }
+ pacienteAlertaCache = null;
+ pacienteSeleccionadoId = null;
  const container = document.getElementById("receta-items");
  container.innerHTML = "";
  renglonesReceta = [];
@@ -1828,82 +2133,317 @@ function buscarPacientes(texto) {
 }
 
 async function abrirModalExpediente(pid) {
- document.getElementById("modal-expediente").classList.remove("hidden");
- if (window.lucide) lucide.createIcons();
+  document.getElementById("modal-expediente").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
 
- try {
- const res = await fetch(`/api/pacientes/${pid}/historial`);
- const pac = await res.json();
- pacienteHistorialCache = pac.historial || [];
+  try {
+    const res = await fetch(`/api/pacientes/${pid}/historial`);
+    const pac = await res.json();
+    expedienteActualCache = pac;
+    pacienteHistorialCache = pac.historial || [];
 
- document.getElementById("exp-pac-nombre").textContent = `${pac.nombres} ${pac.apellidos}`;
- document.getElementById("exp-pac-sub").textContent = `Expediente Clínico Ocupacional - Total Visitas: ${pac.historial.length}`;
- document.getElementById("exp-pac-cedula").textContent = pac.cedula || "No registrada";
- document.getElementById("exp-pac-contacto").textContent = `${pac.edad ? pac.edad + ' años' : 'Edad N/D'} &bull; Cel: ${pac.celular || 'N/D'}`;
- document.getElementById("exp-pac-piso").textContent = pac.piso_area || "No especificado";
+    document.getElementById("exp-pac-nombre").textContent = `${pac.nombres} ${pac.apellidos}`;
+    document.getElementById("exp-pac-sub").textContent = `Expediente Clínico Ocupacional • C.I: ${pac.cedula || 'S/C'}`;
+    document.getElementById("exp-pac-cedula").textContent = pac.cedula || "No registrada";
+    document.getElementById("exp-pac-contacto").textContent = `${pac.edad ? pac.edad + ' años' : 'Edad N/D'} • Cel: ${pac.celular || 'N/D'}`;
+    document.getElementById("exp-pac-piso").textContent = pac.piso_area || "No especificado";
+    document.getElementById("exp-pac-total-visitas").textContent = `${pac.historial ? pac.historial.length : 0} atenciones`;
 
- const atListDiv = document.getElementById("exp-atenciones-list");
- if (pac.historial.length === 0) {
- atListDiv.innerHTML = `<div class="p-4 text-center text-slate-400">Sin atenciones registradas.</div>`;
- return;
- }
+    // Alergias y antecedentes
+    const expAlergias = document.getElementById("exp-pac-alergias");
+    const alergiaStr = (pac.alergias || "").trim().toUpperCase();
+    if (alergiaStr && !["NO", "NO REFIERE", "NINGUNA", "NINGUNO", "NIEGA"].includes(alergiaStr)) {
+      expAlergias.textContent = pac.alergias;
+      expAlergias.className = "font-black text-rose-700 text-xs mt-0.5 block";
+    } else {
+      expAlergias.textContent = "Niega alergias medicamentosas";
+      expAlergias.className = "font-semibold text-emerald-700 text-xs mt-0.5 block";
+    }
 
- const puedeAnular = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
+    document.getElementById("exp-pac-app").textContent = pac.antecedentes_personales || "Sin antecedentes patológicos declarados";
+    document.getElementById("exp-pac-med-habitual").textContent = `Medicación: ${pac.medicacion_habitual || 'Ninguna'} • Familiares: ${pac.antecedentes_familiares || 'No refiere'}`;
 
- atListDiv.innerHTML = pac.historial.map(at => {
- const esAnulada = at.estado === "ANULADA";
- const medListHtml = at.medicamentos && at.medicamentos.length > 0 
- ? at.medicamentos.map(m => `<span class="bg-white border ${esAnulada ? 'border-slate-200 text-slate-400 line-through' : 'border-slate-200 text-slate-700'} px-2 py-0.5 rounded text-[11px] font-medium">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
- : `<span class="text-slate-400 italic">Solo consulta / curación</span>`;
+    // Conteo de informes
+    const numInformes = (pac.informes || []).length;
+    document.getElementById("exp-conteo-informes").textContent = numInformes;
 
- const pacNombre = `${pac.nombres} ${pac.apellidos}`;
+    // Renderizar Consultas
+    const atListDiv = document.getElementById("exp-atenciones-list");
+    if (!pac.historial || pac.historial.length === 0) {
+      atListDiv.innerHTML = `<div class="p-4 text-center text-slate-400 bg-slate-50 rounded-xl">Sin consultas registradas para este paciente.</div>`;
+    } else {
+      const puedeAnular = currentUser.rol === "ADMINISTRADOR" || tienePermiso("anular_atenciones");
 
- let anularBtnHtml = "";
- if (!esAnulada && puedeAnular) {
- anularBtnHtml = `
- <button onclick="abrirModalAnulacion(${at.id})" class="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
- Anular
- </button>
- `;
- }
+      atListDiv.innerHTML = pac.historial.map(at => {
+        const esAnulada = at.estado === "ANULADA";
+        const medListHtml = at.medicamentos && at.medicamentos.length > 0 
+          ? at.medicamentos.map(m => `<span class="bg-white border ${esAnulada ? 'border-slate-200 text-slate-400 line-through' : 'border-slate-200 text-slate-700'} px-2 py-0.5 rounded text-[11px] font-medium">${m.nombre} (${m.presentacion || ''}) x${m.cantidad}</span>`).join(" ")
+          : `<span class="text-slate-500 italic text-[11px] bg-white border border-slate-200 px-2 py-0.5 rounded">Consulta / Triaje / Sin medicamentos</span>`;
 
- return `
- <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 ${esAnulada ? 'opacity-70 bg-slate-100/60' : ''}">
- <div class="flex items-center justify-between">
- <div class="flex items-center gap-2">
- <span class="font-mono font-bold text-slate-800 text-xs">${at.fecha}</span>
- ${esAnulada 
- ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]" title="${at.motivo_anulacion || ''}">ANULADA</span>`
- : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">ACTIVA</span>`}
- </div>
- <div class="flex items-center gap-2">
- <span class="text-[11px] text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded">Atención #${at.id}</span>
- ${anularBtnHtml}
- </div>
- </div>
- <div class="text-slate-800 font-semibold text-xs">
- Diagnóstico: <span class="font-normal ${esAnulada ? 'line-through text-slate-400' : ''}">${at.diagnostico}</span>
- </div>
- <div class="pt-1 flex flex-wrap gap-1 items-center">
- <span class="text-[10px] uppercase font-bold text-slate-400">Medicinas:</span>
- ${medListHtml}
- </div>
- ${esAnulada && at.motivo_anulacion ? `
- <div class="text-[11px] text-rose-700 bg-rose-50 p-1.5 rounded border border-rose-100">
- <strong>Motivo anulación:</strong> ${at.motivo_anulacion} (por ${at.anulado_por || 'admin'})
- </div>
- ` : ''}
- </div>
- `;
- }).join("");
+        let anularBtnHtml = "";
+        if (!esAnulada && puedeAnular) {
+          anularBtnHtml = `
+            <button onclick="abrirModalAnulacion(${at.id})" class="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition" title="Anular consulta y devolver stock a bodega">
+              Anular
+            </button>
+          `;
+        }
 
- } catch (err) {
- console.error("Error al cargar expediente:", err);
- }
+        // Construir badges de signos vitales
+        const svBadges = [];
+        if (at.presion_arterial) svBadges.push(`<span class="bg-sky-50 text-sky-800 border border-sky-200 px-2 py-0.5 rounded text-[10px] font-mono font-bold">PA: ${at.presion_arterial}</span>`);
+        if (at.frecuencia_cardiaca) svBadges.push(`<span class="bg-rose-50 text-rose-800 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-medium">FC: ${at.frecuencia_cardiaca} lpm</span>`);
+        if (at.temperatura) svBadges.push(`<span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-medium">Temp: ${at.temperatura}°C</span>`);
+        if (at.saturacion_oxigeno) svBadges.push(`<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-medium">SpO2: ${at.saturacion_oxigeno}%</span>`);
+        if (at.imc) svBadges.push(`<span class="bg-purple-50 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-medium">IMC: ${at.imc} (${at.clasificacion_imc || ''})</span>`);
+
+        return `
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 ${esAnulada ? 'opacity-70 bg-slate-100/60' : ''}">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-slate-800 text-xs">${at.fecha}</span>
+                ${esAnulada 
+                  ? `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]" title="${at.motivo_anulacion || ''}">ANULADA</span>`
+                  : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">ACTIVA</span>`}
+                <span class="text-[10px] text-slate-500">Atendido por: <strong>${at.usuario_registro || 'Enfermería'}</strong></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded">Atención #${at.id}</span>
+                ${anularBtnHtml}
+              </div>
+            </div>
+
+            <!-- Signos Vitales de la Consulta -->
+            ${svBadges.length > 0 ? `
+              <div class="flex flex-wrap gap-1.5 pt-0.5">
+                ${svBadges.join("")}
+              </div>
+            ` : ''}
+
+            <!-- Diagnóstico y Tiempo Evolución -->
+            <div class="text-slate-800 text-xs">
+              <strong>Motivo / Diagnóstico:</strong> <span class="font-medium ${esAnulada ? 'line-through text-slate-400' : 'text-slate-900'}">${at.diagnostico}</span>
+              ${at.tiempo_evolucion ? `<span class="ml-2 text-slate-500 text-[11px]">(Evolución: ${at.tiempo_evolucion})</span>` : ''}
+            </div>
+
+            <!-- Observaciones / Indicaciones Clínicas de la Enfermera -->
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs text-slate-700">
+              <strong class="text-brand-900 flex items-center gap-1 mb-0.5 text-[11px]">
+                <i data-lucide="clipboard-check" class="w-3.5 h-3.5 text-brand-600"></i>
+                Observaciones e Indicaciones Médicas:
+              </strong>
+              <p class="leading-relaxed whitespace-pre-wrap">${at.observaciones ? at.observaciones : '<span class="text-slate-400 italic">Sin observaciones adicionales.</span>'}</p>
+            </div>
+
+            <!-- Medicinas Prescritas -->
+            <div class="pt-1 flex flex-wrap gap-1 items-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Medicamentos Despachados:</span>
+              ${medListHtml}
+            </div>
+
+            ${esAnulada && at.motivo_anulacion ? `
+              <div class="text-[11px] text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
+                <strong>Motivo de anulación:</strong> ${at.motivo_anulacion} (por ${at.anulado_por || 'admin'})
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Renderizar Informes y Derivaciones
+    const infListDiv = document.getElementById("exp-informes-list");
+    if (!pac.informes || pac.informes.length === 0) {
+      infListDiv.innerHTML = `<div class="p-4 text-center text-slate-400 bg-slate-50 rounded-xl">No registra informes clínicos ni derivaciones formalmente emitidas.</div>`;
+    } else {
+      infListDiv.innerHTML = pac.informes.map(inf => `
+        <div class="p-3.5 bg-rose-50/50 border border-rose-200 rounded-xl flex items-center justify-between text-xs">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-bold text-slate-800 text-xs">${inf.fecha}</span>
+              <span class="px-2 py-0.5 bg-rose-200 text-rose-900 font-bold text-[10px] rounded uppercase">${inf.tipo_informe}</span>
+              <span class="text-[11px] text-slate-500">Emisor: ${inf.profesional_nombre}</span>
+            </div>
+            <p class="font-bold text-slate-900 text-xs">${inf.motivo_derivacion}</p>
+            <p class="text-[11px] text-slate-600 line-clamp-1">${inf.detalles_informe}</p>
+          </div>
+          <button onclick="verInformeClinico(${inf.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-300 hover:bg-rose-50 text-rose-700 font-bold rounded-lg text-xs transition shadow-sm shrink-0 ml-3">
+            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+            Ver / Imprimir
+          </button>
+        </div>
+      `).join("");
+    }
+
+    cambiarVistaExpediente("consultas");
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    console.error("Error al cargar expediente:", err);
+  }
+}
+
+function cambiarVistaExpediente(vista) {
+  const btnCons = document.getElementById("tab-exp-btn-consultas");
+  const btnInf = document.getElementById("tab-exp-btn-informes");
+  const secCons = document.getElementById("exp-seccion-consultas");
+  const secInf = document.getElementById("exp-seccion-informes");
+
+  if (!btnCons || !btnInf || !secCons || !secInf) return;
+
+  if (vista === "informes") {
+    btnCons.className = "px-3 py-1.5 rounded-lg font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700";
+    btnInf.className = "px-3 py-1.5 rounded-lg font-bold text-xs bg-rose-700 text-white shadow-sm";
+    secCons.classList.add("hidden");
+    secInf.classList.remove("hidden");
+  } else {
+    btnCons.className = "px-3 py-1.5 rounded-lg font-bold text-xs bg-brand-600 text-white shadow-sm";
+    btnInf.className = "px-3 py-1.5 rounded-lg font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700";
+    secCons.classList.remove("hidden");
+    secInf.classList.add("hidden");
+  }
+  if (window.lucide) lucide.createIcons();
 }
 
 function cerrarModalExpediente() {
- document.getElementById("modal-expediente").classList.add("hidden");
+  document.getElementById("modal-expediente").classList.add("hidden");
+}
+
+function imprimirExpedienteCompleto() {
+  window.print();
+}
+
+// ----------------------------------------------------------------
+// GESTIÓN DE INFORMES CLÍNICOS, DERIVACIÓN Y DESLINDE
+// ----------------------------------------------------------------
+function abrirModalInformeDesdeExpediente() {
+  if (expedienteActualCache && expedienteActualCache.id) {
+    abrirModalInformeClinico(expedienteActualCache.id);
+  }
+}
+
+function abrirModalInformeClinico(pacienteId, atencionIdOpt) {
+  const p = (expedienteActualCache && expedienteActualCache.id === pacienteId) 
+    ? expedienteActualCache 
+    : (pacienteAlertaCache && pacienteAlertaCache.paciente && pacienteAlertaCache.paciente.id === pacienteId)
+      ? pacienteAlertaCache.paciente
+      : pacientesCache.find(x => x.id === pacienteId);
+
+  if (!p) {
+    showToast("Error", "No se encontró información del paciente.", "error");
+    return;
+  }
+
+  document.getElementById("inf-paciente-id").value = p.id;
+  document.getElementById("inf-atencion-id").value = atencionIdOpt || "";
+  document.getElementById("inf-pac-nombre").textContent = `${p.nombres} ${p.apellidos}`;
+  document.getElementById("inf-pac-detalles").textContent = `C.I: ${p.cedula || 'S/C'} • Área: ${p.piso_area || 'General'} • Edad: ${p.edad || 'N/D'}`;
+  document.getElementById("inf-fecha").value = new Date().toISOString().split("T")[0];
+  document.getElementById("inf-motivo").value = "";
+  document.getElementById("inf-detalles").value = "";
+  document.getElementById("inf-recomendaciones").value = "Se recomienda acudir a consulta médica externa o de especialidad de manera obligatoria y prioritaria. Suspender automedicación analgésica repetitiva.";
+  document.getElementById("inf-prof-nombre").value = currentUser?.nombre_completo || "Lic. Patricia Pilataxi";
+  document.getElementById("inf-prof-rol").value = currentUser?.rol === "ADMINISTRADOR" ? "Médico / Director Técnico" : "Enfermera Titular FYDI";
+
+  document.getElementById("modal-informe-clinico").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function cerrarModalInformeClinico() {
+  document.getElementById("modal-informe-clinico").classList.add("hidden");
+}
+
+async function guardarInformeClinico(e) {
+  e.preventDefault();
+
+  const paciente_id = parseInt(document.getElementById("inf-paciente-id").value);
+  const atencion_id = document.getElementById("inf-atencion-id").value ? parseInt(document.getElementById("inf-atencion-id").value) : null;
+  const fecha = document.getElementById("inf-fecha").value;
+  const tipo_informe = document.getElementById("inf-tipo").value;
+  const motivo_derivacion = document.getElementById("inf-motivo").value.trim();
+  const detalles_informe = document.getElementById("inf-detalles").value.trim();
+  const recomendaciones = document.getElementById("inf-recomendaciones").value.trim();
+  const profesional_nombre = document.getElementById("inf-prof-nombre").value.trim();
+  const profesional_rol = document.getElementById("inf-prof-rol").value.trim();
+
+  try {
+    const res = await fetch("/api/informes-clinicos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        paciente_id,
+        atencion_id,
+        fecha,
+        tipo_informe,
+        motivo_derivacion,
+        detalles_informe,
+        recomendaciones,
+        profesional_nombre,
+        profesional_rol,
+        usuario_registro: currentUser?.usuario || "enfermeria",
+        user_role: currentUser?.rol || "ENFERMERIA"
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast("Error", data.error || "No se pudo registrar el informe.", "error");
+      return;
+    }
+
+    showToast("Informe Registrado", "El informe clínico formal se registró con éxito.", "success");
+    cerrarModalInformeClinico();
+
+    // Actualizar expediente si estaba abierto
+    if (expedienteActualCache && expedienteActualCache.id === paciente_id) {
+      abrirModalExpediente(paciente_id);
+    }
+    // Abrir visor de impresión de inmediato
+    verInformeClinico(data.id);
+
+  } catch (err) {
+    showToast("Error de Conexión", err.message, "error");
+  }
+}
+
+async function verInformeClinico(informeId) {
+  try {
+    const res = await fetch(`/api/informes-clinicos/${informeId}`);
+    const inf = await res.json();
+    if (!res.ok) {
+      showToast("Error", "No se pudo cargar el documento.", "error");
+      return;
+    }
+
+    document.getElementById("doc-inf-codigo").textContent = `INF-${inf.fecha.slice(0, 4)}-${String(inf.id).padStart(4, '0')}`;
+    document.getElementById("doc-inf-fecha").textContent = `Fecha de Emisión: ${inf.fecha}`;
+    document.getElementById("doc-inf-titulo").textContent = inf.tipo_informe.replace(/_/g, " ");
+
+    document.getElementById("doc-inf-pac-nombre").textContent = `${inf.nombres} ${inf.apellidos}`;
+    document.getElementById("doc-inf-pac-cedula").textContent = inf.cedula || "No registrada";
+    document.getElementById("doc-inf-pac-edad").textContent = inf.edad ? `${inf.edad} años` : "N/D";
+    document.getElementById("doc-inf-pac-piso").textContent = inf.piso_area || "General";
+    document.getElementById("doc-inf-pac-alergias").textContent = inf.alergias || "Niega alergias";
+    document.getElementById("doc-inf-pac-meds").textContent = inf.medicacion_habitual || "Ninguna";
+
+    document.getElementById("doc-inf-motivo").textContent = inf.motivo_derivacion;
+    document.getElementById("doc-inf-detalles").textContent = inf.detalles_informe;
+    document.getElementById("doc-inf-recomendaciones").textContent = inf.recomendaciones;
+
+    document.getElementById("doc-inf-firma-prof").textContent = inf.profesional_nombre;
+    document.getElementById("doc-inf-cargo-prof").textContent = `${inf.profesional_rol} • Dispensario FYDI`;
+    document.getElementById("doc-inf-firma-pac").textContent = `${inf.nombres} ${inf.apellidos} (C.I: ${inf.cedula || 'S/C'})`;
+
+    document.getElementById("modal-visor-informe").classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    showToast("Error", "Error al visualizar el informe: " + err.message, "error");
+  }
+}
+
+function cerrarModalVisorInforme() {
+  document.getElementById("modal-visor-informe").classList.add("hidden");
 }
 
 // ----------------------------------------------------------------

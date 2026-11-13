@@ -604,6 +604,149 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 cur.execute(sql, args)
                 self.send_json([dict(r) for r in cur.fetchall()])
 
+            elif path == "/api/pacientes/alerta-clinica":
+                cedula = params.get("cedula", [""])[0].strip()
+                pid_str = params.get("id", [""])[0].strip()
+                pac = None
+                if cedula:
+                    cur.execute("SELECT * FROM pacientes WHERE cedula = ?", (cedula,))
+                    pac = cur.fetchone()
+                elif pid_str:
+                    cur.execute("SELECT * FROM pacientes WHERE id = ?", (int(pid_str),))
+                    pac = cur.fetchone()
+
+                if not pac:
+                    self.send_json({"existe": False})
+                    return
+
+                pac_dict = dict(pac)
+                pid = pac_dict["id"]
+
+                # Atenciones previas no anuladas
+                cur.execute("""
+                    SELECT a.id, a.fecha, a.diagnostico, a.observaciones, 
+                           a.presion_arterial, a.frecuencia_cardiaca, a.frecuencia_respiratoria,
+                           a.temperatura, a.saturacion_oxigeno, a.peso, a.talla,
+                           a.imc, a.clasificacion_imc, a.tiempo_evolucion,
+                           COALESCE(a.estado, 'ACTIVA') as estado,
+                           COALESCE(a.usuario_registro, 'enfermeria') as usuario_registro,
+                           a.creado_en
+                    FROM atenciones a
+                    WHERE a.paciente_id = ? AND COALESCE(a.estado, 'ACTIVA') != 'ANULADA'
+                    ORDER BY a.fecha DESC, a.id DESC
+                    LIMIT 20
+                """, (pid,))
+                hist = [dict(r) for r in cur.fetchall()]
+
+                # Medicamentos despachados en cada atencion previa
+                for at in hist[:5]:
+                    cur.execute("""
+                        SELECT m.nombre, m.presentacion, d.cantidad
+                        FROM despachos d
+                        JOIN medicamentos m ON d.medicamento_id = m.id
+                        WHERE d.atencion_id = ?
+                    """, (at["id"],))
+                    at["medicamentos"] = [dict(m) for m in cur.fetchall()]
+
+                # Visitas en últimos 30 días
+                cur.execute("""
+                    SELECT count(*) FROM atenciones 
+                    WHERE paciente_id = ? AND COALESCE(estado, 'ACTIVA') != 'ANULADA' 
+                      AND fecha >= date('now', '-30 days')
+                """, (pid,))
+                row_30 = cur.fetchone()
+                visitas_30 = row_30[0] if row_30 else 0
+
+                # Total histórico de visitas
+                cur.execute("SELECT count(*) FROM atenciones WHERE paciente_id = ? AND COALESCE(estado, 'ACTIVA') != 'ANULADA'", (pid,))
+                row_tot = cur.fetchone()
+                total_visitas = row_tot[0] if row_tot else 0
+
+                # Informes clínicos previos
+                cur.execute("""
+                    SELECT id, atencion_id, fecha, tipo_informe, motivo_derivacion, detalles_informe, recomendaciones, profesional_nombre, profesional_rol, creado_en
+                    FROM informes_clinicos
+                    WHERE paciente_id = ?
+                    ORDER BY id DESC
+                """, (pid,))
+                informes_previos = [dict(inf) for inf in cur.fetchall()]
+
+                # Detección de patrones y recurrencia de síntomas
+                alertas = []
+                sintomas_recurrentes = []
+                keywords_map = {
+                    "Cefalea / Dolor de cabeza": ["cefalea", "cabeza", "migraña", "jaqueca"],
+                    "Gastritis / Dolor epigástrico": ["gastritis", "estómago", "acidez", "reflujo", "epigastralgia", "digestivo"],
+                    "Infección / Cuadro respiratorio": ["gripe", "tos", "garganta", "congestión", "resfriado", "odinofagia", "fiebre"],
+                    "Hipertensión / Alteración PA": ["hipertensión", "presión", "tensión", "hipertenso"],
+                    "Dolor muscular / Lumbalgia": ["lumbalgia", "espalda", "cuello", "muscular", "contractura", "golpe"]
+                }
+                
+                texto_clinico = " ".join([f"{a.get('diagnostico', '')} {a.get('observaciones', '')}".lower() for a in hist])
+                for sintoma, palabras in keywords_map.items():
+                    coincidencias = sum(texto_clinico.count(p) for p in palabras)
+                    if coincidencias >= 2:
+                        sintomas_recurrentes.append(f"{sintoma} ({coincidencias} veces)")
+
+                # Cálculo del nivel de alerta clínica
+                alerta_nivel = "NORMAL"
+                if visitas_30 >= 4 or len(sintomas_recurrentes) >= 2:
+                    alerta_nivel = "CRITICA"
+                    alertas.append(f"ALERTA CLÍNICA CRÍTICA: Paciente altamente recurrente con {visitas_30} consultas en los últimos 30 días.")
+                    if sintomas_recurrentes:
+                        alertas.append(f"Patologías repetitivas detectadas: {', '.join(sintomas_recurrentes)}. Riesgo de tolerancia farmacológica o enfermedad de fondo no diagnosticada.")
+                    alertas.append("ACCIÓN REQUERIDA: Evitar seguir entregando paliativos sin evaluación médica especializada. Se recomienda emitir Informe de Derivación / Deslinde.")
+                elif visitas_30 >= 2 or len(sintomas_recurrentes) >= 1:
+                    alerta_nivel = "PRECAUCION"
+                    alertas.append(f"PACIENTE FRECUENTE: Registra {visitas_30} consultas este mes ({total_visitas} en total).")
+                    if sintomas_recurrentes:
+                        alertas.append(f"Síntomas frecuentes: {', '.join(sintomas_recurrentes)}.")
+
+                # Verificar alergias registradas
+                alergias = (pac_dict.get("alergias") or "").strip()
+                if alergias and alergias.upper() not in ("NO", "NO REFIERE", "NINGUNA", "NINGUNO", "NIEGA"):
+                    alertas.insert(0, f"🚨 ALERGIA REGISTRADA: {alergias} (Verificar antes de suministrar fármacos).")
+
+                if informes_previos:
+                    alertas.append(f"Cuenta con {len(informes_previos)} informe(s) o derivación(es) previa(s) registrada(s).")
+
+                self.send_json({
+                    "existe": True,
+                    "paciente": pac_dict,
+                    "alerta_nivel": alerta_nivel,
+                    "visitas_ultimos_30_dias": visitas_30,
+                    "total_visitas": total_visitas,
+                    "alertas": alertas,
+                    "sintomas_recurrentes": sintomas_recurrentes,
+                    "historial_reciente": hist[:5],
+                    "informes_previos": informes_previos
+                })
+
+            elif path.startswith("/api/pacientes/") and path.endswith("/informes"):
+                parts = path.split("/")
+                pid = int(parts[3])
+                cur.execute("""
+                    SELECT id, atencion_id, fecha, tipo_informe, motivo_derivacion, detalles_informe, recomendaciones, profesional_nombre, profesional_rol, usuario_registro, creado_en
+                    FROM informes_clinicos
+                    WHERE paciente_id = ?
+                    ORDER BY id DESC
+                """, (pid,))
+                self.send_json([dict(r) for r in cur.fetchall()])
+
+            elif path.startswith("/api/informes-clinicos/"):
+                inf_id = int(path.split("/")[3])
+                cur.execute("""
+                    SELECT i.*, p.nombres, p.apellidos, p.cedula, p.edad, p.piso_area, p.alergias, p.antecedentes_personales, p.antecedentes_familiares
+                    FROM informes_clinicos i
+                    JOIN pacientes p ON i.paciente_id = p.id
+                    WHERE i.id = ?
+                """, (inf_id,))
+                inf = cur.fetchone()
+                if not inf:
+                    self.send_json({"error": "Informe no encontrado"}, 404)
+                    return
+                self.send_json(dict(inf))
+
             elif path.startswith("/api/pacientes/") and path.endswith("/historial"):
                 parts = path.split("/")
                 pid = int(parts[3])
@@ -618,7 +761,12 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     SELECT a.id, a.fecha, a.diagnostico, a.observaciones, 
                            COALESCE(a.estado, 'ACTIVA') as estado,
                            a.motivo_anulacion, a.anulado_por, a.anulado_en,
-                           COALESCE(a.usuario_registro, 'enfermeria') as usuario_registro
+                           COALESCE(a.usuario_registro, 'enfermeria') as usuario_registro,
+                           a.presion_arterial, a.frecuencia_cardiaca, a.frecuencia_respiratoria,
+                           a.temperatura, a.saturacion_oxigeno, a.peso, a.talla,
+                           a.imc, a.clasificacion_imc, a.tiempo_evolucion,
+                           a.enfermedad_actual, a.revision_sistemas, a.examen_fisico, a.plan_tratamiento,
+                           a.creado_en
                     FROM atenciones a
                     WHERE a.paciente_id = ?
                     ORDER BY a.fecha DESC, a.id DESC
@@ -633,6 +781,16 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     """, (at["id"],))
                     at["medicamentos"] = [dict(m) for m in cur.fetchall()]
                 pac_dict["historial"] = atenciones
+
+                # Adjuntar informes clínicos
+                cur.execute("""
+                    SELECT id, atencion_id, fecha, tipo_informe, motivo_derivacion, detalles_informe, recomendaciones, profesional_nombre, profesional_rol, usuario_registro, creado_en
+                    FROM informes_clinicos
+                    WHERE paciente_id = ?
+                    ORDER BY id DESC
+                """, (pid,))
+                pac_dict["informes"] = [dict(inf) for inf in cur.fetchall()]
+
                 self.send_json(pac_dict)
 
             elif path == "/api/atenciones":
@@ -924,7 +1082,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 })
 
             # ---------------------------------------------------------
-            # 2. REGISTRO DE ATENCIONES (CON TRAZABILIDAD DE USUARIO)
+            # 2. REGISTRO DE ATENCIONES Y TRIAJE CLÍNICO COMPLETO
             # ---------------------------------------------------------
             elif path == "/api/atenciones":
                 user_role = data.get("user_role", "ENFERMERIA").upper()
@@ -940,11 +1098,39 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 observaciones = data.get("observaciones", "").strip()
                 medicamentos = data.get("medicamentos", [])
 
-                if not medicamentos:
-                    self.send_json({"error": "Debe incluir al menos un medicamento."}, 400)
+                # RESTRICCIÓN DE SEGURIDAD LEGAL / CLÍNICA PARA AUXILIAR DE ENFERMERÍA:
+                # La auxiliar puede hacer triaje, toma de signos vitales, preguntas de rutina y registro,
+                # pero NO puede prescribir ni despachar medicamentos farmacológicos por su cuenta.
+                if user_role == "AUXILIAR_ENFERMERIA" and medicamentos and len(medicamentos) > 0:
+                    self.send_json({
+                        "error": "SEGURIDAD CLÍNICA PREVENTIVA: El rol Auxiliar de Enfermería no está facultado legalmente para prescribir ni entregar medicamentos sin autorización médica. Puede registrar el triaje y la consulta sin medicamentos para valoración posterior."
+                    }, 403)
                     return
 
-                # Validar stock y caducidad primero
+                # Datos clínicos y signos vitales (triaje)
+                presion_arterial = (data.get("presion_arterial") or "").strip()
+                frecuencia_cardiaca = data.get("frecuencia_cardiaca")
+                frecuencia_respiratoria = data.get("frecuencia_respiratoria")
+                temperatura = data.get("temperatura")
+                saturacion_oxigeno = data.get("saturacion_oxigeno")
+                peso = data.get("peso")
+                talla = data.get("talla")
+                imc = data.get("imc")
+                clasificacion_imc = (data.get("clasificacion_imc") or "").strip()
+                tiempo_evolucion = (data.get("tiempo_evolucion") or "").strip()
+                enfermedad_actual = (data.get("enfermedad_actual") or "").strip()
+                revision_sistemas = (data.get("revision_sistemas") or "").strip()
+                examen_fisico = (data.get("examen_fisico") or "").strip()
+                plan_tratamiento = (data.get("plan_tratamiento") or "").strip()
+
+                # Antecedentes del paciente
+                alergias = (paciente_data.get("alergias") or data.get("alergias") or "").strip()
+                ant_personales = (paciente_data.get("antecedentes_personales") or data.get("antecedentes_personales") or "").strip()
+                ant_familiares = (paciente_data.get("antecedentes_familiares") or data.get("antecedentes_familiares") or "").strip()
+                med_habitual = (paciente_data.get("medicacion_habitual") or data.get("medicacion_habitual") or "").strip()
+                grupo_sanguineo = (paciente_data.get("grupo_sanguineo") or data.get("grupo_sanguineo") or "").strip()
+
+                # Validar stock y caducidad si se incluyen medicamentos
                 today_val = datetime.now().date()
                 for item in medicamentos:
                     mid = item.get("medicamento_id")
@@ -1001,25 +1187,60 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
                     if not pid:
                         cur.execute("""
-                            INSERT INTO pacientes (cedula, nombres, apellidos, edad, celular, piso_area, creado_en)
-                            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-                        """, (cedula if cedula else None, nombres, apellidos, edad, celular, piso))
+                            INSERT INTO pacientes (
+                                cedula, nombres, apellidos, edad, celular, piso_area,
+                                alergias, antecedentes_personales, antecedentes_familiares, medicacion_habitual, grupo_sanguineo,
+                                creado_en
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                        """, (
+                            cedula if cedula else None, nombres, apellidos, edad, celular, piso,
+                            alergias or None, ant_personales or None, ant_familiares or None, med_habitual or None, grupo_sanguineo or None
+                        ))
                         pid = cur.lastrowid
                     else:
                         cur.execute("""
                             UPDATE pacientes SET 
                                 edad = COALESCE(?, edad),
                                 celular = CASE WHEN ? != '' THEN ? ELSE celular END,
-                                piso_area = CASE WHEN ? != '' THEN ? ELSE piso_area END
+                                piso_area = CASE WHEN ? != '' THEN ? ELSE piso_area END,
+                                alergias = CASE WHEN ? != '' THEN ? ELSE alergias END,
+                                antecedentes_personales = CASE WHEN ? != '' THEN ? ELSE antecedentes_personales END,
+                                antecedentes_familiares = CASE WHEN ? != '' THEN ? ELSE antecedentes_familiares END,
+                                medicacion_habitual = CASE WHEN ? != '' THEN ? ELSE medicacion_habitual END,
+                                grupo_sanguineo = CASE WHEN ? != '' THEN ? ELSE grupo_sanguineo END
                             WHERE id = ?
-                        """, (edad, celular, celular, piso, piso, pid))
+                        """, (edad, celular, celular, piso, piso, alergias, alergias, ant_personales, ant_personales, ant_familiares, ant_familiares, med_habitual, med_habitual, grupo_sanguineo, grupo_sanguineo, pid))
+                else:
+                    # Actualizar antecedentes si se proporcionaron
+                    cur.execute("""
+                        UPDATE pacientes SET 
+                            alergias = CASE WHEN ? != '' THEN ? ELSE alergias END,
+                            antecedentes_personales = CASE WHEN ? != '' THEN ? ELSE antecedentes_personales END,
+                            antecedentes_familiares = CASE WHEN ? != '' THEN ? ELSE antecedentes_familiares END,
+                            medicacion_habitual = CASE WHEN ? != '' THEN ? ELSE medicacion_habitual END,
+                            grupo_sanguineo = CASE WHEN ? != '' THEN ? ELSE grupo_sanguineo END
+                        WHERE id = ?
+                    """, (alergias, alergias, ant_personales, ant_personales, ant_familiares, ant_familiares, med_habitual, med_habitual, grupo_sanguineo, grupo_sanguineo, pid))
 
-                # Registrar atención con trazabilidad de usuario y estado ACTIVA
+                # Registrar atención clínica con trazabilidad y signos vitales
                 usuario_tag = f"{usuario_nombre} ({user_role})"
                 cur.execute("""
-                    INSERT INTO atenciones (fecha, paciente_id, diagnostico, observaciones, estado, usuario_registro, creado_en)
-                    VALUES (?, ?, ?, ?, 'ACTIVA', ?, datetime('now'))
-                """, (fecha, pid, diagnostico, observaciones, usuario_tag))
+                    INSERT INTO atenciones (
+                        fecha, paciente_id, diagnostico, observaciones, estado, usuario_registro,
+                        presion_arterial, frecuencia_cardiaca, frecuencia_respiratoria,
+                        temperatura, saturacion_oxigeno, peso, talla, imc, clasificacion_imc,
+                        tiempo_evolucion, enfermedad_actual, revision_sistemas, examen_fisico, plan_tratamiento,
+                        creado_en
+                    )
+                    VALUES (?, ?, ?, ?, 'ACTIVA', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                """, (
+                    fecha, pid, diagnostico, observaciones, usuario_tag,
+                    presion_arterial or None, frecuencia_cardiaca or None, frecuencia_respiratoria or None,
+                    temperatura or None, saturacion_oxigeno or None, peso or None, talla or None, imc or None,
+                    clasificacion_imc or None, tiempo_evolucion or None, enfermedad_actual or None,
+                    revision_sistemas or None, examen_fisico or None, plan_tratamiento or None
+                ))
                 atencion_id = cur.lastrowid
 
                 cur.execute("SELECT nombres, apellidos FROM pacientes WHERE id = ?", (pid,))
@@ -1058,10 +1279,52 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 conn.commit()
                 self.send_json({
                     "success": True,
-                    "mensaje": "Atención y despacho registrados con éxito. El inventario se actualizó automáticamente.",
+                    "mensaje": "Atención clínica registrada con éxito." if not despachados_info else "Atención clínica y despacho registrados con éxito. El inventario se actualizó automáticamente.",
                     "atencion_id": atencion_id,
                     "paciente": p_name,
                     "despacho": despachados_info
+                }, 201)
+
+            # ---------------------------------------------------------
+            # 2.1 INFORMES CLÍNICOS Y DESLINDE DE RESPONSABILIDAD
+            # ---------------------------------------------------------
+            elif path == "/api/informes-clinicos":
+                user_role = (data.get("user_role") or "ENFERMERIA").upper()
+                paciente_id = data.get("paciente_id")
+                atencion_id = data.get("atencion_id")
+                fecha = data.get("fecha") or datetime.now().strftime("%Y-%m-%d")
+                tipo_informe = (data.get("tipo_informe") or "DERIVACION_MEDICA").strip()
+                motivo = (data.get("motivo_derivacion") or "").strip()
+                detalles = (data.get("detalles_informe") or "").strip()
+                recomendaciones = (data.get("recomendaciones") or "").strip()
+                prof_nombre = data.get("profesional_nombre") or data.get("usuario_nombre") or "Lic. Patricia Pilataxi"
+                prof_rol = data.get("profesional_rol") or "ENFERMERA_TITULAR"
+                usuario_reg = data.get("usuario_registro") or "patricia.pilataxi"
+
+                if not paciente_id:
+                    self.send_json({"error": "Debe especificar el paciente para el informe clínico."}, 400)
+                    return
+                if not motivo or not detalles:
+                    self.send_json({"error": "Debe ingresar el motivo y el detalle clínico del informe."}, 400)
+                    return
+
+                cur.execute("""
+                    INSERT INTO informes_clinicos (
+                        paciente_id, atencion_id, fecha, tipo_informe, motivo_derivacion,
+                        detalles_informe, recomendaciones, profesional_nombre, profesional_rol,
+                        usuario_registro, creado_en
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                """, (
+                    paciente_id, atencion_id, fecha, tipo_informe, motivo,
+                    detalles, recomendaciones, prof_nombre, prof_rol, usuario_reg
+                ))
+                informe_id = cur.lastrowid
+                conn.commit()
+                self.send_json({
+                    "success": True,
+                    "id": informe_id,
+                    "mensaje": "Informe clínico y derivación formal registrados correctamente."
                 }, 201)
 
             # ---------------------------------------------------------
@@ -1731,6 +1994,46 @@ def init_system_tables():
                 cur.execute("ALTER TABLE medicamentos ADD COLUMN fecha_vencimiento TEXT")
             if "lote" not in existing_cols:
                 cur.execute("ALTER TABLE medicamentos ADD COLUMN lote TEXT")
+
+        # Asegurar columnas clínicas en pacientes
+        cur.execute("PRAGMA table_info(pacientes)")
+        pac_cols = [r[1] for r in cur.fetchall()]
+        if pac_cols:
+            for c in ["alergias", "antecedentes_personales", "antecedentes_familiares", "medicacion_habitual", "grupo_sanguineo"]:
+                if c not in pac_cols:
+                    cur.execute(f"ALTER TABLE pacientes ADD COLUMN {c} TEXT")
+
+        # Asegurar columnas de triaje y signos vitales en atenciones
+        cur.execute("PRAGMA table_info(atenciones)")
+        at_cols = [r[1] for r in cur.fetchall()]
+        if at_cols:
+            for c, ctype in [
+                ("presion_arterial", "TEXT"), ("frecuencia_cardiaca", "INTEGER"), ("frecuencia_respiratoria", "INTEGER"),
+                ("temperatura", "REAL"), ("saturacion_oxigeno", "INTEGER"), ("peso", "REAL"), ("talla", "REAL"),
+                ("imc", "REAL"), ("clasificacion_imc", "TEXT"), ("tiempo_evolucion", "TEXT"), ("enfermedad_actual", "TEXT"),
+                ("revision_sistemas", "TEXT"), ("examen_fisico", "TEXT"), ("plan_tratamiento", "TEXT")
+            ]:
+                if c not in at_cols:
+                    cur.execute(f"ALTER TABLE atenciones ADD COLUMN {c} {ctype}")
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS informes_clinicos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                paciente_id INTEGER NOT NULL,
+                atencion_id INTEGER,
+                fecha TEXT NOT NULL,
+                tipo_informe TEXT NOT NULL,
+                motivo_derivacion TEXT NOT NULL,
+                detalles_informe TEXT NOT NULL,
+                recomendaciones TEXT,
+                profesional_nombre TEXT NOT NULL,
+                profesional_rol TEXT NOT NULL,
+                usuario_registro TEXT NOT NULL,
+                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                FOREIGN KEY(atencion_id) REFERENCES atenciones(id)
+            )
+        """)
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS solicitudes_asistencia (
