@@ -425,7 +425,7 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
 
             autenticado = False
             if user and user["rol"] == "ADMINISTRADOR":
-                if user["password_hash"] == p_hash or password in ("admin123", "admin"):
+                if user["password_hash"] == p_hash:
                     autenticado = True
 
             if not autenticado:
@@ -885,22 +885,8 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     user = cur.fetchone()
 
                 valido = False
-                if user:
-                    # 1. Hash exacto
-                    if user["password_hash"] == p_hash:
-                        valido = True
-                    # 2. Clave universal fácil para cualquier usuario (123456, fydi2025, etc.)
-                    elif password in ("123456", "fydi2025", "fydi123", "1234", "admin123"):
-                        valido = True
-                    # 3. Claves directas y mnemotécnicas por rol
-                    elif usuario in ("enfermeria", "patricia.pilataxi") and password in ("123456", "patricia123", "patricia", "enfermeria123", "enfermera123", "enfermeria"):
-                        valido = True
-                    elif usuario in ("asistente.manana", "auxiliar", "asistente") and password in ("123456", "asistente123", "auxiliar123", "asistente", "auxiliar"):
-                        valido = True
-                    elif usuario == "admin" and password in ("123456", "admin123", "admin", "sistemas"):
-                        valido = True
-                    elif usuario == "auditor" and password in ("123456", "auditor123", "auditor", "auditoria", "auditoria123"):
-                        valido = True
+                if user and user["password_hash"] == p_hash:
+                    valido = True
 
                 if not user or not valido:
                     self.send_json({"error": "Credenciales inválidas. Compruebe el usuario o contraseña."}, 401)
@@ -1795,11 +1781,11 @@ def init_system_tables():
             )
         """)
         users_to_ensure = [
-            ("admin", hash_pw("123456"), "Administrador General FYDI (Sistemas)", "ADMINISTRADOR"),
-            ("enfermeria", hash_pw("123456"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
-            ("patricia.pilataxi", hash_pw("123456"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
-            ("asistente.manana", hash_pw("123456"), "Enfermería Apoyo (Turno Mañana 7:30-9:30)", "AUXILIAR_ENFERMERIA"),
-            ("auditor", hash_pw("123456"), "Auditoría Médica y Sanitaria", "AUDITOR")
+            ("admin", hash_pw("Admin.Sistemas#2025"), "Administrador General FYDI (Sistemas)", "ADMINISTRADOR"),
+            ("enfermeria", hash_pw("Patricia.Med@2025"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
+            ("patricia.pilataxi", hash_pw("Patricia.Med@2025"), "Lic. Patricia Pilataxi (Titular 9:30-18:30)", "ENFERMERIA"),
+            ("asistente.manana", hash_pw("Auxiliar.Turno#2025"), "Enfermería Apoyo (Turno Mañana 7:30-9:30)", "AUXILIAR_ENFERMERIA"),
+            ("auditor", hash_pw("Auditoria.Sanitaria#2025"), "Auditoría Médica y Sanitaria", "AUDITOR")
         ]
         for u, p, n, r in users_to_ensure:
             cur.execute("SELECT id FROM usuarios WHERE lower(usuario) = ?", (u.lower(),))
