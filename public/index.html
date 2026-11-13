@@ -1883,17 +1883,18 @@
       <div class="w-full md:w-[45%] lg:w-[43%] bg-gradient-to-br from-[#EEF4FB] via-[#F5F8FC] to-[#E3EDF8] p-4 sm:p-6 lg:p-7 flex flex-col justify-center overflow-y-auto">
         <div class="bg-white rounded-[24px] p-5 sm:p-6 shadow-xl border border-slate-200/80 w-full max-w-md mx-auto space-y-4">
           
-          <!-- Logo Header: FYDI Dispensario Médico (Exacto al diseño original) -->
+          <!-- Logo Header: FYDI Oficial (Exacto a la fotografía del usuario) -->
           <div class="text-center pt-1">
-            <img src="/img/fydi_dispensario_header_logo.png" alt="FYDI Dispensario Médico" class="h-14 sm:h-16 w-auto mx-auto object-contain">
-            <div class="w-full h-px bg-slate-200/80 my-3"></div>
+            <img src="/img/fydi_official_logo_transparent.png" alt="FYDI" class="h-16 sm:h-20 w-auto mx-auto object-contain">
           </div>
 
-          <!-- Iniciar Sesión Title -->
+          <!-- Iniciar Sesión Title (Exacto a la fotografía del usuario) -->
           <div class="text-center">
-            <div class="flex items-center justify-center gap-2">
-              <i data-lucide="lock" class="w-5 h-5 text-[#0B4A82]"></i>
-              <h2 id="lbl-modal-login-title" class="text-lg sm:text-xl font-black text-slate-800 tracking-tight">Iniciar Sesión</h2>
+            <div class="flex items-center justify-center gap-2.5">
+              <span class="w-7 h-7 rounded-lg bg-[#005FB8] text-white flex items-center justify-center shadow-sm">
+                <i data-lucide="lock" class="w-4 h-4 text-white"></i>
+              </span>
+              <h2 id="lbl-modal-login-title" class="text-xl sm:text-2xl font-black text-[#0F2C59] tracking-tight">Iniciar Sesión</h2>
             </div>
             <p id="lbl-modal-login-sub" class="text-xs text-slate-500 mt-1">Accede al sistema con tu usuario y contraseña</p>
           </div>
@@ -1903,18 +1904,18 @@
             
             <!-- Usuario Input -->
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <i data-lucide="user" class="w-4 h-4 text-[#0B4A82]"></i>
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600">
+                <i data-lucide="user" class="w-4 h-4 text-[#0F2C59]"></i>
               </div>
-              <input type="text" name="username" id="login-usuario" required placeholder="Usuario" autocomplete="username" class="w-full bg-slate-50/60 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-[#0B4A82] focus:border-[#0B4A82] focus:outline-none transition">
+              <input type="text" name="username" id="login-usuario" required placeholder="Usuario" autocomplete="username" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#005FB8] focus:border-[#005FB8] focus:outline-none transition">
             </div>
 
             <!-- Contraseña Input -->
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <i data-lucide="lock" class="w-4 h-4 text-[#0B4A82]"></i>
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600">
+                <i data-lucide="lock" class="w-4 h-4 text-[#0F2C59]"></i>
               </div>
-              <input type="password" name="password" id="login-password" required placeholder="Contraseña" autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-slate-50/60 border border-slate-300 rounded-xl pl-10 pr-11 py-2.5 sm:py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-[#0B4A82] focus:border-[#0B4A82] focus:outline-none transition font-mono">
+              <input type="password" name="password" id="login-password" required placeholder="Contraseña" autocomplete="current-password" onkeyup="checkCapsLock(event)" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-11 py-2.5 sm:py-3 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#005FB8] focus:border-[#005FB8] focus:outline-none transition font-sans">
               <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition" title="Alternar visibilidad">
                 <i data-lucide="eye" class="w-4 h-4"></i>
               </button>
@@ -1923,7 +1924,7 @@
             <!-- Nota de Seguridad Discreta (Sin exponer credenciales en pantalla) -->
             <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
               <span class="flex items-center gap-1.5 font-medium text-slate-500">
-                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#0B4A82]"></i> Ingrese su contraseña confidencial
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#005FB8]"></i> Ingrese su contraseña confidencial
               </span>
               <span class="text-slate-400">Acceso protegido</span>
             </div>
@@ -1941,18 +1942,14 @@
 
             <!-- Role Selector 2x2 Grid (Exact match to User's Mockup) -->
             <div class="pt-1">
-              <label class="block text-xs font-bold text-slate-800 mb-2">Selecciona tu rol:</label>
+              <label class="block text-xs font-bold text-[#0F2C59] mb-2">Selecciona tu rol:</label>
               <div class="grid grid-cols-2 gap-2.5">
                 
                 <!-- Rol 1: Licenciada Patricia (Active by default) -->
                 <div onclick="seleccionarPerfil('patricia.pilataxi')" id="card-role-patricia.pilataxi" class="role-card-fidi active-fidi-role">
-                  <div class="shrink-0">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                      <path d="M9 3h6"/>
-                      <path d="M12 1.5v3"/>
-                    </svg>
+                  <div class="w-8 h-8 shrink-0 flex items-center justify-center">
+                    <img src="/img/icon_nurse_navy.png" alt="Icono" class="role-icon-inactive h-7 w-auto object-contain">
+                    <img src="/img/icon_nurse_white.png" alt="Icono" class="role-icon-active h-7 w-auto object-contain">
                   </div>
                   <div class="text-left">
                     <span class="text-xs font-bold block leading-tight">Licenciada</span>
@@ -1960,14 +1957,11 @@
                   </div>
                 </div>
 
-                <!-- Rol 2: Auditoría Médica -->
+                <!-- Rol 2: Auditoría (Mismo icono de enfermera de la foto, reemplazando texto por Auditoría) -->
                 <div onclick="seleccionarPerfil('auditor')" id="card-role-auditor" class="role-card-fidi">
-                  <div class="shrink-0">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                      <path d="m9 14 2 2 4-4"/>
-                    </svg>
+                  <div class="w-8 h-8 shrink-0 flex items-center justify-center">
+                    <img src="/img/icon_nurse_navy.png" alt="Icono" class="role-icon-inactive h-7 w-auto object-contain">
+                    <img src="/img/icon_nurse_white.png" alt="Icono" class="role-icon-active h-7 w-auto object-contain">
                   </div>
                   <div class="text-left">
                     <span class="text-xs font-bold block leading-tight">Auditoría</span>
@@ -1977,11 +1971,9 @@
 
                 <!-- Rol 3: Auxiliar de Mañana -->
                 <div onclick="seleccionarPerfil('asistente.manana')" id="card-role-asistente.manana" class="role-card-fidi">
-                  <div class="shrink-0">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
+                  <div class="w-8 h-8 shrink-0 flex items-center justify-center">
+                    <img src="/img/icon_auxiliar_navy.png" alt="Icono" class="role-icon-inactive h-7 w-auto object-contain">
+                    <img src="/img/icon_auxiliar_white.png" alt="Icono" class="role-icon-active h-7 w-auto object-contain">
                   </div>
                   <div class="text-left">
                     <span class="text-xs font-bold block leading-tight">Auxiliar de</span>
@@ -1991,15 +1983,13 @@
 
                 <!-- Rol 4: Administrador y Auditoría -->
                 <div onclick="seleccionarPerfil('admin')" id="card-role-admin" class="role-card-fidi">
-                  <div class="shrink-0">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
+                  <div class="w-8 h-8 shrink-0 flex items-center justify-center">
+                    <img src="/img/icon_admin_navy.png" alt="Icono" class="role-icon-inactive h-7 w-auto object-contain">
+                    <img src="/img/icon_admin_white.png" alt="Icono" class="role-icon-active h-7 w-auto object-contain">
                   </div>
                   <div class="text-left">
                     <span class="text-xs font-bold block leading-tight">Administrador</span>
-                    <span class="text-xs font-bold block leading-tight">General</span>
+                    <span class="text-xs font-bold block leading-tight">y Auditoría</span>
                   </div>
                 </div>
 
@@ -2008,7 +1998,7 @@
 
             <!-- Submit Button (Ingresar) -->
             <div class="pt-2">
-              <button type="submit" id="btn-login-submit" class="w-full bg-[#0B4A82] hover:bg-[#08355E] active:scale-[0.99] text-white font-bold py-3 rounded-xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+              <button type="submit" id="btn-login-submit" class="w-full bg-[#00509D] hover:bg-[#003E7A] active:scale-[0.99] text-white font-bold py-3 rounded-2xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                 <i data-lucide="log-in" class="w-5 h-5"></i>
                 <span id="btn-login-text">Ingresar</span>
               </button>
@@ -2018,8 +2008,8 @@
 
           <!-- Security Footer (Exact match to User's Mockup) -->
           <div class="pt-2 text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
-            <i data-lucide="shield-check" class="w-4 h-4 text-[#0B4A82]"></i>
-            <span>Sistema Seguro • FYDI © 2025</span>
+            <i data-lucide="shield-check" class="w-4 h-4 text-[#00509D]"></i>
+            <span>Sistema Seguro • FIDI © 2025</span>
           </div>
 
         </div>
