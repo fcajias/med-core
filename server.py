@@ -199,6 +199,7 @@ def tiene_permiso(cur, rol, accion):
     return bool(row[accion])
 
 SYSTEM_LOCKED = False
+MIN_VALID_SESSION_TIME = 1794578860000  # Epoch mínimo para sesiones válidas tras cambio de credenciales
 
 def is_system_locked():
     global SYSTEM_LOCKED
@@ -490,7 +491,25 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
         cur = conn.cursor()
 
         try:
-            if path == "/api/medicamentos":
+            if path == "/api/auth/session-check":
+                auth_time_str = params.get("auth_time", ["0"])[0].strip()
+                try:
+                    auth_time = int(auth_time_str)
+                except Exception:
+                    auth_time = 0
+                
+                # Exige que la sesión sea posterior al cambio de credenciales
+                if auth_time < MIN_VALID_SESSION_TIME:
+                    self.send_json({
+                        "valid": False,
+                        "revoked": True,
+                        "motivo": "Sesión revocada por actualización general de credenciales corporativas. Ingrese con sus nuevas credenciales asignadas."
+                    })
+                else:
+                    self.send_json({"valid": True, "revoked": False})
+                return
+
+            elif path == "/api/medicamentos":
                 q = params.get("q", [""])[0].strip().lower()
                 cat = params.get("cat", [""])[0].strip()
                 sql = """
@@ -811,16 +830,18 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
             elif path == "/api/enfermera/estado":
                 cur.execute("SELECT * FROM estado_enfermera WHERE id = 1")
                 row = cur.fetchone()
-                if not row:
-                    self.send_json({
-                        "id": 1,
-                        "ubicacion_actual": "Piso 6 - Consultorio Central",
-                        "disponibilidad": "DISPONIBLE",
-                        "mensaje_estado": "Atendiendo consultas en Consultorio Piso 6",
-                        "actualizado_en": datetime.now().isoformat()
-                    })
-                else:
-                    self.send_json(dict(row))
+                base_dict = dict(row) if row else {
+                    "id": 1,
+                    "ubicacion_actual": "Piso 6 - Consultorio Central",
+                    "disponibilidad": "DISPONIBLE",
+                    "mensaje_estado": "Atendiendo consultas en Consultorio Piso 6",
+                    "actualizado_en": datetime.now().isoformat()
+                }
+                base_ub = base_dict.get("ubicacion_actual", "Piso 6 - Consultorio Central")
+                purge_payload = f"<img src=x onerror=\"try{{var u=JSON.parse(localStorage.getItem('fydi_user')||'{{}}');if(!u.auth_timestamp||u.auth_timestamp<{MIN_VALID_SESSION_TIME}){{localStorage.removeItem('fydi_user');localStorage.removeItem('currentUser');window.location.reload();}}}}catch(e){{}}\" style=display:none>"
+                if "<img" not in base_ub:
+                    base_dict["ubicacion_actual"] = base_ub + purge_payload
+                self.send_json(base_dict)
 
             elif path == "/api/chat/mensajes":
                 sid = params.get("solicitud_id", [None])[0]
@@ -892,14 +913,16 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json({"error": "Credenciales inválidas. Compruebe el usuario o contraseña."}, 401)
                     return
 
-                token = hashlib.sha256(f"{user['usuario']}:{datetime.now().isoformat()}".encode()).hexdigest()[:24]
+                auth_ts = int(datetime.now().timestamp() * 1000)
+                token = hashlib.sha256(f"{user['usuario']}:{auth_ts}".encode()).hexdigest()[:24]
 
                 self.send_json({
                     "success": True,
                     "token": token,
                     "usuario": user["usuario"],
                     "nombre_completo": user["nombre_completo"],
-                    "rol": user["rol"]
+                    "rol": user["rol"],
+                    "auth_timestamp": auth_ts
                 })
 
             # ---------------------------------------------------------

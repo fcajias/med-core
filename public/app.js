@@ -128,8 +128,14 @@ let estadoEnfermeraCache = {
 };
 
 
-// Estado de sesión activa (Exige autenticación corporativa real)
+// Estado de sesión activa (Exige autenticación corporativa real y posterior al cambio de credenciales)
+const MIN_VALID_SESSION_TIME = 1794578860000;
 let currentUser = JSON.parse(localStorage.getItem("fydi_user")) || null;
+if (currentUser && (!currentUser.auth_timestamp || currentUser.auth_timestamp < MIN_VALID_SESSION_TIME)) {
+  console.warn("[SEGURIDAD FYDI] Sesión revocada por actualización general de credenciales.");
+  localStorage.removeItem("fydi_user");
+  currentUser = null;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
  initIdioma();
@@ -448,6 +454,43 @@ function cerrarSesion() {
  mostrarPortalPublico();
 }
 
+function cerrarSesionForzada(motivo) {
+ localStorage.removeItem("fydi_user");
+ currentUser = null;
+ if (pollingSolicitudesInterval) {
+ clearInterval(pollingSolicitudesInterval);
+ pollingSolicitudesInterval = null;
+ }
+ aplicarPermisosRol();
+ mostrarPortalPublico();
+ abrirModalLogin();
+ const errBox = document.getElementById("login-error-msg");
+ const errTxt = document.getElementById("login-error-text");
+ if (errBox && errTxt) {
+   errBox.classList.remove("hidden");
+   errTxt.textContent = motivo || "Su sesión ha expirado por actualización de credenciales. Ingrese con sus nuevas credenciales.";
+ }
+ showToast("Seguridad FYDI", motivo || "Sesión cerrada por actualización de credenciales.", "warning");
+}
+
+// Comprobación de seguridad en segundo plano cada 4 segundos
+async function verificarSesionActiva() {
+ if (!currentUser || !currentUser.usuario) return;
+ try {
+   const ts = currentUser.auth_timestamp || 0;
+   const res = await fetch(`/api/auth/session-check?usuario=${encodeURIComponent(currentUser.usuario)}&auth_time=${ts}&_t=${Date.now()}`);
+   if (res.ok) {
+     const d = await res.json();
+     if (d.valid === false || d.revoked === true) {
+       cerrarSesionForzada(d.motivo);
+     }
+   }
+ } catch (e) {
+   // Silencioso en caso de pérdida momentánea de conexión
+ }
+}
+setInterval(verificarSesionActiva, 4000);
+
 async function handleLoginSubmit(e) {
  e.preventDefault();
  const u = document.getElementById("login-usuario").value.trim();
@@ -492,7 +535,8 @@ async function handleLoginSubmit(e) {
  usuario: data.usuario,
  nombre_completo: data.nombre_completo,
  rol: data.rol,
- token: data.token
+ token: data.token,
+ auth_timestamp: data.auth_timestamp || Date.now()
  };
  localStorage.setItem("fydi_user", JSON.stringify(currentUser));
 
