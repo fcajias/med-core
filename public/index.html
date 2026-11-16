@@ -611,6 +611,10 @@
           <i data-lucide="history" class="w-3.5 h-3.5"></i>
           <span>Historial Atenciones</span>
         </button>
+        <button onclick="cambiarTab('informes')" id="tab-btn-informes" class="nav-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition text-xs whitespace-nowrap text-rose-300 hover:text-white">
+          <i data-lucide="file-badge-2" class="w-3.5 h-3.5 text-rose-400"></i>
+          <span>Informes &amp; Deslindes SST</span>
+        </button>
         <button onclick="cambiarTab('permisos')" id="tab-btn-permisos" class="nav-tab hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition text-xs whitespace-nowrap text-purple-300">
           <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
           <span>Permisos</span>
@@ -713,6 +717,18 @@
 
  <!-- Sugerencias desplegables de autocompletado -->
  <div id="pac-sugerencias" class="hidden mt-2 bg-white border border-slate-300 rounded-lg shadow-lg max-h-40 overflow-y-auto divide-y divide-slate-100 text-xs z-20"></div>
+
+  <!-- Botón de Acción Rápida: Emitir Informe / Deslinde desde Atención -->
+  <div class="mt-2.5 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+    <div class="flex items-center gap-2 text-[11px] text-slate-600">
+      <i data-lucide="file-shield" class="w-4 h-4 text-rose-600 shrink-0"></i>
+      <span>¿Caso complejo, epilepsia, no adherencia a medicación o riesgo laboral?</span>
+    </div>
+    <button type="button" onclick="abrirModalInformeDesdeAtencion()" class="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0">
+      <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+      <span>Emitir Informe / Deslinde a Gerencia</span>
+    </button>
+  </div>
 
  <!-- Alerta Clínica Reactiva por Cédula / Recurrencia -->
  <div id="card-alerta-clinica-paciente" class="hidden mt-3 p-4 rounded-xl border text-xs transition-all animate-fade-in">
@@ -1380,7 +1396,88 @@
 
  <!-- ======================================================== -->
  <!-- TAB 6: CONFIGURACIÓN & PERMISOS DE ROLES (ADMINISTRADOR) -->
- <!-- ======================================================== -->
+   <!-- ======================================================== -->
+  <!-- TAB: INFORMES MÉDICOS OCUPACIONALES, DERIVACIONES & DESLINDES SST -->
+  <!-- ======================================================== -->
+  <section id="tab-informes" class="tab-pane hidden">
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6 space-y-5">
+      
+      <!-- Encabezado de la Sección -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+              <i data-lucide="file-badge-2" class="w-5 h-5"></i>
+            </span>
+            <div>
+              <h2 class="text-lg font-black text-slate-900 tracking-tight">
+                Informes Médicos Ocupacionales, Derivaciones &amp; Deslindes SST
+              </h2>
+              <p class="text-xs text-slate-500">
+                Documentación oficial para Gerencia, Jefatura de Talento Humano y resguardo legal del dispensario médico.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button onclick="abrirModalInformeClinico()" class="px-4 py-2.5 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>+ Emitir Nuevo Informe / Deslinde</span>
+          </button>
+          <button onclick="cargarListaInformes(true)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition" title="Actualizar lista">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros de Búsqueda y Tipo -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 text-xs">
+        <div class="relative flex-1 w-full">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input type="text" id="filtro-informes-busqueda" oninput="filtrarInformesTabla()" placeholder="Buscar por paciente, cédula, motivo o código de informe..." class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+        
+        <select id="filtro-informes-tipo" onchange="filtrarInformesTabla()" class="w-full sm:w-64 border border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none bg-white font-semibold text-slate-700">
+          <option value="">Todos los tipos de documento</option>
+          <option value="DESLINDE_RESPONSABILIDAD">Acta de Deslinde de Responsabilidad</option>
+          <option value="DERIVACION_MEDICA">Derivación Médica a Especialista / IESS</option>
+          <option value="NOTIFICACION_GERENCIA">Notificación a Gerencia / Riesgo Laboral</option>
+          <option value="SOLICITUD_EXAMENES">Recomendación de Exámenes</option>
+          <option value="EVOLUCION_CLINICA">Informe de Evolución Clínica</option>
+        </select>
+
+        <span id="contador-informes-total" class="px-3 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold whitespace-nowrap text-xs border border-slate-200">
+          0 informes
+        </span>
+      </div>
+
+      <!-- Tabla de Informes Registrados -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-4">Cód. / Fecha</th>
+              <th class="py-3 px-4">Tipo de Documento</th>
+              <th class="py-3 px-4">Colaborador / Paciente</th>
+              <th class="py-3 px-4">Piso / Área</th>
+              <th class="py-3 px-4">Motivo Principal</th>
+              <th class="py-3 px-4">Emisor</th>
+              <th class="py-3 px-4 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-informes-body" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="7" class="text-center py-8 text-slate-400">Cargando informes clínicos...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+<!-- ======================================================== -->
  <section id="tab-permisos" class="tab-pane hidden">
  <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6">
  <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
@@ -1983,297 +2080,330 @@
 
  <!-- ======================================================== -->
  <!-- MODAL: EMITIR INFORME CLÍNICO, DERIVACIÓN Y DESLINDE -->
- <!-- ======================================================== -->
- <div id="modal-informe-clinico" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
- <div class="px-6 py-4 bg-rose-900 text-white flex items-center justify-between">
- <div>
- <h3 class="text-base font-bold flex items-center gap-2">
- <i data-lucide="shield-alert" class="w-5 h-5 text-rose-300"></i>
- Informe Clínico, Derivación & Deslinde de Responsabilidad
- </h3>
- <p class="text-xs text-rose-200">Emisión formal para protección legal del dispensario y resguardo del paciente</p>
- </div>
- <button onclick="cerrarModalInformeClinico()" class="text-slate-300 hover:text-white">
- <i data-lucide="x" class="w-5 h-5"></i>
- </button>
- </div>
+   <!-- ======================================================== -->
+  <!-- MODAL: EMITIR INFORME CLÍNICO, DERIVACIÓN Y DESLINDE -->
+  <!-- ======================================================== -->
+  <div id="modal-informe-clinico" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[94vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in my-auto">
+      
+      <!-- Top Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-rose-950 via-rose-900 to-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center border border-rose-400/30 font-bold shrink-0">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              Informe Médico Ocupacional &amp; Deslinde de Responsabilidad
+            </h3>
+            <p class="text-xs text-rose-200 font-medium">
+              Notificación oficial para Gerencia General, Talento Humano y protección legal de Enfermería
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalInformeClinico()" class="text-slate-300 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
 
- <form id="form-informe-clinico" onsubmit="guardarInformeClinico(event)" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
- <input type="hidden" id="inf-paciente-id" value="">
- <input type="hidden" id="inf-atencion-id" value="">
+      <form id="form-informe-clinico" onsubmit="guardarInformeClinico(event)" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+        <input type="hidden" id="inf-paciente-id" value="">
+        <input type="hidden" id="inf-atencion-id" value="">
 
- <!-- Tarjeta Resumen del Paciente -->
- <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between">
- <div>
- <span class="font-bold text-slate-800 text-sm" id="inf-pac-nombre">Paciente</span>
- <span class="text-slate-500 ml-2" id="inf-pac-detalles">C.I: - • Área: -</span>
- </div>
- <span class="px-2 py-0.5 bg-rose-200 text-rose-900 rounded font-bold text-[10px] uppercase">FYDI Salud Ocupacional</span>
- </div>
+        <!-- SECCIÓN 1: IDENTIFICACIÓN DEL PACIENTE -->
+        <!-- Caso A: Paciente Seleccionado -->
+        <div id="box-inf-paciente-seleccionado" class="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="user-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="font-black text-slate-900 text-sm block" id="inf-pac-nombre">Colaborador</span>
+              <span class="text-slate-600 text-[11px]" id="inf-pac-detalles">C.I: -- • Área: --</span>
+            </div>
+          </div>
+          <button type="button" onclick="cambiarPacienteEnInforme()" class="px-3 py-1.5 bg-white border border-rose-300 hover:bg-rose-100 text-rose-800 rounded-xl font-bold text-[11px] transition shadow-2xs">
+            Cambiar Paciente
+          </button>
+        </div>
 
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Fecha de Emisión *</label>
- <input type="date" id="inf-fecha" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
- </div>
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Tipo de Documento *</label>
- <select id="inf-tipo" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-medium">
- <option value="DERIVACION_MEDICA">Derivación a Especialista / IESS / Centro de Salud</option>
- <option value="DESLINDE_RESPONSABILIDAD">Acta de Deslinde de Responsabilidad (Paciente Recurrente)</option>
- <option value="SOLICITUD_EXAMENES">Recomendación de Exámenes de Laboratorio / Imagen</option>
- <option value="EVOLUCION_CLINICA">Informe de Evolución Clínica y Seguimiento</option>
- </select>
- </div>
- </div>
+        <!-- Caso B: Selector / Buscador si no viene preseleccionado -->
+        <div id="box-inf-buscar-paciente" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+          <label class="block font-bold text-slate-800 text-xs flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-rose-600"></i>
+              <span>Buscar Colaborador por Cédula o Nombre:</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-normal">Digita 2 o más letras</span>
+          </label>
+          <input type="text" id="inf-buscar-input" oninput="buscarPacienteParaInforme(this.value)" placeholder="Ej. Juan Pérez o 1712345678..." class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-semibold">
+          <div id="inf-sugerencias-paciente" class="hidden max-h-36 overflow-y-auto divide-y divide-slate-100 bg-white border border-slate-200 rounded-xl shadow-lg text-xs"></div>
+        </div>
 
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Motivo Principal de la Derivación o Deslinde *</label>
- <input type="text" id="inf-motivo" required placeholder="Ej. Cefalea recurrente refractaria con 4 consultas en el mes sin estudio neurológico" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
- </div>
+        <!-- SECCIÓN 2: PLANTILLAS RÁPIDAS (1-CLIC) -->
+        <div class="p-3.5 bg-slate-100/80 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+              <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i>
+              <span>Plantillas Rápidas Preconfiguradas (1 Clic):</span>
+            </span>
+            <span class="text-[10px] text-slate-400">Autocompleta el informe legal al instante</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" onclick="aplicarPlantillaInforme('epilepsia')" class="p-2.5 bg-white hover:bg-rose-50 text-rose-900 border border-rose-200 rounded-xl text-left font-bold transition flex items-start gap-2 shadow-2xs group">
+              <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5 group-hover:scale-110 transition"></i>
+              <div>
+                <span class="text-xs block text-rose-900">🚨 Epilepsia / No Toma Medicación</span>
+                <span class="text-[10px] text-rose-700/80 font-normal">Riesgo inminente de convulsión en puesto y deslinde formal</span>
+              </div>
+            </button>
+            <button type="button" onclick="aplicarPlantillaInforme('derivacion_urgente')" class="p-2.5 bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 rounded-xl text-left font-bold transition flex items-start gap-2 shadow-2xs group">
+              <i data-lucide="ambulance" class="w-4 h-4 text-[#005FB8] shrink-0 mt-0.5 group-hover:scale-110 transition"></i>
+              <div>
+                <span class="text-xs block text-blue-900">🚑 Derivación Urgente IESS / Hospital</span>
+                <span class="text-[10px] text-blue-700/80 font-normal">Traslado inmediato y retiro de labores por riesgo vital</span>
+              </div>
+            </button>
+            <button type="button" onclick="aplicarPlantillaInforme('notificacion_gerencia')" class="p-2.5 bg-white hover:bg-purple-50 text-purple-900 border border-purple-200 rounded-xl text-left font-bold transition flex items-start gap-2 shadow-2xs group">
+              <i data-lucide="briefcase" class="w-4 h-4 text-purple-700 shrink-0 mt-0.5 group-hover:scale-110 transition"></i>
+              <div>
+                <span class="text-xs block text-purple-900">🏢 Notificación a Gerencia / Riesgo Laboral</span>
+                <span class="text-[10px] text-purple-700/80 font-normal">Inaptitud temporal para operar llamadas por salud</span>
+              </div>
+            </button>
+            <button type="button" onclick="aplicarPlantillaInforme('deslinde_medicacion')" class="p-2.5 bg-white hover:bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-left font-bold transition flex items-start gap-2 shadow-2xs group">
+              <i data-lucide="file-warning" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5 group-hover:scale-110 transition"></i>
+              <div>
+                <span class="text-xs block text-amber-900">⚠️ Deslinde por Negativa a Tratamiento</span>
+                <span class="text-[10px] text-amber-700/80 font-normal">Reincidencia de síntomas por no acudir a especialista</span>
+              </div>
+            </button>
+          </div>
+        </div>
 
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Detalle Clínico, Anamnesis y Hallazgos *</label>
- <textarea id="inf-detalles" rows="3" required placeholder="Detalle la evolución del paciente, signos vitales tomados, medicamentos solicitados reiteradamente y justificación del informe..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
- </div>
+        <!-- SECCIÓN 3: CAMPOS FORMALES DEL DOCUMENTO -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Fecha de Emisión *</label>
+            <input type="date" id="inf-fecha" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-semibold">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Tipo de Documento *</label>
+            <select id="inf-tipo" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none bg-white font-bold text-slate-800">
+              <option value="DESLINDE_RESPONSABILIDAD">Acta de Deslinde de Responsabilidad (No toma medicación)</option>
+              <option value="DERIVACION_MEDICA">Derivación Médica a Especialista / IESS / Hospital</option>
+              <option value="NOTIFICACION_GERENCIA">Notificación Formal a Gerencia &amp; Talento Humano</option>
+              <option value="SOLICITUD_EXAMENES">Recomendación de Exámenes de Laboratorio / Imagen</option>
+              <option value="EVOLUCION_CLINICA">Informe de Evolución y Seguimiento Clínico</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Destinatario Oficial</label>
+            <input type="text" id="inf-destinatario" value="Gerencia General &amp; Jefatura de Talento Humano" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-semibold text-slate-700">
+          </div>
+        </div>
 
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Recomendaciones e Instrucciones Obligatorias al Paciente *</label>
- <textarea id="inf-recomendaciones" rows="2" required placeholder="Ej. Acudir de inmediato a consulta especializada por Consulta Externa o Emergencia. Suspender automedicación sintomática. Guardar reposo prescrito." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
- </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Motivo Principal del Informe / Deslinde *</label>
+          <input type="text" id="inf-motivo" required placeholder="Ej. Paciente con epilepsia diagnosticada que suspende medicación anticonvulsiva prescrita" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-medium">
+        </div>
 
- <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Profesional Emisor</label>
- <input type="text" id="inf-prof-nombre" value="Lic. Patricia Pilataxi" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
- </div>
- <div>
- <label class="block font-semibold text-slate-700 mb-1">Cargo / Rol</label>
- <input type="text" id="inf-prof-rol" value="Enfermera Titular FYDI" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
- </div>
- </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Detalle Clínico, Anamnesis y Constatación de Hechos *</label>
+          <textarea id="inf-detalles" rows="4" required placeholder="Detalle la constatación médica, renuencia del paciente a tomar su tratamiento, signos vitales tomados y justificación del riesgo laboral..." class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none leading-relaxed"></textarea>
+        </div>
 
- <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-relaxed">
- <strong>Aviso Legal Institucional:</strong> Este documento deja constancia administrativa y clínica de las orientaciones brindadas al paciente. Protege legalmente al personal de enfermería ante la insistencia de medicamentos o renuencia del paciente a acudir a valoración médica externa.
- </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Disposición Médica, Recomendaciones &amp; Medidas Laborales *</label>
+          <textarea id="inf-recomendaciones" rows="4" required placeholder="Indique el retiro a domicilio, la prohibición de operar sin alta médica de especialista neurólogo y las cláusulas de descargo de responsabilidad..." class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none leading-relaxed"></textarea>
+        </div>
 
- <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
- <button type="button" onclick="cerrarModalInformeClinico()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 font-medium">
- Cancelar
- </button>
- <button type="submit" class="px-5 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm">
- <i data-lucide="check-circle" class="w-4 h-4"></i>
- Guardar e Imprimir Documento
- </button>
- </div>
- </form>
- </div>
- </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Profesional Emisor (Doctora / Enfermera)</label>
+            <input type="text" id="inf-prof-nombre" value="Lic. Patricia Pilataxi" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-bold text-slate-800">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Cargo Institucional</label>
+            <input type="text" id="inf-prof-rol" value="Enfermera Titular FYDI • Salud Ocupacional" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none font-semibold text-slate-700">
+          </div>
+        </div>
 
- <!-- ======================================================== -->
- <!-- MODAL: EXPEDIENTE CLÍNICO INTEGRAL DEL PACIENTE -->
- <!-- ======================================================== -->
- <div id="modal-expediente" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
- <div class="px-6 py-4 bg-brand-900 text-white flex items-center justify-between">
- <div>
- <h3 id="exp-pac-nombre" class="text-base font-bold flex items-center gap-2">
- <i data-lucide="file-text" class="w-5 h-5 text-sky-400"></i>
- Expediente Clínico Ocupacional
- </h3>
- <p id="exp-pac-sub" class="text-xs text-sky-200"></p>
- </div>
- <div class="flex items-center gap-2">
- <button onclick="imprimirExpedienteCompleto()" class="px-3 py-1 bg-brand-800 hover:bg-brand-700 text-white border border-brand-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
- <i data-lucide="printer" class="w-3.5 h-3.5"></i>
- Imprimir
- </button>
- <button onclick="cerrarModalExpediente()" class="text-slate-300 hover:text-white p-1">
- <i data-lucide="x" class="w-5 h-5"></i>
- </button>
- </div>
- </div>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-relaxed flex items-start gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+          <div>
+            <strong>Validez Médico-Legal Institucional:</strong> Este informe queda formalmente archivado en la base de datos de FYDI y genera el acta con 3 firmas (Enfermería, Colaborador Notificado y Gerencia/Talento Humano). Protege 100% al personal del dispensario y a la empresa.
+          </div>
+        </div>
 
- <div class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
- <!-- Tarjeta de Datos Demográficos y Antecedentes -->
- <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
- <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
- <div>
- <span class="text-slate-400 block text-[10px] uppercase font-bold">Cédula</span>
- <span id="exp-pac-cedula" class="font-semibold text-slate-800 font-mono text-sm">-</span>
- </div>
- <div>
- <span class="text-slate-400 block text-[10px] uppercase font-bold">Edad / Contacto</span>
- <span id="exp-pac-contacto" class="font-semibold text-slate-800">-</span>
- </div>
- <div>
- <span class="text-slate-400 block text-[10px] uppercase font-bold">Piso / Ubicación</span>
- <span id="exp-pac-piso" class="font-semibold text-slate-800">-</span>
- </div>
- <div>
- <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Atenciones</span>
- <span id="exp-pac-total-visitas" class="font-bold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full inline-block">0</span>
- </div>
- </div>
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          <button type="button" onclick="cerrarModalInformeClinico()" class="px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 font-bold text-xs transition">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-submit-informe" class="px-6 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Guardar e Imprimir Documento</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
- <!-- Alergias y Antecedentes Médicos -->
- <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-200">
- <div class="bg-white p-2.5 rounded-lg border border-slate-200">
- <span class="text-rose-600 block text-[10px] uppercase font-bold flex items-center gap-1">
- <i data-lucide="shield-alert" class="w-3 h-3"></i>
- Alergias a Medicamentos
- </span>
- <span id="exp-pac-alergias" class="font-bold text-rose-800 text-xs mt-0.5 block">No registradas</span>
- </div>
- <div class="bg-white p-2.5 rounded-lg border border-slate-200">
- <span class="text-slate-500 block text-[10px] uppercase font-bold">Antecedentes Personales (APP)</span>
- <span id="exp-pac-app" class="font-medium text-slate-700 text-xs mt-0.5 block">Ninguno</span>
- </div>
- <div class="bg-white p-2.5 rounded-lg border border-slate-200">
- <span class="text-slate-500 block text-[10px] uppercase font-bold">Medicación Habitual / APF</span>
- <span id="exp-pac-med-habitual" class="font-medium text-slate-700 text-xs mt-0.5 block">Ninguna</span>
- </div>
- </div>
- </div>
+  <!-- ======================================================== -->
+  <!-- MODAL: VISOR / IMPRESIÓN DE INFORME CLÍNICO FORMAL (FYDI OFFICIAL) -->
+  <!-- ======================================================== -->
+  <div id="modal-visor-informe" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[96vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in my-auto">
+      
+      <!-- Top Action Bar (Invisible al imprimir) -->
+      <div class="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="printer" class="w-5 h-5 text-[#FDBA74]"></i>
+          <div>
+            <span class="font-bold text-sm block">Documento Médico-Legal Oficial FYDI</span>
+            <span class="text-[10px] text-slate-400">Listo para imprimir y presentar a Gerencia / Talento Humano</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-800 hover:to-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition transform hover:-translate-y-0.5">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Imprimir Documento</span>
+          </button>
+          <button onclick="cerrarModalVisorInforme()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
 
- <!-- Acciones rápidas dentro del expediente -->
- <div class="flex items-center justify-between">
- <div class="flex items-center gap-2">
- <button id="tab-exp-btn-consultas" onclick="cambiarVistaExpediente('consultas')" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-brand-600 text-white shadow-sm">
- Consultas y Triajes Clínicos
- </button>
- <button id="tab-exp-btn-informes" onclick="cambiarVistaExpediente('informes')" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700">
- Informes y Derivaciones (<span id="exp-conteo-informes">0</span>)
- </button>
- </div>
- <button onclick="abrirModalInformeDesdeExpediente()" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 px-3 py-1.5 rounded-lg transition">
- <i data-lucide="file-warning" class="w-3.5 h-3.5"></i>
- + Emitir Derivación / Deslinde
- </button>
- </div>
+      <!-- Hoja Oficial Imprimible A4 -->
+      <div class="p-8 sm:p-12 overflow-y-auto flex-1 text-slate-900 text-xs space-y-6 printable-document bg-white" id="contenido-imprimible-informe">
+        
+        <!-- Cabecera Institucional Membretada con Logo FYDI -->
+        <div class="flex items-center justify-between border-b-2 border-[#0F2C59] pb-4">
+          <div class="flex items-center gap-4">
+            <img src="/img/fydi_official_logo_transparent.png" alt="FYDI Global" class="h-14 w-auto object-contain">
+            <div>
+              <h2 class="text-sm sm:text-base font-black text-[#0F2C59] uppercase tracking-wide">
+                FYDI GLOBAL BPO &amp; CONTACT CENTER S.A.
+              </h2>
+              <p class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">
+                Departamento de Seguridad y Salud en el Trabajo (SST)
+              </p>
+              <p class="text-[10px] text-slate-500">
+                Dispensario Médico y Atención Ocupacional • Edificio Corporativo FYDI
+              </p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="doc-inf-codigo" class="text-xs font-mono font-bold text-[#0F2C59] bg-slate-100 px-3 py-1 rounded-lg border border-slate-300 block">INF-2026-0000</span>
+            <span id="doc-inf-fecha" class="text-[11px] text-slate-600 font-semibold mt-1 block">Quito, 2026-11-16</span>
+          </div>
+        </div>
 
- <!-- Vista 1: Lista de Consultas Clínicas con Triaje y Observaciones -->
- <div id="exp-seccion-consultas" class="space-y-3">
- <div id="exp-atenciones-list" class="space-y-3"></div>
- </div>
+        <!-- Bloque de Destinatario y Encabezado Formal -->
+        <div class="p-4 bg-slate-50 border border-slate-300 rounded-xl space-y-1.5 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div><strong>DIRIGIDO A:</strong> <span id="doc-inf-destinatario-val" class="font-bold text-slate-800">GERENCIA GENERAL &amp; JEFATURA DE TALENTO HUMANO</span></div>
+            <div><strong>EMISOR:</strong> <span id="doc-inf-emisor-val" class="font-bold text-slate-800">Lic. Patricia Pilataxi (Enfermera Titular FYDI)</span></div>
+          </div>
+          <div class="pt-1 border-t border-slate-200">
+            <strong>ASUNTO:</strong> <span id="doc-inf-asunto-val" class="font-black text-rose-900 uppercase">INFORME CLÍNICO OCUPACIONAL, NO ADHERENCIA A TRATAMIENTO Y DESLINDE DE RESPONSABILIDAD</span>
+          </div>
+        </div>
 
- <!-- Vista 2: Lista de Informes y Derivaciones Emitidas -->
- <div id="exp-seccion-informes" class="hidden space-y-3">
- <div id="exp-informes-list" class="space-y-2.5"></div>
- </div>
- </div>
+        <!-- Título Central del Documento -->
+        <div class="text-center py-1">
+          <h3 id="doc-inf-titulo" class="text-sm font-black text-[#0F2C59] uppercase tracking-wider underline">
+            ACTA MÉDICA DE DESLINDE DE RESPONSABILIDAD Y DISPOSICIÓN DE REPOSO
+          </h3>
+        </div>
 
- <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
- <button onclick="cerrarModalExpediente()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-medium text-xs">
- Cerrar Expediente
- </button>
- </div>
- </div>
- </div>
+        <!-- 1. Datos del Colaborador -->
+        <div class="border border-slate-300 rounded-xl p-3.5 bg-slate-50/50">
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59] mb-2 flex items-center gap-1.5">
+            <span>1. DATOS DE IDENTIFICACIÓN DEL TRABAJADOR / PACIENTE</span>
+          </h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div><span class="text-slate-500">Nombres Completos:</span> <strong id="doc-inf-pac-nombre" class="block text-slate-900">-</strong></div>
+            <div><span class="text-slate-500">Cédula de Identidad:</span> <strong id="doc-inf-pac-cedula" class="block font-mono text-slate-900">-</strong></div>
+            <div><span class="text-slate-500">Edad:</span> <strong id="doc-inf-pac-edad" class="block text-slate-900">-</strong></div>
+            <div><span class="text-slate-500">Piso / Área de Trabajo:</span> <strong id="doc-inf-pac-piso" class="block text-slate-900">-</strong></div>
+            <div><span class="text-slate-500">Alergias Conocidas:</span> <strong id="doc-inf-pac-alergias" class="block text-rose-800">-</strong></div>
+            <div><span class="text-slate-500">Medicación Crónica:</span> <strong id="doc-inf-pac-meds" class="block text-slate-900">-</strong></div>
+          </div>
+        </div>
 
- <!-- ======================================================== -->
- <!-- MODAL: VISOR / IMPRESIÓN DE INFORME CLÍNICO FORMAL -->
- <!-- ======================================================== -->
- <div id="modal-visor-informe" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[94vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
- <div class="px-6 py-3.5 bg-slate-800 text-white flex items-center justify-between">
- <div class="flex items-center gap-2">
- <i data-lucide="printer" class="w-5 h-5 text-brand-400"></i>
- <span class="font-bold text-sm">Vista Previa de Documento Médico Legal</span>
- </div>
- <div class="flex items-center gap-2">
- <button onclick="window.print()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold flex items-center gap-1">
- <i data-lucide="printer" class="w-3.5 h-3.5"></i>
- Imprimir
- </button>
- <button onclick="cerrarModalVisorInforme()" class="text-slate-400 hover:text-white p-1">
- <i data-lucide="x" class="w-5 h-5"></i>
- </button>
- </div>
- </div>
+        <!-- 2. Motivo y Fundamento Clínico -->
+        <div>
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59] mb-1">
+            2. MOTIVO DEL INFORME Y DIAGNÓSTICO BASE
+          </h4>
+          <div id="doc-inf-motivo" class="p-3 bg-white border border-slate-300 rounded-xl leading-relaxed text-slate-900 font-bold"></div>
+        </div>
 
- <div class="p-8 overflow-y-auto flex-1 text-slate-800 text-xs space-y-6 printable-document" id="contenido-imprimible-informe">
- <!-- Cabecera Institucional Membretada -->
- <div class="flex items-center justify-between border-b-2 border-brand-800 pb-4">
- <div class="flex items-center gap-3">
- <div class="w-12 h-12 rounded-xl bg-brand-800 flex items-center justify-center text-white font-black text-xl">
- FYDI
- </div>
- <div>
- <h2 class="text-base font-black text-slate-900 uppercase tracking-wide">DISPENSARIO MÉDICO & OCUPACIONAL FYDI</h2>
- <p class="text-[11px] text-slate-500">Área de Salud Ocupacional, Triaje y Atención Médica Continua</p>
- </div>
- </div>
- <div class="text-right">
- <span id="doc-inf-codigo" class="text-xs font-mono font-bold text-brand-800 bg-brand-50 px-2.5 py-1 rounded border border-brand-200 block">INF-2026-000</span>
- <span id="doc-inf-fecha" class="text-[11px] text-slate-500 mt-1 block">Fecha: 2026-11-13</span>
- </div>
- </div>
+        <!-- 3. Hallazgos y Constatación de Hechos -->
+        <div>
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59] mb-1">
+            3. ANTECEDENTES, HALLAZGOS DE ENFERMERÍA Y CONSTATACIÓN DE HECHOS
+          </h4>
+          <div id="doc-inf-detalles" class="p-3.5 bg-white border border-slate-300 rounded-xl leading-relaxed text-slate-800 whitespace-pre-wrap"></div>
+        </div>
 
- <!-- Título del Informe -->
- <div class="text-center py-2">
- <h3 id="doc-inf-titulo" class="text-sm font-black text-slate-900 uppercase tracking-wider underline">
- DERIVACIÓN MÉDICA A ESPECIALISTA Y DESLINDE DE RESPONSABILIDAD
- </h3>
- </div>
+        <!-- 4. Medidas y Disposiciones Obligatorias -->
+        <div>
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59] mb-1">
+            4. DISPOSICIÓN MÉDICA OBLIGATORIA, RECOMENDACIONES Y ACCIONES LABORALES
+          </h4>
+          <div id="doc-inf-recomendaciones" class="p-3.5 bg-rose-50/50 border border-rose-300 rounded-xl leading-relaxed text-slate-900 font-medium whitespace-pre-wrap"></div>
+        </div>
 
- <!-- Datos del Trabajador -->
- <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
- <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-600 mb-2">1. Datos del Paciente / Trabajador</h4>
- <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
- <div><strong>Nombres:</strong> <span id="doc-inf-pac-nombre">-</span></div>
- <div><strong>Cédula:</strong> <span id="doc-inf-pac-cedula">-</span></div>
- <div><strong>Edad:</strong> <span id="doc-inf-pac-edad">-</span></div>
- <div><strong>Piso / Área:</strong> <span id="doc-inf-pac-piso">-</span></div>
- <div><strong>Alergias Registradas:</strong> <span id="doc-inf-pac-alergias" class="text-rose-700 font-bold">-</span></div>
- <div><strong>Medicación Habitual:</strong> <span id="doc-inf-pac-meds">-</span></div>
- </div>
- </div>
+        <!-- 5. Cláusula Legal de Deslinde de Responsabilidad -->
+        <div class="p-3.5 bg-slate-100 border border-slate-300 rounded-xl text-[10px] text-slate-700 leading-relaxed text-justify space-y-1">
+          <p>
+            <strong>CLÁUSULA DE DESLINDE Y CONSTANCIA LEGAL:</strong> El Dispensario Médico de FYDI constituye un área de atención primaria, triaje y primeros auxilios ocupacionales. Habiéndose constatado la patología de base y la omisión deliberada o negligente de la terapia prescrita por su médico especialista, se deja constancia formal de que el colaborador fue notificado de los graves riesgos que corre su salud e integridad física en el puesto de trabajo.
+          </p>
+          <p>
+            En consecuencia, el personal médico y de enfermería de FYDI, así como la institución empleadora, quedan <strong>totalmente exentos de cualquier responsabilidad civil, laboral, administrativa o médica</strong> derivada de cualquier crisis convulsiva, complicación, traumatismo o desenlace adverso que pudiera sobrevenir como resultado directo del incumplimiento terapéutico del colaborador.
+          </p>
+        </div>
 
- <!-- Motivo y Justificación -->
- <div>
- <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-600 mb-1">2. Motivo de Derivación / Fundamento Clínico</h4>
- <div id="doc-inf-motivo" class="p-3 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed text-slate-800 font-medium"></div>
- </div>
+        <!-- 6. Bloque Formal de Tres Firmas -->
+        <div class="pt-8">
+          <div class="grid grid-cols-3 gap-4 text-center text-xs">
+            
+            <!-- Firma 1: Personal de Salud -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong id="doc-inf-firma-prof" class="block font-black text-slate-900">Lic. Patricia Pilataxi</strong>
+              <span class="block text-[10px] text-slate-600" id="doc-inf-cargo-prof">Enfermera Titular FYDI • Salud Ocupacional</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Emisor Responsable</span>
+            </div>
 
- <!-- Detalle Clínico -->
- <div>
- <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-600 mb-1">3. Hallazgos Clínicos, Anamnesis y Evolución</h4>
- <div id="doc-inf-detalles" class="p-3 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed text-slate-800 whitespace-pre-wrap"></div>
- </div>
+            <!-- Firma 2: Colaborador Notificado -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong id="doc-inf-firma-pac" class="block font-black text-slate-900">Firma del Trabajador</strong>
+              <span class="block text-[10px] text-slate-600">Recibí copia, notificado de riesgos</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Aceptación y Conocimiento</span>
+            </div>
 
- <!-- Recomendaciones al Paciente -->
- <div>
- <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-600 mb-1">4. Recomendaciones e Indicaciones Obligatorias</h4>
- <div id="doc-inf-recomendaciones" class="p-3 bg-rose-50/70 border border-rose-200 rounded-xl leading-relaxed text-slate-800 whitespace-pre-wrap"></div>
- </div>
+            <!-- Firma 3: Gerencia / Talento Humano -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong class="block font-black text-slate-900">Gerencia / Talento Humano</strong>
+              <span class="block text-[10px] text-slate-600">Recibido para fines administrativos</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Firma, Sello, Fecha y Hora</span>
+            </div>
 
- <!-- Cláusula de Responsabilidad -->
- <div class="p-3 bg-slate-100 rounded-xl text-[10px] text-slate-600 leading-relaxed text-justify">
- Se informa formalmente al paciente que el Dispensario FYDI constituye un área de atención primaria, triaje y primeros auxilios. Las atenciones previas fueron de carácter sintomático inicial. Se exhorta al paciente a concurrir obligatoriamente a una casa asistencial de segundo o tercer nivel para la realización de estudios diagnósticos complementarios y valoración médica definitiva. La omisión de esta indicación o la persistencia en automedicarse es de su exclusiva responsabilidad.
- </div>
+          </div>
+        </div>
 
- <!-- Bloque de Firmas -->
- <div class="grid grid-cols-2 gap-8 pt-8 text-center text-xs">
- <div class="space-y-1">
- <div class="border-b border-slate-400 w-48 mx-auto mb-1"></div>
- <strong id="doc-inf-firma-prof">Lic. Patricia Pilataxi</strong>
- <span class="block text-[10px] text-slate-500" id="doc-inf-cargo-prof">Enfermera Titular FYDI</span>
- </div>
- <div class="space-y-1">
- <div class="border-b border-slate-400 w-48 mx-auto mb-1"></div>
- <strong id="doc-inf-firma-pac">Firma del Trabajador</strong>
- <span class="block text-[10px] text-slate-500">Recibí conforme y notificado</span>
- </div>
- </div>
- </div>
- </div>
- </div>
+      </div>
 
- <!-- ======================================================== -->
- <!-- MODAL: REGISTRAR ENTRADA / COMPRA A BODEGA -->
- <!-- ======================================================== -->
+    </div>
+  </div>
+
+<!-- ======================================================== -->
  <div id="modal-entrada" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-fade-in">
  <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">

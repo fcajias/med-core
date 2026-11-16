@@ -733,12 +733,21 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 """, (pid,))
                 self.send_json([dict(r) for r in cur.fetchall()])
 
+            elif path == "/api/informes-clinicos":
+                cur.execute("""
+                    SELECT i.*, p.nombres, p.apellidos, p.cedula, p.piso_area, p.edad
+                    FROM informes_clinicos i
+                    LEFT JOIN pacientes p ON i.paciente_id = p.id
+                    ORDER BY i.id DESC LIMIT 200
+                """)
+                self.send_json([dict(r) for r in cur.fetchall()])
+
             elif path.startswith("/api/informes-clinicos/"):
                 inf_id = int(path.split("/")[3])
                 cur.execute("""
                     SELECT i.*, p.nombres, p.apellidos, p.cedula, p.edad, p.piso_area, p.alergias, p.antecedentes_personales, p.antecedentes_familiares
                     FROM informes_clinicos i
-                    JOIN pacientes p ON i.paciente_id = p.id
+                    LEFT JOIN pacientes p ON i.paciente_id = p.id
                     WHERE i.id = ?
                 """, (inf_id,))
                 inf = cur.fetchone()

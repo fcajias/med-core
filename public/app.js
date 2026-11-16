@@ -570,7 +570,9 @@ function cambiarTab(tabName) {
  cargarHistorial();
  } else if (tabName === "permisos") {
  cargarMatrizPermisos();
- }
+ } else if (tabName === "informes") {
+    cargarListaInformes();
+  }
 
  if (window.lucide) {
  lucide.createIcons();
@@ -3253,4 +3255,568 @@ async function ejecutarAccionBloqueo(e) {
       btn.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> BLOQUEAR SISTEMA AHORA`;
     }
   }
+}
+
+
+// ================================================================
+// MÓDULO OFICIAL: INFORMES MÉDICOS OCUPACIONALES & DESLINDES SST
+// ================================================================
+let informesCache = [];
+
+/**
+ * Cargar listado completo de informes clínicos y deslindes desde backend
+ */
+async function cargarListaInformes(notify = false) {
+  try {
+    const res = await apiFetch("/api/informes-clinicos");
+    if (!res.ok) throw new Error("No se pudo obtener el historial de informes.");
+    informesCache = await res.json();
+    renderTablaInformes(informesCache);
+    if (notify) {
+      showToast("Actualizado", "Lista de informes clínicos y deslindes actualizada en vivo.", "success");
+    }
+  } catch (err) {
+    console.error("Error al cargar informes:", err);
+    showToast("Error de Carga", "No se pudo sincronizar los informes: " + err.message, "error");
+  }
+}
+
+/**
+ * Renderizar tabla de informes clínicos
+ */
+function renderTablaInformes(lista) {
+  const tbody = document.getElementById("tabla-informes-body");
+  const countEl = document.getElementById("contador-informes-total");
+  if (!tbody) return;
+
+  if (countEl) {
+    countEl.textContent = `${lista.length} informe(s)`;
+  }
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-12 text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <i data-lucide="file-check" class="w-8 h-8 text-slate-300"></i>
+            <p class="font-bold text-slate-600 text-sm">No se encontraron informes médicos ni actas registradas</p>
+            <p class="text-xs text-slate-400">Puedes emitir un deslinde de responsabilidad o derivación formal usando el botón superior.</p>
+            <button type="button" onclick="abrirModalInformeClinico()" class="mt-2 px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>+ Emitir Nuevo Informe / Deslinde</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  tbody.innerHTML = lista.map(item => {
+    const cod = `INF-2026-${String(item.id).padStart(4, "0")}`;
+    const fecha = item.fecha || (item.creado_en ? item.creado_en.split(" ")[0] : "2026-11-16");
+    
+    // Badge según tipo
+    let tipoBadge = "";
+    if (item.tipo_informe === "DESLINDE_RESPONSABILIDAD") {
+      tipoBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 w-fit"><i data-lucide="alert-octagon" class="w-3 h-3 text-rose-600"></i> Deslinde SST</span>`;
+    } else if (item.tipo_informe === "DERIVACION_MEDICA") {
+      tipoBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1 w-fit"><i data-lucide="ambulance" class="w-3 h-3 text-blue-600"></i> Derivación IESS</span>`;
+    } else if (item.tipo_informe === "NOTIFICACION_GERENCIA") {
+      tipoBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1 w-fit"><i data-lucide="briefcase" class="w-3 h-3 text-purple-600"></i> Notificación Gerencia</span>`;
+    } else if (item.tipo_informe === "SOLICITUD_EXAMENES") {
+      tipoBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1 w-fit"><i data-lucide="clipboard-list" class="w-3 h-3 text-amber-600"></i> Exámenes Ext.</span>`;
+    } else {
+      tipoBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200 w-fit">${item.tipo_informe || "Informe"}</span>`;
+    }
+
+    const pacNombre = item.paciente_nombre || `${item.nombres || ""} ${item.apellidos || ""}`.trim() || "Colaborador FYDI";
+    const pacCedula = item.cedula || item.paciente_cedula || "S/C";
+    const piso = item.piso_area || item.paciente_piso || "-";
+    const motivo = (item.motivo_derivacion || "").replace(/"/g, "&quot;");
+    const profNombre = item.profesional_nombre || "Lic. Patricia Pilataxi";
+    const profRol = item.profesional_rol || "Enfermera Titular";
+
+    return `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+        <td class="py-3 px-4">
+          <span class="font-mono font-bold text-slate-800 block text-xs">${cod}</span>
+          <span class="text-[11px] text-slate-500">${fecha}</span>
+        </td>
+        <td class="py-3 px-4">
+          ${tipoBadge}
+        </td>
+        <td class="py-3 px-4">
+          <strong class="text-slate-900 block text-xs">${pacNombre}</strong>
+          <span class="text-[10px] font-mono text-slate-500">C.I: ${pacCedula}</span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium border border-slate-200">${piso}</span>
+        </td>
+        <td class="py-3 px-4">
+          <div class="max-w-xs text-xs text-slate-700 font-medium truncate" title="${motivo}">
+            ${motivo}
+          </div>
+        </td>
+        <td class="py-3 px-4">
+          <span class="font-bold text-slate-800 text-xs block">${profNombre}</span>
+          <span class="text-[10px] text-slate-500">${profRol}</span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button type="button" onclick="verInformeClinico(${item.id})" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs mx-auto">
+            <i data-lucide="printer" class="w-3.5 h-3.5 text-[#FDBA74]"></i>
+            <span>Ver / Imprimir</span>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
+ * Filtrar tabla de informes en vivo por buscador y tipo
+ */
+function filtrarInformesTabla() {
+  const q = (document.getElementById("filtro-informes-busqueda")?.value || "").toLowerCase().trim();
+  const tipo = (document.getElementById("filtro-informes-tipo")?.value || "").trim();
+
+  const filtrados = informesCache.filter(item => {
+    const matchTipo = !tipo || item.tipo_informe === tipo;
+    if (!matchTipo) return false;
+
+    if (!q) return true;
+    const cod = `INF-2026-${String(item.id).padStart(4, "0")}`.toLowerCase();
+    const nombre = (item.paciente_nombre || `${item.nombres || ""} ${item.apellidos || ""}`).toLowerCase();
+    const cedula = (item.cedula || item.paciente_cedula || "").toLowerCase();
+    const motivo = (item.motivo_derivacion || "").toLowerCase();
+    const piso = (item.piso_area || "").toLowerCase();
+
+    return cod.includes(q) || nombre.includes(q) || cedula.includes(q) || motivo.includes(q) || piso.includes(q);
+  });
+
+  renderTablaInformes(filtrados);
+}
+
+/**
+ * Abrir modal de informe clínico desde el formulario de Nueva Atención
+ */
+function abrirModalInformeDesdeAtencion() {
+  const cedula = (document.getElementById("pac-cedula")?.value || "").trim();
+  const nombres = (document.getElementById("pac-nombres")?.value || "").trim();
+  const apellidos = (document.getElementById("pac-apellidos")?.value || "").trim();
+
+  let pacEncontrado = null;
+  if (cedula && pacientesCache) {
+    pacEncontrado = pacientesCache.find(p => p.cedula === cedula);
+  }
+  if (!pacEncontrado && nombres && pacientesCache) {
+    pacEncontrado = pacientesCache.find(p => `${p.nombres} ${p.apellidos}`.toLowerCase().includes(nombres.toLowerCase()));
+  }
+
+  if (pacEncontrado) {
+    abrirModalInformeClinico(pacEncontrado.id);
+  } else {
+    // Si no está en cache pero hay datos escritos, abrir modal y permitir búsqueda
+    abrirModalInformeClinico();
+    if (cedula || nombres) {
+      const inputBusqueda = document.getElementById("inf-buscar-input");
+      if (inputBusqueda) {
+        inputBusqueda.value = cedula || nombres;
+        buscarPacienteParaInforme(inputBusqueda.value);
+      }
+    }
+  }
+}
+
+/**
+ * Abrir modal de informe clínico con paciente opcional
+ */
+function abrirModalInformeClinico(pacienteIdOpt = null, atencionIdOpt = null) {
+  const modal = document.getElementById("modal-informe-clinico");
+  if (!modal) return;
+
+  // Reset del formulario
+  document.getElementById("form-informe-clinico")?.reset();
+  document.getElementById("inf-paciente-id").value = "";
+  document.getElementById("inf-atencion-id").value = atencionIdOpt || "";
+
+  // Fecha de hoy
+  const hoyStr = new Date().toISOString().split("T")[0];
+  const fechaInput = document.getElementById("inf-fecha");
+  if (fechaInput) fechaInput.value = hoyStr;
+
+  // Valores institucionales predeterminados (Lic. Patricia Pilataxi)
+  const profNombre = document.getElementById("inf-prof-nombre");
+  if (profNombre) profNombre.value = "Lic. Patricia Pilataxi";
+
+  const profRol = document.getElementById("inf-prof-rol");
+  if (profRol) profRol.value = "Enfermera Titular FYDI • Salud Ocupacional";
+
+  const destInput = document.getElementById("inf-destinatario");
+  if (destInput) destInput.value = "Gerencia General & Jefatura de Talento Humano";
+
+  const boxSel = document.getElementById("box-inf-paciente-seleccionado");
+  const boxBus = document.getElementById("box-inf-buscar-paciente");
+
+  if (pacienteIdOpt && pacientesCache) {
+    const pac = pacientesCache.find(p => p.id === parseInt(pacienteIdOpt));
+    if (pac) {
+      document.getElementById("inf-paciente-id").value = pac.id;
+      document.getElementById("inf-pac-nombre").textContent = `${pac.nombres} ${pac.apellidos}`;
+      document.getElementById("inf-pac-detalles").textContent = `C.I: ${pac.cedula || "N/A"} • Área: ${pac.piso_area || "N/A"} • Edad: ${pac.edad || "N/A"} años`;
+      if (boxSel) boxSel.classList.remove("hidden");
+      if (boxBus) boxBus.classList.add("hidden");
+    } else {
+      if (boxSel) boxSel.classList.add("hidden");
+      if (boxBus) boxBus.classList.remove("hidden");
+    }
+  } else {
+    if (boxSel) boxSel.classList.add("hidden");
+    if (boxBus) boxBus.classList.remove("hidden");
+  }
+
+  // Pre-cargar por defecto plantilla de epilepsia/deslinde (la más urgente y solicitada)
+  aplicarPlantillaInforme("epilepsia");
+
+  modal.classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
+ * Cerrar modal de creación de informe clínico
+ */
+function cerrarModalInformeClinico() {
+  const modal = document.getElementById("modal-informe-clinico");
+  if (modal) modal.classList.add("hidden");
+}
+
+/**
+ * Aplicar plantilla clínica y legal con 1 solo clic
+ */
+function aplicarPlantillaInforme(templateKey) {
+  const tipoSelect = document.getElementById("inf-tipo");
+  const motivoInput = document.getElementById("inf-motivo");
+  const detallesArea = document.getElementById("inf-detalles");
+  const recArea = document.getElementById("inf-recomendaciones");
+
+  if (templateKey === "epilepsia") {
+    if (tipoSelect) tipoSelect.value = "DESLINDE_RESPONSABILIDAD";
+    if (motivoInput) motivoInput.value = "Paciente con epilepsia y antecedentes convulsivos que rehúsa / suspende medicación anticonvulsiva prescrita";
+    if (detallesArea) {
+      detallesArea.value = `Se constata en la atención del Dispensario Médico FYDI que el colaborador presenta antecedente patológico de EPILEPSIA / SÍNDROME CONVULSIVO.
+
+El colaborador manifiesta de forma expresa que NO está tomando su medicación anticonvulsiva prescrita por su médico especialista neurólogo, ni porta consigo las dosis requeridas para su jornada laboral en la empresa.
+
+Se constata renuencia a la adherencia farmacológica, generando un riesgo inminente y severo de presentar crisis convulsivas tónico-clónicas generalizadas, pérdida de consciencia y traumatismos severos por caída o golpe en su puesto de trabajo en la plataforma operativa.`;
+    }
+    if (recArea) {
+      recArea.value = `1. RETIRO INMEDIATO A DOMICILIO / REPOSO OBLIGATORIO: Se dispone el retiro inmediato del colaborador de las instalaciones de FYDI por inaptitud temporal para la jornada laboral activa en prevención de crisis en plataforma.
+2. DERIVACIÓN MÉDICA OBLIGATORIA: Debe acudir con carácter urgente al IESS o neurólogo tratante para reinstaurar esquema anticonvulsivo estricto.
+3. PROHIBICIÓN EXPRESA DE REINTEGRO A LABORES: No podrá reintegrarse a su puesto de trabajo sin presentar el certificado médico de alta emitido por especialista neurólogo que certifique el control efectivo de crisis.
+4. CONSTANCIA DE DESLINDE: Habiéndose advertido la gravedad de omitir su medicación, el dispensario médico FYDI, la profesional emisor y la empresa empleadora quedan totalmente deslindados de toda responsabilidad legal, civil, laboral o médica ante cualquier crisis, accidente o desenlace derivado del incumplimiento terapéutico del colaborador.`;
+    }
+  } else if (templateKey === "derivacion_urgente") {
+    if (tipoSelect) tipoSelect.value = "DERIVACION_MEDICA";
+    if (motivoInput) motivoInput.value = "Derivación médica urgente a Especialista / IESS / Hospital por cuadro clínico agudo con riesgo de complicación severa";
+    if (detallesArea) {
+      detallesArea.value = `Colaborador acude a dispensario médico presentando sintomatología aguda severa que sobrepasa la capacidad resolutiva de atención primaria ocupacional.
+Se constatan signos vitales alterados y cuadro que amerita de manera perentoria valoración médica en segundo o tercer nivel asistencial, con exámenes paraclínicos urgentes.`;
+    }
+    if (recArea) {
+      recArea.value = `1. Traslado inmediato a la casa de salud del IESS o centro hospitalario de emergencias más cercano.
+2. Suspensión de labores en la jornada de hoy por riesgo clínico evidente.
+3. El colaborador deberá presentar certificado médico oficial de atención y reposo emitido por el IESS para justificar su ausencia y habilitar su posterior reintegro.`;
+    }
+  } else if (templateKey === "notificacion_gerencia") {
+    if (tipoSelect) tipoSelect.value = "NOTIFICACION_GERENCIA";
+    if (motivoInput) motivoInput.value = "Notificación formal a Gerencia General y Talento Humano por riesgo de salud e inaptitud temporal para el puesto de trabajo";
+    if (detallesArea) {
+      detallesArea.value = `Por medio de la presente, el Dispensario Médico y Salud Ocupacional pone en conocimiento formal de la Gerencia General y la Jefatura de Talento Humano la condición de salud que afecta al colaborador.
+Debido al cuadro clínico valorado, el desempeño de sus funciones habituales en plataforma operativa representa un riesgo para su integridad física y la continuidad operacional de la campaña.`;
+    }
+    if (recArea) {
+      recArea.value = `1. Disponer el reposo médico o reubicación temporal de puesto según criterio médico y administrativo.
+2. Coordinar seguimiento mediante Talento Humano y solicitar los debidos respaldos médicos legalizados.
+3. Mantener registro en el expediente ocupacional del colaborador para fines preventivos de SST.`;
+    }
+  } else if (templateKey === "deslinde_medicacion") {
+    if (tipoSelect) tipoSelect.value = "DESLINDE_RESPONSABILIDAD";
+    if (motivoInput) motivoInput.value = "Acta de deslinde por reiterada negativa a cumplir tratamiento médico prescrito y automedicación sintomática";
+    if (detallesArea) {
+      detallesArea.value = `El colaborador acude de manera reiterada y recurrente a este dispensario solicitando fármacos sintomáticos sin presentar prescripción de especialista ni acudir a las citas médicas indicadas previamente.
+Se le ha explicado en múltiples ocasiones la necesidad de diagnóstico etiológico, habiéndose rehusado a iniciar estudios médicos externos.`;
+    }
+    if (recArea) {
+      recArea.value = `1. Cese definitivo de entrega de fármacos sintomáticos reiterativos sin respaldo de médico tratante.
+2. Compromiso obligatorio del colaborador de acudir a su prestador de salud del IESS para estudios diagnósticos.
+3. Se deslinda formalmente de toda responsabilidad al dispensario por complicaciones derivadas de patologías no tratadas oportunamente.`;
+    }
+  }
+  showToast("Plantilla Aplicada", "Texto legal y clínico cargado con éxito.", "success");
+}
+
+/**
+ * Autocompletado de pacientes en modal de informe
+ */
+function buscarPacienteParaInforme(q) {
+  const boxSug = document.getElementById("inf-sugerencias-paciente");
+  if (!boxSug) return;
+
+  const texto = q.toLowerCase().trim();
+  if (texto.length < 2 || !pacientesCache) {
+    boxSug.classList.add("hidden");
+    return;
+  }
+
+  const matches = pacientesCache.filter(p => {
+    const full = `${p.nombres || ""} ${p.apellidos || ""}`.toLowerCase();
+    const ced = (p.cedula || "").toLowerCase();
+    return full.includes(texto) || ced.includes(texto);
+  }).slice(0, 8);
+
+  if (matches.length === 0) {
+    boxSug.innerHTML = `<div class="p-3 text-slate-400 text-center">No se encontraron colaboradores con ese nombre o cédula</div>`;
+    boxSug.classList.remove("hidden");
+    return;
+  }
+
+  boxSug.innerHTML = matches.map(p => `
+    <div onclick="seleccionarPacienteParaInforme(${p.id})" class="p-2.5 hover:bg-rose-50 cursor-pointer flex items-center justify-between transition">
+      <div>
+        <strong class="text-slate-800 block">${p.nombres} ${p.apellidos}</strong>
+        <span class="text-[10px] text-slate-500 font-mono">C.I: ${p.cedula || "S/C"} • ${p.piso_area || "Sin área"}</span>
+      </div>
+      <span class="px-2 py-1 bg-rose-100 text-rose-800 rounded-lg text-[10px] font-bold">Seleccionar</span>
+    </div>
+  `).join("");
+
+  boxSug.classList.remove("hidden");
+}
+
+/**
+ * Seleccionar paciente en modal de informe
+ */
+function seleccionarPacienteParaInforme(id) {
+  if (!pacientesCache) return;
+  const pac = pacientesCache.find(p => p.id === id);
+  if (!pac) return;
+
+  document.getElementById("inf-paciente-id").value = pac.id;
+  document.getElementById("inf-pac-nombre").textContent = `${pac.nombres} ${pac.apellidos}`;
+  document.getElementById("inf-pac-detalles").textContent = `C.I: ${pac.cedula || "N/A"} • Área: ${pac.piso_area || "N/A"} • Edad: ${pac.edad || "N/A"} años`;
+
+  document.getElementById("inf-sugerencias-paciente")?.classList.add("hidden");
+  document.getElementById("box-inf-buscar-paciente")?.classList.add("hidden");
+  document.getElementById("box-inf-paciente-seleccionado")?.classList.remove("hidden");
+}
+
+/**
+ * Desvincular paciente para buscar otro en modal
+ */
+function cambiarPacienteEnInforme() {
+  document.getElementById("inf-paciente-id").value = "";
+  document.getElementById("box-inf-paciente-seleccionado")?.classList.add("hidden");
+  const boxBus = document.getElementById("box-inf-buscar-paciente");
+  if (boxBus) {
+    boxBus.classList.remove("hidden");
+    const input = document.getElementById("inf-buscar-input");
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  }
+}
+
+/**
+ * Guardar informe clínico y abrir visor oficial para impresión
+ */
+async function guardarInformeClinico(e) {
+  if (e) e.preventDefault();
+
+  const pacienteId = document.getElementById("inf-paciente-id")?.value;
+  if (!pacienteId) {
+    showToast("Colaborador Requerido", "Debes seleccionar al colaborador / trabajador para emitir el informe.", "warning");
+    cambiarPacienteEnInforme();
+    return;
+  }
+
+  const atencionId = document.getElementById("inf-atencion-id")?.value || null;
+  const fecha = document.getElementById("inf-fecha")?.value || new Date().toISOString().split("T")[0];
+  const tipoInforme = document.getElementById("inf-tipo")?.value || "DESLINDE_RESPONSABILIDAD";
+  const motivo = (document.getElementById("inf-motivo")?.value || "").trim();
+  const detalles = (document.getElementById("inf-detalles")?.value || "").trim();
+  const recomendaciones = (document.getElementById("inf-recomendaciones")?.value || "").trim();
+  const profNombre = (document.getElementById("inf-prof-nombre")?.value || "Lic. Patricia Pilataxi").trim();
+  const profRol = (document.getElementById("inf-prof-rol")?.value || "Enfermera Titular FYDI • Salud Ocupacional").trim();
+  const usuarioReg = currentUser ? currentUser.usuario : "patricia.pilataxi";
+
+  if (!motivo || !detalles || !recomendaciones) {
+    showToast("Campos Incompletos", "Por favor completa el motivo, detalle clínico y las recomendaciones obligatorias.", "warning");
+    return;
+  }
+
+  const btnSubmit = document.getElementById("btn-submit-informe");
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Procesando...`;
+  }
+
+  try {
+    const payload = {
+      paciente_id: parseInt(pacienteId),
+      atencion_id: atencionId ? parseInt(atencionId) : null,
+      fecha,
+      tipo_informe: tipoInforme,
+      motivo_derivacion: motivo,
+      detalles_informe: detalles,
+      recomendaciones,
+      profesional_nombre: profNombre,
+      profesional_rol: profRol,
+      usuario_registro: usuarioReg,
+      user_role: currentUser ? currentUser.rol : "ENFERMERIA"
+    };
+
+    const res = await apiFetch("/api/informes-clinicos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const resData = await res.json();
+    if (!res.ok) {
+      throw new Error(resData.error || "Error al registrar el informe clínico.");
+    }
+
+    showToast("Informe Oficial Generado", "El informe clínico y acta de deslinde ha sido guardado exitosamente.", "success");
+    cerrarModalInformeClinico();
+
+    // Actualizar tabla en segundo plano
+    cargarListaInformes();
+
+    // Abrir inmediatamente el documento membretado listo para imprimir
+    if (resData.id) {
+      verInformeClinico(resData.id);
+    }
+
+  } catch (err) {
+    console.error("Error al guardar informe:", err);
+    showToast("Error", err.message, "error");
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<i data-lucide="printer" class="w-4 h-4"></i> <span>Guardar e Imprimir Documento</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+/**
+ * Ver documento membretado formal con cabecera y 3 firmas
+ */
+async function verInformeClinico(informeId) {
+  try {
+    const res = await apiFetch(`/api/informes-clinicos/${informeId}`);
+    if (!res.ok) throw new Error("No se pudo obtener el detalle del informe.");
+    const inf = await res.json();
+
+    const cod = `INF-2026-${String(inf.id).padStart(4, "0")}`;
+    const fecha = inf.fecha || (inf.creado_en ? inf.creado_en.split(" ")[0] : "2026-11-16");
+
+    // Llenar campos en el modal visor
+    const codEl = document.getElementById("doc-inf-codigo");
+    if (codEl) codEl.textContent = cod;
+
+    const fechaEl = document.getElementById("doc-inf-fecha");
+    if (fechaEl) fechaEl.textContent = `Quito D.M., ${fecha}`;
+
+    const destVal = document.getElementById("doc-inf-destinatario-val");
+    if (destVal) destVal.textContent = "GERENCIA GENERAL & JEFATURA DE TALENTO HUMANO";
+
+    const emisorVal = document.getElementById("doc-inf-emisor-val");
+    if (emisorVal) emisorVal.textContent = `${inf.profesional_nombre || "Lic. Patricia Pilataxi"} (${inf.profesional_rol || "Enfermera Titular FYDI"})`;
+
+    const asuntoVal = document.getElementById("doc-inf-asunto-val");
+    if (asuntoVal) asuntoVal.textContent = `${(inf.tipo_informe || "").replace(/_/g, " ")} — ${inf.motivo_derivacion || ""}`;
+
+    // Título según tipo
+    const tituloEl = document.getElementById("doc-inf-titulo");
+    if (tituloEl) {
+      if (inf.tipo_informe === "DESLINDE_RESPONSABILIDAD") {
+        tituloEl.textContent = "ACTA MÉDICA DE DESLINDE DE RESPONSABILIDAD, NO ADHERENCIA Y DISPOSICIÓN DE REPOSO";
+      } else if (inf.tipo_informe === "DERIVACION_MEDICA") {
+        tituloEl.textContent = "INFORME OFICIAL DE DERIVACIÓN MÉDICA A ESPECIALISTA / IESS Y RETIRO DE JORNADA";
+      } else if (inf.tipo_informe === "NOTIFICACION_GERENCIA") {
+        tituloEl.textContent = "NOTIFICACIÓN FORMAL DE RIESGO DE SALUD OCUPACIONAL E INAPTITUD TEMPORAL";
+      } else {
+        tituloEl.textContent = "INFORME MÉDICO OCUPACIONAL Y VALORACIÓN CLÍNICA INSTITUCIONAL";
+      }
+    }
+
+    // Datos del Paciente
+    const pacNombre = inf.paciente_nombre || `${inf.nombres || ""} ${inf.apellidos || ""}`.trim() || "-";
+    const pacCedula = inf.paciente_cedula || inf.cedula || "-";
+    const pacEdad = inf.paciente_edad || inf.edad ? `${inf.paciente_edad || inf.edad} años` : "-";
+    const pacPiso = inf.paciente_piso || inf.piso_area || "-";
+    const pacAlergias = inf.alergias || inf.paciente_alergias || "Ninguna reportada";
+    const pacMeds = inf.antecedentes_personales || inf.medicacion_habitual || "Ninguna registrada";
+
+    const elPacNombre = document.getElementById("doc-inf-pac-nombre");
+    if (elPacNombre) elPacNombre.textContent = pacNombre;
+
+    const elPacCedula = document.getElementById("doc-inf-pac-cedula");
+    if (elPacCedula) elPacCedula.textContent = pacCedula;
+
+    const elPacEdad = document.getElementById("doc-inf-pac-edad");
+    if (elPacEdad) elPacEdad.textContent = pacEdad;
+
+    const elPacPiso = document.getElementById("doc-inf-pac-piso");
+    if (elPacPiso) elPacPiso.textContent = pacPiso;
+
+    const elPacAlergias = document.getElementById("doc-inf-pac-alergias");
+    if (elPacAlergias) elPacAlergias.textContent = pacAlergias;
+
+    const elPacMeds = document.getElementById("doc-inf-pac-meds");
+    if (elPacMeds) elPacMeds.textContent = pacMeds;
+
+    // Secciones clínicas
+    const elMotivo = document.getElementById("doc-inf-motivo");
+    if (elMotivo) elMotivo.textContent = inf.motivo_derivacion || "-";
+
+    const elDetalles = document.getElementById("doc-inf-detalles");
+    if (elDetalles) elDetalles.textContent = inf.detalles_informe || "-";
+
+    const elRec = document.getElementById("doc-inf-recomendaciones");
+    if (elRec) elRec.textContent = inf.recomendaciones || "-";
+
+    // Firmas
+    const elFirmaProf = document.getElementById("doc-inf-firma-prof");
+    if (elFirmaProf) elFirmaProf.textContent = inf.profesional_nombre || "Lic. Patricia Pilataxi";
+
+    const elCargoProf = document.getElementById("doc-inf-cargo-prof");
+    if (elCargoProf) elCargoProf.textContent = inf.profesional_rol || "Enfermera Titular FYDI • Salud Ocupacional";
+
+    const elFirmaPac = document.getElementById("doc-inf-firma-pac");
+    if (elFirmaPac) elFirmaPac.textContent = pacNombre;
+
+    const modalVisor = document.getElementById("modal-visor-informe");
+    if (modalVisor) {
+      modalVisor.classList.remove("hidden");
+      if (window.lucide) lucide.createIcons();
+    }
+
+  } catch (err) {
+    console.error("Error al visualizar informe:", err);
+    showToast("Error", "No se pudo cargar el documento: " + err.message, "error");
+  }
+}
+
+/**
+ * Cerrar modal visor del informe
+ */
+function cerrarModalVisorInforme() {
+  const modal = document.getElementById("modal-visor-informe");
+  if (modal) modal.classList.add("hidden");
 }
