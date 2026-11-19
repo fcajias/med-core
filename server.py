@@ -948,6 +948,26 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                 """)
                 mensual = [dict(r) for r in cur.fetchall()]
 
+                cur.execute("""
+                    SELECT m.codigo, m.nombre, m.presentacion, m.stock_actual, m.stock_minimo,
+                           CASE WHEN m.stock_actual = 0 THEN 'AGOTADO' ELSE 'BAJO' END as estado_stock
+                    FROM medicamentos m
+                    WHERE m.activo = 1 AND (m.stock_actual = 0 OR m.stock_actual <= m.stock_minimo)
+                    ORDER BY m.stock_actual ASC, m.nombre ASC
+                """)
+                meds_criticos = [dict(r) for r in cur.fetchall()]
+
+                cur.execute("""
+                    SELECT p.piso_area, count(*) as atenciones
+                    FROM atenciones a
+                    JOIN pacientes p ON a.paciente_id = p.id
+                    WHERE a.estado != 'ANULADA' AND p.piso_area IS NOT NULL AND trim(p.piso_area) != ''
+                    GROUP BY trim(p.piso_area)
+                    ORDER BY atenciones DESC
+                    LIMIT 7
+                """)
+                por_piso = [dict(r) for r in cur.fetchall()]
+
                 self.send_json({
                     "totales": {
                         "unidades_bodega": tot_unid or 0,
@@ -965,7 +985,9 @@ class DispensarioHandler(http.server.SimpleHTTPRequestHandler):
                     "mas_consumidos": top_mas,
                     "menos_consumidos": top_menos,
                     "top_diagnosticos": top_diag,
-                    "atenciones_mensuales": mensual
+                    "atenciones_mensuales": mensual,
+                    "medicamentos_criticos": meds_criticos,
+                    "atenciones_por_piso": por_piso
                 })
 
             elif path in ["/api/solicitudes", "/api/chat/mensajes"]:

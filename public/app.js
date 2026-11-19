@@ -3820,3 +3820,378 @@ function cerrarModalVisorInforme() {
   const modal = document.getElementById("modal-visor-informe");
   if (modal) modal.classList.add("hidden");
 }
+
+
+// ================================================================
+// MÓDULO: DOSSIER EJECUTIVO DE JUSTIFICACIÓN DE ABASTECIMIENTO
+// (Para presentación y auditoría ante Contabilidad y Gerencia)
+// ================================================================
+let itemsRequerimientoDossier = [];
+let statsDossierCache = null;
+
+/**
+ * Abrir modal de Dossier Ejecutivo cargando datos reales y gráficos
+ */
+async function abrirModalDossierEjecutivo() {
+  const modal = document.getElementById("modal-dossier-ejecutivo");
+  if (!modal) return;
+
+  try {
+    // 1. Consultar estadísticas actualizadas
+    const res = await apiFetch("/api/estadisticas");
+    if (!res.ok) throw new Error("No se pudo obtener las estadísticas del sistema.");
+    statsDossierCache = await res.json();
+    const st = statsDossierCache;
+
+    // 2. Metadatos del documento
+    const fechaEl = document.getElementById("dossier-fecha-emision");
+    if (fechaEl) {
+      const hoy = new Date();
+      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+      fechaEl.textContent = `Quito D.M., ${hoy.toLocaleDateString('es-EC', opciones)}`;
+    }
+
+    const codEl = document.getElementById("dossier-codigo-doc");
+    if (codEl) {
+      const anio = new Date().getFullYear();
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      codEl.textContent = `DOS-FYDI-${anio}-${rand}`;
+    }
+
+    // 3. Indicadores Clave (KPIs)
+    document.getElementById("dossier-kpi-atenciones").textContent = st.totales.atenciones;
+    document.getElementById("dossier-kpi-pacientes").textContent = st.totales.pacientes;
+    document.getElementById("dossier-kpi-alertas").textContent = (st.totales.agotados + st.totales.stock_bajo);
+    document.getElementById("dossier-kpi-unidades").textContent = st.totales.unidades_bodega;
+
+    // 4. Gráfico A: Evolución Mensual de Atenciones
+    const mensualDiv = document.getElementById("dossier-chart-mensual");
+    if (mensualDiv) {
+      if (!st.atenciones_mensuales || st.atenciones_mensuales.length === 0) {
+        mensualDiv.innerHTML = `<p class="text-slate-400 py-3 text-center">Sin datos mensuales registrados</p>`;
+      } else {
+        const maxMes = Math.max(...st.atenciones_mensuales.map(m => m.atenciones), 1);
+        mensualDiv.innerHTML = st.atenciones_mensuales.map(m => {
+          const pct = Math.max(12, Math.round((m.atenciones / maxMes) * 100));
+          return `
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 text-[10px] mb-0.5">
+                <span>${m.mes}</span>
+                <span class="text-[#0F2C59]">${m.atenciones} consultas</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-[#0F2C59] h-2 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    // 5. Gráfico B: Top Patologías / Diagnósticos
+    const diagDiv = document.getElementById("dossier-chart-diagnosticos");
+    if (diagDiv) {
+      if (!st.top_diagnosticos || st.top_diagnosticos.length === 0) {
+        diagDiv.innerHTML = `<p class="text-slate-400 py-3 text-center">Sin diagnósticos frecuentes registrados</p>`;
+      } else {
+        const maxDiag = Math.max(...st.top_diagnosticos.map(d => d.cantidad), 1);
+        diagDiv.innerHTML = st.top_diagnosticos.map(d => {
+          const pct = Math.max(15, Math.round((d.cantidad / maxDiag) * 100));
+          return `
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 text-[10px] mb-0.5">
+                <span class="truncate max-w-[180px]">${d.diagnostico}</span>
+                <span class="text-amber-700">${d.cantidad} casos</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-500 to-rose-600 h-2 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    // 6. Tabla de Fármacos Agotados y en Riesgo
+    const agotadosBody = document.getElementById("dossier-tabla-agotados-body");
+    if (agotadosBody) {
+      const criticos = st.medicamentos_criticos || [];
+      if (criticos.length === 0) {
+        agotadosBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">No hay fármacos en stock cero o bajo actualmente.</td></tr>`;
+      } else {
+        agotadosBody.innerHTML = criticos.slice(0, 12).map(m => {
+          const esAgotado = m.stock_actual === 0;
+          const badgeClass = esAgotado 
+            ? "bg-rose-100 text-rose-800 border-rose-300 font-black" 
+            : "bg-amber-100 text-amber-800 border-amber-300 font-bold";
+          const badgeTxt = esAgotado ? "STOCK CERO (AGOTADO)" : "STOCK CRÍTICO";
+
+          return `
+            <tr class="hover:bg-slate-50 text-[11px]">
+              <td class="py-1.5 px-3 font-mono text-slate-500">${m.codigo || '-'}</td>
+              <td class="py-1.5 px-3 font-bold text-slate-900">${m.nombre}</td>
+              <td class="py-1.5 px-3 text-slate-600">${m.presentacion || '-'}</td>
+              <td class="py-1.5 px-3 text-center font-bold ${esAgotado ? 'text-rose-600 text-xs' : 'text-slate-800'}">${m.stock_actual}</td>
+              <td class="py-1.5 px-3 text-center text-slate-500">${m.stock_minimo}</td>
+              <td class="py-1.5 px-3 text-center">
+                <span class="px-2 py-0.5 rounded text-[9px] border ${badgeClass}">${badgeTxt}</span>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+    }
+
+    // 7. Requerimientos Dinámicos Iniciales (si está vacío, inicializar con propuestas estándar)
+    if (itemsRequerimientoDossier.length === 0) {
+      itemsRequerimientoDossier = [
+        {
+          nombre: "Báscula médica con tallímetro para adultos (Balanza clínica)",
+          categoria: "EQUIPAMIENTO_BIOMEDICO",
+          cantidad: "1 unidad",
+          justificacion: "Permite control ponderal, cálculo de IMC y triaje de signos vitales obligatorio en fichas de aptitud laboral SST y exámenes periódicos de la empresa.",
+          prioridad: "CRÍTICA"
+        },
+        {
+          nombre: "Tensiómetro aneroide/digital clínico con brazalete para adultos",
+          categoria: "EQUIPAMIENTO_BIOMEDICO",
+          cantidad: "2 unidades",
+          justificacion: "Diagnóstico inmediato y monitoreo de crisis hipertensivas derivadas del estrés en plataforma de llamadas (7 pisos operativos).",
+          prioridad: "ALTA"
+        },
+        {
+          nombre: "Oxímetro de pulso digital pediátrico/adulto",
+          categoria: "EQUIPAMIENTO_BIOMEDICO",
+          cantidad: "2 unidades",
+          justificacion: "Medición rápida de saturación de oxígeno (SpO2) y frecuencia cardiaca en casos de asma, crisis respiratorias y síncopes.",
+          prioridad: "ALTA"
+        },
+        {
+          nombre: "Lote de Fármacos Esenciales Agotados (Analgésicos, Antiinflamatorios y Antiespasmódicos)",
+          categoria: "FARMACOS_ESENCIALES",
+          cantidad: "Reposición según consumo",
+          justificacion: "Reabastecimiento urgente de medicinas con stock en 0 para evitar que el colaborador abandone su jornada de trabajo por dolor agudo.",
+          prioridad: "CRÍTICA"
+        },
+        {
+          nombre: "Insumos Descartables de Primeros Auxilios (Gasas estériles, vendas, apósitos y guantes)",
+          categoria: "INSUMOS_DESCARTABLES",
+          cantidad: "1 kit completo",
+          justificacion: "Material estéril indispensable para curaciones inmediatas ante heridas, traumatismos o caídas en el edificio.",
+          prioridad: "ALTA"
+        }
+      ];
+    }
+
+    renderTablaRequerimientosDossier();
+
+    modal.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    console.error("Error al abrir dossier ejecutivo:", err);
+    showToast("Error", "No se pudo generar el dossier: " + err.message, "error");
+  }
+}
+
+/**
+ * Mostrar / Ocultar panel editor de ítems
+ */
+function toggleEditorRequerimientos() {
+  const panel = document.getElementById("dossier-panel-editor");
+  if (!panel) return;
+  panel.classList.toggle("hidden");
+  if (!panel.classList.contains("hidden")) {
+    document.getElementById("dossier-item-nombre")?.focus();
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
+ * Agregar sugerencia rápida de equipamiento
+ */
+function agregarSugerenciaRapida(nombre, categoria, cantidad, justificacion, prioridad) {
+  // Evitar duplicados exactos
+  const yaExiste = itemsRequerimientoDossier.some(it => it.nombre.toLowerCase() === nombre.toLowerCase());
+  if (yaExiste) {
+    showToast("Ítem Existente", `"${nombre}" ya se encuentra en la propuesta de compra.`, "warning");
+    return;
+  }
+
+  itemsRequerimientoDossier.push({
+    nombre,
+    categoria,
+    cantidad,
+    justificacion,
+    prioridad: prioridad || "ALTA"
+  });
+
+  renderTablaRequerimientosDossier();
+  showToast("Ítem Añadido", `Se incorporó "${nombre}" al plan de requerimientos.`, "success");
+}
+
+/**
+ * Agregar ítem desde el formulario interactivo
+ */
+function agregarItemDesdeFormulario(e) {
+  if (e) e.preventDefault();
+
+  const nombre = (document.getElementById("dossier-item-nombre")?.value || "").trim();
+  const categoria = document.getElementById("dossier-item-categoria")?.value || "EQUIPAMIENTO_BIOMEDICO";
+  const cantidad = (document.getElementById("dossier-item-cantidad")?.value || "1 unidad").trim();
+  const prioridad = document.getElementById("dossier-item-prioridad")?.value || "ALTA";
+  const justificacion = (document.getElementById("dossier-item-justificacion")?.value || "").trim();
+
+  if (!nombre || !justificacion) {
+    showToast("Datos Incompletos", "Por favor ingresa el nombre del ítem y su justificación técnica.", "warning");
+    return;
+  }
+
+  itemsRequerimientoDossier.push({
+    nombre,
+    categoria,
+    cantidad,
+    justificacion,
+    prioridad
+  });
+
+  // Limpiar campos
+  document.getElementById("dossier-item-nombre").value = "";
+  document.getElementById("dossier-item-cantidad").value = "";
+  document.getElementById("dossier-item-justificacion").value = "";
+
+  renderTablaRequerimientosDossier();
+  showToast("Propuesta Actualizada", `Se agregó "${nombre}" al dossier ejecutivo.`, "success");
+}
+
+/**
+ * Importar automáticamente fármacos agotados desde el inventario del sistema
+ */
+function importarFarmacosAgotadosAlDossier() {
+  if (!statsDossierCache || !statsDossierCache.medicamentos_criticos) {
+    showToast("Sin Datos", "No hay lista de medicamentos disponible para importar.", "warning");
+    return;
+  }
+
+  const criticos = statsDossierCache.medicamentos_criticos.filter(m => m.stock_actual === 0);
+  if (criticos.length === 0) {
+    showToast("Sin Fármacos en Cero", "Actualmente no existen medicamentos con stock igual a cero.", "info");
+    return;
+  }
+
+  let agregados = 0;
+  criticos.forEach(m => {
+    const nombreCompleto = `Fármaco: ${m.nombre} (${m.presentacion || 'unidad'})`;
+    const yaExiste = itemsRequerimientoDossier.some(it => it.nombre.toLowerCase().includes(m.nombre.toLowerCase()));
+    if (!yaExiste) {
+      itemsRequerimientoDossier.push({
+        nombre: nombreCompleto,
+        categoria: "FARMACOS_ESENCIALES",
+        cantidad: `${Math.max(10, m.stock_minimo * 3)} unidades`,
+        justificacion: `Stock en bodega agotado (0 unidades). Fármaco de alta rotación para sintomatología recurrente de colaboradores en turno.`,
+        prioridad: "CRÍTICA"
+      });
+      agregados++;
+    }
+  });
+
+  renderTablaRequerimientosDossier();
+  showToast("Importación Completa", `Se agregaron ${agregados} medicamentos agotados a la propuesta.`, "success");
+}
+
+/**
+ * Eliminar ítem del plan de requerimientos
+ */
+function eliminarItemRequerimientoDossier(idx) {
+  if (idx >= 0 && idx < itemsRequerimientoDossier.length) {
+    const eliminado = itemsRequerimientoDossier.splice(idx, 1);
+    renderTablaRequerimientosDossier();
+    showToast("Ítem Eliminado", `Se retiró "${eliminado[0]?.nombre}" de la propuesta.`, "info");
+  }
+}
+
+/**
+ * Renderizar la tabla de requerimientos en el documento imprimible
+ */
+function renderTablaRequerimientosDossier() {
+  const tbody = document.getElementById("dossier-tabla-requerimientos-body");
+  const countBadge = document.getElementById("dossier-total-items-badge");
+
+  if (countBadge) {
+    countBadge.textContent = `${itemsRequerimientoDossier.length} requerimiento(s) activo(s)`;
+  }
+
+  if (!tbody) return;
+
+  if (itemsRequerimientoDossier.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-6 text-slate-400">
+          <p class="font-bold text-slate-500">No hay ítems en la propuesta de compra</p>
+          <span class="text-[11px]">Usa el botón "Personalizar Pedido" para agregar equipos, fármacos o insumos.</span>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = itemsRequerimientoDossier.map((item, idx) => {
+    // Formato de categoría
+    let catBadge = "";
+    if (item.categoria === "EQUIPAMIENTO_BIOMEDICO") {
+      catBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-black bg-blue-100 text-blue-900 border border-blue-200">Equipamiento Biomédico</span>`;
+    } else if (item.categoria === "FARMACOS_ESENCIALES") {
+      catBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200">Fármacos Esenciales</span>`;
+    } else if (item.categoria === "INSUMOS_DESCARTABLES") {
+      catBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200">Insumos Descartables</span>`;
+    } else {
+      catBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-800 border border-slate-200">Adecuación Clínica</span>`;
+    }
+
+    // Prioridad
+    let prioBadge = "";
+    if (item.prioridad === "CRÍTICA") {
+      prioBadge = `<span class="px-2 py-0.5 rounded font-black text-[9px] bg-rose-600 text-white">CRÍTICA</span>`;
+    } else if (item.prioridad === "ALTA") {
+      prioBadge = `<span class="px-2 py-0.5 rounded font-bold text-[9px] bg-amber-500 text-slate-950">ALTA</span>`;
+    } else {
+      prioBadge = `<span class="px-2 py-0.5 rounded font-medium text-[9px] bg-slate-200 text-slate-700">PLANIFICADA</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50 text-[11px] border-b border-slate-200">
+        <td class="py-2.5 px-3 whitespace-nowrap">${catBadge}</td>
+        <td class="py-2.5 px-3">
+          <strong class="text-slate-900 block text-xs">${item.nombre}</strong>
+        </td>
+        <td class="py-2.5 px-3 text-center font-bold text-slate-800 whitespace-nowrap">${item.cantidad}</td>
+        <td class="py-2.5 px-3 text-slate-700 leading-snug">
+          ${item.justificacion}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">${prioBadge}</td>
+        <td class="py-2.5 px-2 text-center dossier-no-print">
+          <button type="button" onclick="eliminarItemRequerimientoDossier(${idx})" class="p-1 text-slate-400 hover:text-rose-600 rounded transition" title="Eliminar ítem">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
+ * Imprimir / Guardar en PDF el Dossier Ejecutivo
+ */
+function imprimirDossierEjecutivo() {
+  window.print();
+}
+
+/**
+ * Cerrar modal de Dossier Ejecutivo
+ */
+function cerrarModalDossierEjecutivo() {
+  const modal = document.getElementById("modal-dossier-ejecutivo");
+  if (modal) modal.classList.add("hidden");
+}

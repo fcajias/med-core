@@ -207,22 +207,26 @@ body {
   body * {
     visibility: hidden;
   }
-  #modal-visor-informe,
-  #modal-visor-informe * {
+  #modal-visor-informe:not(.hidden),
+  #modal-visor-informe:not(.hidden) *,
+  #modal-dossier-ejecutivo:not(.hidden),
+  #modal-dossier-ejecutivo:not(.hidden) * {
     visibility: visible;
   }
-  #modal-visor-informe {
+  #modal-visor-informe,
+  #modal-dossier-ejecutivo {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: transparent !important;
+    background: #ffffff !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
   }
-  #modal-visor-informe > div {
+  #modal-visor-informe > div,
+  #modal-dossier-ejecutivo > div {
     max-width: 100% !important;
     width: 100% !important;
     box-shadow: none !important;
@@ -230,16 +234,22 @@ body {
   }
   #modal-visor-informe .px-6.py-3\.5,
   #modal-visor-informe button,
-  #modal-visor-informe header {
+  #modal-visor-informe header,
+  #modal-dossier-ejecutivo button,
+  .dossier-no-print {
     display: none !important;
   }
-  #contenido-imprimible-informe {
-    padding: 1.5cm 1cm !important;
-    font-size: 11pt !important;
+  #contenido-imprimible-informe,
+  #hoja-imprimible-dossier {
+    padding: 1.2cm 1cm !important;
+    font-size: 10.5pt !important;
     color: #000000 !important;
+    background: #ffffff !important;
   }
-  .printable-document {
-    page-break-inside: avoid;
+  .printable-document,
+  .dossier-section-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

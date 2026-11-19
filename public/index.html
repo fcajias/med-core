@@ -1218,6 +1218,34 @@
  <!-- TAB 4: ESTADÍSTICAS & TENDENCIAS -->
  <!-- ======================================================== -->
  <section id="tab-estadisticas" class="tab-pane hidden">
+    <!-- Header Bar de Estadísticas & Generador de Dossier Ejecutivo -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 p-4 bg-gradient-to-r from-slate-900 via-[#0F2C59] to-slate-900 rounded-2xl text-white shadow-md border border-slate-800">
+      <div class="flex items-center gap-3">
+        <span class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-400 border border-white/10 shrink-0">
+          <i data-lucide="bar-chart-big" class="w-5 h-5"></i>
+        </span>
+        <div>
+          <h2 class="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
+            <span>Auditoría de Consumo, Carga Asistencial &amp; Abastecimiento</span>
+            <span class="hidden md:inline px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">Métricas Oficiales FYDI</span>
+          </h2>
+          <p class="text-xs text-slate-300">
+            Respaldo de atenciones clínicas en tiempo real para justificación técnica y financiera ante Contabilidad y Gerencia.
+          </p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="btn-generar-dossier-ejecutivo" onclick="abrirModalDossierEjecutivo()" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg transition transform hover:-translate-y-0.5">
+          <i data-lucide="file-check-2" class="w-4 h-4 text-slate-950"></i>
+          <span>📊 Generar Dossier para Contabilidad / Gerencia</span>
+        </button>
+        <button type="button" onclick="cargarEstadisticas(true)" class="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition border border-white/10" title="Actualizar métricas en vivo">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
  <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
  <div class="flex items-center justify-between text-slate-500 mb-2">
@@ -2393,6 +2421,315 @@
               <strong class="block font-black text-slate-900">Gerencia / Talento Humano</strong>
               <span class="block text-[10px] text-slate-600">Recibido para fines administrativos</span>
               <span class="block text-[9px] text-slate-400 font-mono">Firma, Sello, Fecha y Hora</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: DOSSIER EJECUTIVO DE JUSTIFICACIÓN PARA GERENCIA Y CONTABILIDAD -->
+  <!-- ======================================================== -->
+  <div id="modal-dossier-ejecutivo" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-100 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[96vh] flex flex-col border border-slate-300 overflow-hidden animate-fade-in my-auto">
+      
+      <!-- Top Action Bar (dossier-no-print) -->
+      <div class="px-6 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shrink-0 dossier-no-print border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 font-bold shrink-0">
+            <i data-lucide="file-pie-chart" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white flex items-center gap-2">
+              <span>Dossier Ejecutivo: Justificación de Abastecimiento &amp; Auditoría</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">Oficial Gerencia / Contabilidad</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              Demuestra con gráficos y datos reales la necesidad de compra de insumos, equipamiento y fármacos.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleEditorRequerimientos()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-2xs">
+            <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
+            <span>Personalizar Pedido</span>
+          </button>
+          <button type="button" onclick="imprimirDossierEjecutivo()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition transform hover:-translate-y-0.5">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Imprimir / Guardar PDF</span>
+          </button>
+          <button type="button" onclick="cerrarModalDossierEjecutivo()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel Plegable de Configuración & Adición Dinámica de Ítems (dossier-no-print) -->
+      <div id="dossier-panel-editor" class="hidden p-5 bg-white border-b border-slate-200 overflow-y-auto max-h-72 shrink-0 dossier-no-print shadow-inner">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="package-plus" class="w-4 h-4 text-brand-600"></i>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800">
+              Agregar Ítems a la Propuesta de Compra (Equipos, Insumos o Medicinas)
+            </h4>
+          </div>
+          <button type="button" onclick="importarFarmacosAgotadosAlDossier()" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-[11px] font-bold flex items-center gap-1 transition">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-rose-600"></i>
+            <span>Importar Automáticamente Fármacos Agotados (Stock 0 / Bajo)</span>
+          </button>
+        </div>
+
+        <!-- Chips de Acceso Rápido para Equipos e Insumos Comunes -->
+        <div class="flex flex-wrap items-center gap-1.5 mb-3 text-[11px]">
+          <span class="text-slate-400 font-semibold text-[10px]">Sugerencias de Equipamiento:</span>
+          <button type="button" onclick="agregarSugerenciaRapida('Báscula médica con tallímetro para adultos', 'EQUIPAMIENTO_BIOMEDICO', '1 unidad', 'Control ponderal, cálculo de IMC y triaje ocupacional obligatorio por normativa SST', 'CRÍTICA')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium border border-slate-200 transition">
+            + Báscula con Tallímetro
+          </button>
+          <button type="button" onclick="agregarSugerenciaRapida('Tensiómetro digital clínico con brazalete', 'EQUIPAMIENTO_BIOMEDICO', '2 unidades', 'Monitoreo de presión arterial en crisis hipertensivas y estrés laboral', 'ALTA')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium border border-slate-200 transition">
+            + Tensiómetro
+          </button>
+          <button type="button" onclick="agregarSugerenciaRapida('Oxímetro de pulso digital pediátrico/adulto', 'EQUIPAMIENTO_BIOMEDICO', '2 unidades', 'Medición de saturación de oxígeno y pulso en crisis respiratorias', 'ALTA')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium border border-slate-200 transition">
+            + Oxímetro de Pulso
+          </button>
+          <button type="button" onclick="agregarSugerenciaRapida('Glucómetro capilar con 50 tiras y lancetas', 'EQUIPAMIENTO_BIOMEDICO', '1 kit', 'Detección urgente de hipoglucemia/hiperglucemia en colaboradores', 'ALTA')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium border border-slate-200 transition">
+            + Glucómetro
+          </button>
+          <button type="button" onclick="agregarSugerenciaRapida('Guantes de nitrilo, gasas y apósitos estériles', 'INSUMOS_DESCARTABLES', '1 lote', 'Material descartable de curación básica y primeros auxilios', 'ALTA')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium border border-slate-200 transition">
+            + Insumos Descartables
+          </button>
+        </div>
+
+        <!-- Formulario Dinámico -->
+        <form id="form-item-dossier" onsubmit="agregarItemDesdeFormulario(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2 text-xs">
+          <div class="sm:col-span-4">
+            <label class="block font-semibold text-slate-700 mb-0.5 text-[11px]">Ítem / Equipo / Fármaco *</label>
+            <input type="text" id="dossier-item-nombre" required placeholder="Ej. Báscula médica con tallímetro" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block font-semibold text-slate-700 mb-0.5 text-[11px]">Categoría Formal *</label>
+            <select id="dossier-item-categoria" required class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-medium">
+              <option value="EQUIPAMIENTO_BIOMEDICO">Equipamiento Biomédico &amp; Diagnóstico</option>
+              <option value="FARMACOS_ESENCIALES">Fármacos &amp; Medicación Esencial</option>
+              <option value="INSUMOS_DESCARTABLES">Insumos Descartables &amp; Primeros Auxilios</option>
+              <option value="ADECUACION_CONSULTORIO">Adecuación &amp; Mobiliario Clínico</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block font-semibold text-slate-700 mb-0.5 text-[11px]">Cantidad Solicitada *</label>
+            <input type="text" id="dossier-item-cantidad" required placeholder="Ej. 1 unidad / 20 cajas" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block font-semibold text-slate-700 mb-0.5 text-[11px]">Prioridad *</label>
+            <select id="dossier-item-prioridad" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-medium">
+              <option value="CRÍTICA">Crítica / Inmediata</option>
+              <option value="ALTA" selected>Alta</option>
+              <option value="MEDIA">Planificada</option>
+            </select>
+          </div>
+          <div class="sm:col-span-1 flex items-end">
+            <button type="submit" class="w-full py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-xs transition shadow-xs flex items-center justify-center">
+              + Añadir
+            </button>
+          </div>
+          <div class="sm:col-span-12 mt-1">
+            <label class="block font-semibold text-slate-700 mb-0.5 text-[11px]">Justificación Técnica / Impacto Operacional *</label>
+            <input type="text" id="dossier-item-justificacion" required placeholder="Ej. Requerido para valoración de peso/talla y control de IMC en exámenes periódicos según normativa de SST" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </form>
+      </div>
+
+      <!-- Hoja Imprimible Oficial (Se imprime tal cual) -->
+      <div class="p-6 sm:p-10 overflow-y-auto flex-1 bg-white text-slate-900 text-xs space-y-6 printable-document" id="hoja-imprimible-dossier">
+        
+        <!-- Cabecera Institucional Membretada FYDI -->
+        <div class="flex items-center justify-between border-b-2 border-[#0F2C59] pb-4">
+          <div class="flex items-center gap-4">
+            <img src="/img/fydi_official_logo_transparent.png" alt="FYDI Global" class="h-14 w-auto object-contain">
+            <div>
+              <h2 class="text-sm sm:text-base font-black text-[#0F2C59] uppercase tracking-wide">
+                FYDI GLOBAL BPO &amp; CONTACT CENTER S.A.
+              </h2>
+              <p class="text-[11px] font-bold text-[#C84500] uppercase tracking-wider">
+                Departamento de Seguridad y Salud en el Trabajo (SST) &bull; Dispensario Médico
+              </p>
+              <p class="text-[10px] text-slate-500">
+                Auditoría Asistencial &bull; Edificio Corporativo FYDI (7 Pisos Operativos)
+              </p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="dossier-codigo-doc" class="text-xs font-mono font-bold text-[#0F2C59] bg-slate-100 px-3 py-1 rounded-lg border border-slate-300 block">DOS-FYDI-2026-0001</span>
+            <span id="dossier-fecha-emision" class="text-[11px] text-slate-600 font-semibold mt-1 block">Quito D.M., 2026-11-19</span>
+          </div>
+        </div>
+
+        <!-- Bloque de Destinatarios y Encabezado Formal -->
+        <div class="p-4 bg-slate-50 border border-slate-300 rounded-xl space-y-2 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div><strong>DIRIGIDO A:</strong> <span class="font-bold text-slate-800">GERENCIA GENERAL &bull; JEFATURA FINANCIERA Y CONTABILIDAD</span></div>
+            <div><strong>COPIA:</strong> <span class="font-bold text-slate-800">JEFATURA DE TALENTO HUMANO &amp; SST</span></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200">
+            <div><strong>EMISOR:</strong> <span class="font-bold text-slate-800">Lic. Patricia Pilataxi &bull; Enfermera Titular FYDI</span></div>
+            <div><strong>RESPALDO TÉCNICO:</strong> <span class="font-bold text-slate-800">Médico Ocupacional Institucional</span></div>
+          </div>
+          <div class="pt-1 border-t border-slate-200">
+            <strong>ASUNTO:</strong> <span class="font-black text-[#0F2C59] uppercase">DOSSIER EJECUTIVO DE JUSTIFICACIÓN TÉCNICA Y AUDITORÍA ASISTENCIAL PARA LA APROBACIÓN DE COMPRA DE INSUMOS MÉDICOS, MEDICAMENTOS Y EQUIPAMIENTO BIOMÉDICO</span>
+          </div>
+        </div>
+
+        <!-- 1. Justificación Técnica y Financiera para Contabilidad -->
+        <div class="p-4 bg-blue-50/60 border border-blue-200 rounded-xl text-[11px] text-slate-800 leading-relaxed text-justify space-y-2">
+          <div class="flex items-center gap-2 font-black text-[#0F2C59] text-xs uppercase tracking-wide">
+            <i data-lucide="scale" class="w-4 h-4 text-brand-600"></i>
+            <span>1. JUSTIFICACIÓN TÉCNICO-FINANCIERA PARA GERENCIA Y CONTABILIDAD</span>
+          </div>
+          <p>
+            Por medio del presente informe, el área de Salud Ocupacional y Enfermería de FYDI eleva a la Jefatura Financiera y Contabilidad la auditoría formal del consumo clínico. Los datos reflejan que <strong>la atención médica no se ha detenido y mantiene una alta demanda en todo el edificio</strong>. La reducción de inventario responde al tratamiento activo y oportuno de cientos de colaboradores, permitiendo su continuidad en sus puestos de trabajo en los 7 pisos de la operación.
+          </p>
+          <p>
+            Negar la reposición presupuestaria o carecer de equipamiento e insumos básicos conlleva un <strong>grave riesgo de interrupción operativa</strong>: un trabajador con dolor agudo, fiebre o malestar que no reciba auxilio sintomático inmediato se ve obligado a abandonar su puesto de llamadas, generando pérdidas directas en horas de servicio al cliente y sobrecostos por ausentismo. Asimismo, la falta de control de signos vitales (presión, saturación e IMC) expone a la empresa a observaciones en auditorías del Ministerio de Trabajo e IESS.
+          </p>
+        </div>
+
+        <!-- 2. Tarjetas de Indicadores Clave (Scorecard Asistencial) -->
+        <div class="space-y-2 dossier-section-avoid">
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59]">
+            2. INDICADORES DE GESTIÓN CLÍNICA Y DEMANDA ASISTENCIAL AUDITADA
+          </h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-500">Consultas Atendidas</span>
+              <strong id="dossier-kpi-atenciones" class="text-xl font-black text-[#0F2C59] block">0</strong>
+              <span class="text-[9px] text-slate-400">Atenciones válidas en sistema</span>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-500">Colaboradores Únicos</span>
+              <strong id="dossier-kpi-pacientes" class="text-xl font-black text-emerald-700 block">0</strong>
+              <span class="text-[9px] text-slate-400">Personal con expediente activo</span>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-500">Fármacos en Alerta</span>
+              <strong id="dossier-kpi-alertas" class="text-xl font-black text-rose-700 block">0</strong>
+              <span class="text-[9px] text-rose-600 font-semibold">Stock agotado o bajo</span>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-500">Unidades en Bodega</span>
+              <strong id="dossier-kpi-unidades" class="text-xl font-black text-cyan-700 block">0</strong>
+              <span class="text-[9px] text-slate-400">Saldo actual verificado</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Gráficos Ejecutivos Visuales Impresos -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 dossier-section-avoid">
+          <!-- Gráfico A: Evolución Mensual de Consultas -->
+          <div class="border border-slate-300 rounded-xl p-3.5 bg-slate-50/50">
+            <h5 class="font-bold text-[11px] text-slate-800 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <span>Evolución Mensual de Atenciones</span>
+              <span class="text-[9px] text-slate-500 font-normal">Frecuencia continua</span>
+            </h5>
+            <div id="dossier-chart-mensual" class="space-y-1.5 text-[10px]">
+              <!-- Renderizado dinámico -->
+            </div>
+          </div>
+
+          <!-- Gráfico B: Top Patologías / Diagnósticos -->
+          <div class="border border-slate-300 rounded-xl p-3.5 bg-slate-50/50">
+            <h5 class="font-bold text-[11px] text-slate-800 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <span>Top Patologías y Motivos de Consulta</span>
+              <span class="text-[9px] text-slate-500 font-normal">Demanda clínica real</span>
+            </h5>
+            <div id="dossier-chart-diagnosticos" class="space-y-1.5 text-[10px]">
+              <!-- Renderizado dinámico -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Tabla de Requerimiento de Equipamiento, Fármacos e Insumos (Dinámica) -->
+        <div class="space-y-2 dossier-section-avoid">
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-[11px] uppercase tracking-wider text-[#0F2C59]">
+              3. PLAN DE REQUERIMIENTOS Y PROPUESTA DE COMPRA JUSTIFICADA
+            </h4>
+            <span class="text-[10px] text-slate-500 font-mono" id="dossier-total-items-badge">0 requerimientos</span>
+          </div>
+
+          <div class="border border-slate-300 rounded-xl overflow-hidden shadow-2xs">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-300">
+                <tr>
+                  <th class="py-2.5 px-3">Categoría</th>
+                  <th class="py-2.5 px-3">Ítem / Equipamiento / Fármaco</th>
+                  <th class="py-2.5 px-3 text-center">Cantidad</th>
+                  <th class="py-2.5 px-3">Justificación Técnica &amp; Operativa</th>
+                  <th class="py-2.5 px-3 text-center">Prioridad</th>
+                  <th class="py-2.5 px-2 text-center dossier-no-print">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="dossier-tabla-requerimientos-body" class="divide-y divide-slate-200">
+                <!-- Filas agregadas dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. Tabla Semafórica de Fármacos Agotados en Sistema -->
+        <div class="space-y-2 dossier-section-avoid">
+          <h4 class="font-black text-[11px] uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+            <span>4. ESTADO DE MEDICAMENTOS EN ALERTA DE DESABASTECIMIENTO (SISTEMA DE BODEGA)</span>
+          </h4>
+          <div class="border border-slate-300 rounded-xl overflow-hidden">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-rose-50 text-rose-900 uppercase text-[10px] tracking-wider border-b border-rose-200">
+                <tr>
+                  <th class="py-2 px-3">Código</th>
+                  <th class="py-2 px-3">Medicamento / Fármaco</th>
+                  <th class="py-2 px-3">Presentación</th>
+                  <th class="py-2 px-3 text-center">Stock Actual</th>
+                  <th class="py-2 px-3 text-center">Stock Mínimo</th>
+                  <th class="py-2 px-3 text-center">Estado Crítico</th>
+                </tr>
+              </thead>
+              <tbody id="dossier-tabla-agotados-body" class="divide-y divide-slate-200">
+                <!-- Renderizado dinámico -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. Bloque Formal de Tres Firmas de Responsabilidad y Aprobación -->
+        <div class="pt-6 border-t border-slate-300 dossier-section-avoid">
+          <div class="grid grid-cols-3 gap-6 text-center text-xs">
+            
+            <!-- Firma 1: Área Médica / Enfermería -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong class="block font-black text-slate-900">Lic. Patricia Pilataxi</strong>
+              <span class="block text-[10px] text-slate-600">Enfermera Titular FYDI &bull; Salud Ocupacional</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Solicitante Técnico</span>
+            </div>
+
+            <!-- Firma 2: Jefatura de SST / Talento Humano -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong class="block font-black text-slate-900">Talento Humano &amp; SST</strong>
+              <span class="block text-[10px] text-slate-600">Jefatura de Operaciones &amp; Bienestar</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Visto Bueno Operacional</span>
+            </div>
+
+            <!-- Firma 3: Contabilidad & Gerencia Financiera -->
+            <div class="space-y-1">
+              <div class="border-b border-slate-400 w-full mb-1"></div>
+              <strong class="block font-black text-slate-900">Contabilidad / Gerencia</strong>
+              <span class="block text-[10px] text-slate-600">Aprobación Presupuestaria de Compra</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Despacho de Fondos</span>
             </div>
 
           </div>
