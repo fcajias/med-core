@@ -201,20 +201,46 @@ body {
 }
 
 /* ==========================================================================
-   Print Styles for Official Legal-Medical Reports
+   Print Styles for Official Legal-Medical Reports & Executive Dossiers
    ========================================================================== */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   body * {
     visibility: hidden;
   }
+
+  /* Mostrar exclusivamente el modal activo para impresión */
   #modal-visor-informe:not(.hidden),
   #modal-visor-informe:not(.hidden) *,
   #modal-dossier-ejecutivo:not(.hidden),
-  #modal-dossier-ejecutivo:not(.hidden) * {
+  #modal-dossier-ejecutivo:not(.hidden) *,
+  #modal-expediente:not(.hidden),
+  #modal-expediente:not(.hidden) * {
     visibility: visible;
   }
+
   #modal-visor-informe,
-  #modal-dossier-ejecutivo {
+  #modal-dossier-ejecutivo,
+  #modal-expediente {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -224,28 +250,57 @@ body {
     background: #ffffff !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
+    border: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
+
   #modal-visor-informe > div,
-  #modal-dossier-ejecutivo > div {
+  #modal-dossier-ejecutivo > div,
+  #modal-expediente > div {
     max-width: 100% !important;
     width: 100% !important;
     box-shadow: none !important;
     border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 0 !important;
   }
-  #modal-visor-informe .px-6.py-3\.5,
-  #modal-visor-informe button,
-  #modal-visor-informe header,
+
+  /* Ocultar elementos interactivos en impresión */
+  .dossier-no-print,
+  .no-print,
+  #dossier-panel-editor,
   #modal-dossier-ejecutivo button,
-  .dossier-no-print {
+  #modal-visor-informe button,
+  #modal-expediente button,
+  #modal-visor-informe header,
+  #modal-visor-informe .px-6.py-3\.5 {
     display: none !important;
   }
+
+  /* Hojas oficiales imprimibles */
   #contenido-imprimible-informe,
   #hoja-imprimible-dossier {
-    padding: 1.2cm 1cm !important;
-    font-size: 10.5pt !important;
-    color: #000000 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.4cm 0.4cm !important;
+    margin: 0 !important;
+    font-size: 10pt !important;
+    color: #0f172a !important;
     background: #ffffff !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
   }
+
+  /* Evitar saltos de página dentro de bloques clave */
   .printable-document,
   .dossier-section-avoid {
     page-break-inside: avoid !important;

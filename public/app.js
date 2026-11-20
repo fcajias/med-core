@@ -2090,7 +2090,7 @@ async function abrirModalExpediente(pid) {
   if (window.lucide) lucide.createIcons();
 
   try {
-    const res = await fetch(`/api/pacientes/${pid}/historial`);
+    const res = await apiFetch(`/api/pacientes/${pid}/historial`);
     const pac = await res.json();
     expedienteActualCache = pac;
     pacienteHistorialCache = pac.historial || [];

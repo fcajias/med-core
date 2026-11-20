@@ -1238,7 +1238,7 @@
       <div class="flex items-center gap-2 shrink-0">
         <button type="button" id="btn-generar-dossier-ejecutivo" onclick="abrirModalDossierEjecutivo()" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg transition transform hover:-translate-y-0.5">
           <i data-lucide="file-check-2" class="w-4 h-4 text-slate-950"></i>
-          <span>📊 Generar Dossier para Contabilidad / Gerencia</span>
+          <span>📊 Generar Dossier Ejecutivo para Gerencia General</span>
         </button>
         <button type="button" onclick="cargarEstadisticas(true)" class="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition border border-white/10" title="Actualizar métricas en vivo">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
@@ -2280,6 +2280,107 @@
   <!-- ======================================================== -->
   <!-- MODAL: VISOR / IMPRESIÓN DE INFORME CLÍNICO FORMAL (FYDI OFFICIAL) -->
   <!-- ======================================================== -->
+  <!-- MODAL: EXPEDIENTE CLÍNICO INTEGRAL DEL PACIENTE -->
+  <!-- ======================================================== -->
+<div id="modal-expediente" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in">
+ <div class="px-6 py-4 bg-brand-900 text-white flex items-center justify-between">
+ <div>
+ <h3 id="exp-pac-nombre" class="text-base font-bold flex items-center gap-2">
+ <i data-lucide="file-text" class="w-5 h-5 text-sky-400"></i>
+ Expediente Clínico Ocupacional
+ </h3>
+ <p id="exp-pac-sub" class="text-xs text-sky-200"></p>
+ </div>
+ <div class="flex items-center gap-2">
+ <button onclick="imprimirExpedienteCompleto()" class="px-3 py-1 bg-brand-800 hover:bg-brand-700 text-white border border-brand-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+ <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+ Imprimir
+ </button>
+ <button onclick="cerrarModalExpediente()" class="text-slate-300 hover:text-white p-1">
+ <i data-lucide="x" class="w-5 h-5"></i>
+ </button>
+ </div>
+ </div>
+
+ <div class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+ <!-- Tarjeta de Datos Demográficos y Antecedentes -->
+ <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+ <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+ <div>
+ <span class="text-slate-400 block text-[10px] uppercase font-bold">Cédula</span>
+ <span id="exp-pac-cedula" class="font-semibold text-slate-800 font-mono text-sm">-</span>
+ </div>
+ <div>
+ <span class="text-slate-400 block text-[10px] uppercase font-bold">Edad / Contacto</span>
+ <span id="exp-pac-contacto" class="font-semibold text-slate-800">-</span>
+ </div>
+ <div>
+ <span class="text-slate-400 block text-[10px] uppercase font-bold">Piso / Ubicación</span>
+ <span id="exp-pac-piso" class="font-semibold text-slate-800">-</span>
+ </div>
+ <div>
+ <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Atenciones</span>
+ <span id="exp-pac-total-visitas" class="font-bold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full inline-block">0</span>
+ </div>
+ </div>
+
+ <!-- Alergias y Antecedentes Médicos -->
+ <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-200">
+ <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+ <span class="text-rose-600 block text-[10px] uppercase font-bold flex items-center gap-1">
+ <i data-lucide="shield-alert" class="w-3 h-3"></i>
+ Alergias a Medicamentos
+ </span>
+ <span id="exp-pac-alergias" class="font-bold text-rose-800 text-xs mt-0.5 block">No registradas</span>
+ </div>
+ <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+ <span class="text-slate-500 block text-[10px] uppercase font-bold">Antecedentes Personales (APP)</span>
+ <span id="exp-pac-app" class="font-medium text-slate-700 text-xs mt-0.5 block">Ninguno</span>
+ </div>
+ <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+ <span class="text-slate-500 block text-[10px] uppercase font-bold">Medicación Habitual / APF</span>
+ <span id="exp-pac-med-habitual" class="font-medium text-slate-700 text-xs mt-0.5 block">Ninguna</span>
+ </div>
+ </div>
+ </div>
+
+ <!-- Acciones rápidas dentro del expediente -->
+ <div class="flex items-center justify-between">
+ <div class="flex items-center gap-2">
+ <button id="tab-exp-btn-consultas" onclick="cambiarVistaExpediente('consultas')" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-brand-600 text-white shadow-sm">
+ Consultas y Triajes Clínicos
+ </button>
+ <button id="tab-exp-btn-informes" onclick="cambiarVistaExpediente('informes')" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700">
+ Informes y Derivaciones (<span id="exp-conteo-informes">0</span>)
+ </button>
+ </div>
+ <button onclick="abrirModalInformeDesdeExpediente()" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 px-3 py-1.5 rounded-lg transition">
+ <i data-lucide="file-warning" class="w-3.5 h-3.5"></i>
+ + Emitir Derivación / Deslinde
+ </button>
+ </div>
+
+ <!-- Vista 1: Lista de Consultas Clínicas con Triaje y Observaciones -->
+ <div id="exp-seccion-consultas" class="space-y-3">
+ <div id="exp-atenciones-list" class="space-y-3"></div>
+ </div>
+
+ <!-- Vista 2: Lista de Informes y Derivaciones Emitidas -->
+ <div id="exp-seccion-informes" class="hidden space-y-3">
+ <div id="exp-informes-list" class="space-y-2.5"></div>
+ </div>
+ </div>
+
+ <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+ <button onclick="cerrarModalExpediente()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-medium text-xs">
+ Cerrar Expediente
+ </button>
+ </div>
+ </div>
+ </div>
+
+  <!-- ======================================================== -->
   <div id="modal-visor-informe" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
     <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[96vh] flex flex-col border border-slate-200 overflow-hidden animate-fade-in my-auto">
       
@@ -2312,7 +2413,7 @@
             <img src="/img/fydi_official_logo_transparent.png" alt="FYDI Global" class="h-14 w-auto object-contain">
             <div>
               <h2 class="text-sm sm:text-base font-black text-[#0F2C59] uppercase tracking-wide">
-                FYDI GLOBAL BPO &amp; CONTACT CENTER S.A.
+                FYDI &bull; Fulfill Your Dreams International
               </h2>
               <p class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">
                 Departamento de Seguridad y Salud en el Trabajo (SST)
@@ -2446,7 +2547,7 @@
           <div>
             <h3 class="text-sm font-black text-white flex items-center gap-2">
               <span>Dossier Ejecutivo: Justificación de Abastecimiento &amp; Auditoría</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">Oficial Gerencia / Contabilidad</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">Documento Oficial para Gerencia General</span>
             </h3>
             <p class="text-[11px] text-slate-400">
               Demuestra con gráficos y datos reales la necesidad de compra de insumos, equipamiento y fármacos.
@@ -2552,7 +2653,7 @@
             <img src="/img/fydi_official_logo_transparent.png" alt="FYDI Global" class="h-14 w-auto object-contain">
             <div>
               <h2 class="text-sm sm:text-base font-black text-[#0F2C59] uppercase tracking-wide">
-                FYDI GLOBAL BPO &amp; CONTACT CENTER S.A.
+                FYDI &bull; Fulfill Your Dreams International
               </h2>
               <p class="text-[11px] font-bold text-[#C84500] uppercase tracking-wider">
                 Departamento de Seguridad y Salud en el Trabajo (SST) &bull; Dispensario Médico
@@ -2571,12 +2672,12 @@
         <!-- Bloque de Destinatarios y Encabezado Formal -->
         <div class="p-4 bg-slate-50 border border-slate-300 rounded-xl space-y-2 text-xs">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div><strong>DIRIGIDO A:</strong> <span class="font-bold text-slate-800">GERENCIA GENERAL &bull; JEFATURA FINANCIERA Y CONTABILIDAD</span></div>
-            <div><strong>COPIA:</strong> <span class="font-bold text-slate-800">JEFATURA DE TALENTO HUMANO &amp; SST</span></div>
+            <div><strong>DIRIGIDO A:</strong> <span class="font-bold text-slate-800">GERENCIA GENERAL</span></div>
+            <div><strong>DEPARTAMENTO:</strong> <span class="font-bold text-slate-800">DISPENSARIO MÉDICO &amp; SALUD OCUPACIONAL</span></div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200">
             <div><strong>EMISOR:</strong> <span class="font-bold text-slate-800">Lic. Patricia Pilataxi &bull; Enfermera Titular FYDI</span></div>
-            <div><strong>RESPALDO TÉCNICO:</strong> <span class="font-bold text-slate-800">Médico Ocupacional Institucional</span></div>
+            <div><strong>RESPALDO TÉCNICO:</strong> <span class="font-bold text-slate-800">Dr. Médico Ocupacional</span></div>
           </div>
           <div class="pt-1 border-t border-slate-200">
             <strong>ASUNTO:</strong> <span class="font-black text-[#0F2C59] uppercase">DOSSIER EJECUTIVO DE JUSTIFICACIÓN TÉCNICA Y AUDITORÍA ASISTENCIAL PARA LA APROBACIÓN DE COMPRA DE INSUMOS MÉDICOS, MEDICAMENTOS Y EQUIPAMIENTO BIOMÉDICO</span>
@@ -2587,10 +2688,10 @@
         <div class="p-4 bg-blue-50/60 border border-blue-200 rounded-xl text-[11px] text-slate-800 leading-relaxed text-justify space-y-2">
           <div class="flex items-center gap-2 font-black text-[#0F2C59] text-xs uppercase tracking-wide">
             <i data-lucide="scale" class="w-4 h-4 text-brand-600"></i>
-            <span>1. JUSTIFICACIÓN TÉCNICO-FINANCIERA PARA GERENCIA Y CONTABILIDAD</span>
+            <span>1. JUSTIFICACIÓN TÉCNICO-MÉDICA PARA GERENCIA GENERAL</span>
           </div>
           <p>
-            Por medio del presente informe, el área de Salud Ocupacional y Enfermería de FYDI eleva a la Jefatura Financiera y Contabilidad la auditoría formal del consumo clínico. Los datos reflejan que <strong>la atención médica no se ha detenido y mantiene una alta demanda en todo el edificio</strong>. La reducción de inventario responde al tratamiento activo y oportuno de cientos de colaboradores, permitiendo su continuidad en sus puestos de trabajo en los 7 pisos de la operación.
+            Por medio del presente informe, el área de Salud Ocupacional y Enfermería de FYDI eleva a la Gerencia General la auditoría formal del consumo clínico. Los datos reflejan que <strong>la atención médica no se ha detenido y mantiene una alta demanda en todo el edificio</strong>. La reducción de inventario responde al tratamiento activo y oportuno de cientos de colaboradores, permitiendo su continuidad en sus puestos de trabajo en los 7 pisos de la operación.
           </p>
           <p>
             Negar la reposición presupuestaria o carecer de equipamiento e insumos básicos conlleva un <strong>grave riesgo de interrupción operativa</strong>: un trabajador con dolor agudo, fiebre o malestar que no reciba auxilio sintomático inmediato se ve obligado a abandonar su puesto de llamadas, generando pérdidas directas en horas de servicio al cliente y sobrecostos por ausentismo. Asimismo, la falta de control de signos vitales (presión, saturación e IMC) expone a la empresa a observaciones en auditorías del Ministerio de Trabajo e IESS.
@@ -2708,28 +2809,28 @@
         <div class="pt-6 border-t border-slate-300 dossier-section-avoid">
           <div class="grid grid-cols-3 gap-6 text-center text-xs">
             
-            <!-- Firma 1: Área Médica / Enfermería -->
+            <!-- Firma 1: Lic. Patricia Pilataxi -->
             <div class="space-y-1">
               <div class="border-b border-slate-400 w-full mb-1"></div>
               <strong class="block font-black text-slate-900">Lic. Patricia Pilataxi</strong>
               <span class="block text-[10px] text-slate-600">Enfermera Titular FYDI &bull; Salud Ocupacional</span>
-              <span class="block text-[9px] text-slate-400 font-mono">Solicitante Técnico</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Solicitante Responsable</span>
             </div>
 
-            <!-- Firma 2: Jefatura de SST / Talento Humano -->
+            <!-- Firma 2: Dr. Médico Ocupacional -->
             <div class="space-y-1">
               <div class="border-b border-slate-400 w-full mb-1"></div>
-              <strong class="block font-black text-slate-900">Talento Humano &amp; SST</strong>
-              <span class="block text-[10px] text-slate-600">Jefatura de Operaciones &amp; Bienestar</span>
-              <span class="block text-[9px] text-slate-400 font-mono">Visto Bueno Operacional</span>
+              <strong class="block font-black text-slate-900">Dr. Médico Ocupacional</strong>
+              <span class="block text-[10px] text-slate-600">Dirección Médica &amp; Salud Ocupacional</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Criterio Técnico y Prescripción</span>
             </div>
 
-            <!-- Firma 3: Contabilidad & Gerencia Financiera -->
+            <!-- Firma 3: Gerencia General -->
             <div class="space-y-1">
               <div class="border-b border-slate-400 w-full mb-1"></div>
-              <strong class="block font-black text-slate-900">Contabilidad / Gerencia</strong>
-              <span class="block text-[10px] text-slate-600">Aprobación Presupuestaria de Compra</span>
-              <span class="block text-[9px] text-slate-400 font-mono">Despacho de Fondos</span>
+              <strong class="block font-black text-slate-900">Gerencia General</strong>
+              <span class="block text-[10px] text-slate-600">Aprobación y Autorización de Adquisición</span>
+              <span class="block text-[9px] text-slate-400 font-mono">Firma y Sello de Autorización</span>
             </div>
 
           </div>
